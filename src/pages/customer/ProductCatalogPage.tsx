@@ -1,0 +1,819 @@
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { Filter, X, Search, RotateCcw } from 'lucide-react';
+import { productsApi, ProductFilters } from '@/services/api/products.api';
+import { categoriesApi } from '@/services/api/categories.api';
+import { ProductCard } from '@/components/customer/ProductCard';
+import { ScrollReveal, StaggerReveal } from '@/components/motion';
+
+const METAL_OPTIONS = [
+  { value: 'GOLD', label: 'Gold' },
+  { value: 'SILVER', label: 'Silver' },
+  { value: 'DIAMOND', label: 'Diamond' },
+  { value: 'PLATINUM', label: 'Platinum' }
+] as const;
+
+const PURITY_OPTIONS = [
+  { value: '24K', label: '24K', description: '24K Pure Gold' },
+  { value: '22K', label: '22K', description: '22K 916 Gold' },
+  { value: '18K', label: '18K', description: '18K Fine Jewellery' },
+  { value: '999', label: '999', description: '999 Fine Silver' },
+  { value: '925', label: '925', description: '925 Sterling Silver' }
+] as const;
+
+const SORT_OPTIONS = [
+  { value: 'display_order', label: 'Curated Order' },
+  { value: 'newest', label: 'Newest Arrivals' },
+  { value: 'name_asc', label: 'Name: A to Z' }
+] as const;
+
+const GOLD_PURITY_SET = new Set(['24K', '22K', '18K']);
+const SILVER_PURITY_SET = new Set(['999', '925']);
+
+function getCompatiblePurityOptions(selectedMetal: string) {
+  if (selectedMetal === 'GOLD') {
+    return PURITY_OPTIONS.filter((opt) => GOLD_PURITY_SET.has(opt.value));
+  }
+  if (selectedMetal === 'SILVER') {
+    return PURITY_OPTIONS.filter((opt) => SILVER_PURITY_SET.has(opt.value));
+  }
+  if (selectedMetal === 'DIAMOND' || selectedMetal === 'PLATINUM') {
+    return [];
+  }
+  return [...PURITY_OPTIONS];
+}
+
+export const ProductCatalogPage: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+
+  // URL search params are the single source of truth for committed catalogue filters
+  const urlSearch = searchParams.get('search') || '';
+  const urlCategoryId = searchParams.get('categoryId') || '';
+  const urlCategorySlug = searchParams.get('category') || '';
+  const metalType = (searchParams.get('metalType') || '').toUpperCase();
+  const purity = (searchParams.get('purity') || '').toUpperCase();
+  const sort = searchParams.get('sort') || 'display_order';
+  const page = Math.max(1, Number(searchParams.get('page')) || 1);
+
+  // Local keyword input synchronized with URL search without effect-driven state mutations
+  const [searchDraftState, setSearchDraftState] = useState<{ urlValue: string; text: string }>({
+    urlValue: urlSearch,
+    text: urlSearch
+  });
+  const searchInput = searchDraftState.urlValue === urlSearch ? searchDraftState.text : urlSearch;
+  const searchDebounceRef = useRef<number | null>(null);
+
+  // Mobile drawer staged filter state
+  const [mobileDraftSearch, setMobileDraftSearch] = useState('');
+  const [mobileDraftCategoryId, setMobileDraftCategoryId] = useState('');
+  const [mobileDraftMetal, setMobileDraftMetal] = useState('');
+  const [mobileDraftPurity, setMobileDraftPurity] = useState('');
+
+  useEffect(() => {
+    return () => {
+      if (searchDebounceRef.current !== null) {
+        window.clearTimeout(searchDebounceRef.current);
+      }
+    };
+  }, []);
+
+  // Fetch Admin CMS categories dynamically
+  const { data: categories = [], isLoading: categoriesLoading } = useQuery({
+    queryKey: ['categories'],
+    queryFn: categoriesApi.getCategories
+  });
+
+  // Resolve category by ObjectId or slug
+  const resolvedCategory = useMemo(() => {
+    if (urlCategoryId) {
+      return categories.find((cat) => cat._id === urlCategoryId) || null;
+    }
+    if (urlCategorySlug) {
+      const target = urlCategorySlug.toLowerCase();
+      return categories.find((cat) => cat.slug.toLowerCase() === target) || null;
+    }
+    return null;
+  }, [categories, urlCategoryId, urlCategorySlug]);
+
+  const effectiveCategoryId = resolvedCategory?._id || urlCategoryId;
+  const effectiveCategorySlug = !effectiveCategoryId && urlCategorySlug ? urlCategorySlug : '';
+
+  const filters: ProductFilters = useMemo(
+    () => ({
+      search: urlSearch.trim() || undefined,
+      categoryId: effectiveCategoryId || undefined,
+      category: effectiveCategorySlug || undefined,
+      metalType: metalType || undefined,
+      purity: purity || undefined,
+      sort,
+      page,
+      limit: 12
+    }),
+    [urlSearch, effectiveCategoryId, effectiveCategorySlug, metalType, purity, sort, page]
+  );
+
+  const { data, isLoading, isFetching } = useQuery({
+    queryKey: ['products', filters],
+    queryFn: () => productsApi.getProducts(filters)
+  });
+
+  const products = data?.products || [];
+  const meta = data?.meta;
+  const totalCount = meta?.total ?? products.length;
+  const totalPages = Math.max(1, meta?.totalPages || 1);
+
+  const updateUrlParams = (mutator: (next: URLSearchParams) => void, resetPage: boolean = true) => {
+    const next = new URLSearchParams(searchParams);
+    mutator(next);
+    if (resetPage) {
+      next.delete('page');
+    }
+    setSearchParams(next);
+  };
+
+  const commitKeywordSearch = (rawValue: string) => {
+    const trimmed = rawValue.trim();
+    updateUrlParams((next) => {
+      if (trimmed) next.set('search', trimmed);
+      else next.delete('search');
+    });
+  };
+
+  const handleSearchInputChange = (value: string) => {
+    setSearchDraftState({ urlValue: urlSearch, text: value });
+    if (searchDebounceRef.current !== null) {
+      window.clearTimeout(searchDebounceRef.current);
+    }
+    searchDebounceRef.current = window.setTimeout(() => {
+      commitKeywordSearch(value);
+    }, 350);
+  };
+
+  const handleImmediateSearchSubmit = () => {
+    if (searchDebounceRef.current !== null) {
+      window.clearTimeout(searchDebounceRef.current);
+      searchDebounceRef.current = null;
+    }
+    commitKeywordSearch(searchInput);
+  };
+
+  const handleCategoryChange = (nextCategoryId: string) => {
+    updateUrlParams((next) => {
+      next.delete('category');
+      if (nextCategoryId) next.set('categoryId', nextCategoryId);
+      else next.delete('categoryId');
+    });
+  };
+
+  const handleToggleMetal = (selectedMetal: string) => {
+    updateUrlParams((next) => {
+      const nextVal = metalType === selectedMetal ? '' : selectedMetal;
+      if (nextVal) next.set('metalType', nextVal);
+      else next.delete('metalType');
+
+      if (purity) {
+        const compatible = getCompatiblePurityOptions(nextVal).some((opt) => opt.value === purity);
+        if (!compatible) {
+          next.delete('purity');
+        }
+      }
+    });
+  };
+
+  const handleTogglePurity = (selectedPurity: string) => {
+    updateUrlParams((next) => {
+      const nextVal = purity === selectedPurity ? '' : selectedPurity;
+      if (nextVal) next.set('purity', nextVal);
+      else next.delete('purity');
+    });
+  };
+
+  const handleSortChange = (nextSort: string) => {
+    updateUrlParams((next) => {
+      if (nextSort && nextSort !== 'display_order') next.set('sort', nextSort);
+      else next.delete('sort');
+    });
+  };
+
+  const handlePageChange = (nextPage: number) => {
+    const clamped = Math.max(1, Math.min(totalPages, nextPage));
+    updateUrlParams((next) => {
+      if (clamped > 1) next.set('page', String(clamped));
+      else next.delete('page');
+    }, false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleClearAllFilters = () => {
+    if (searchDebounceRef.current !== null) {
+      window.clearTimeout(searchDebounceRef.current);
+      searchDebounceRef.current = null;
+    }
+    setSearchDraftState({ urlValue: '', text: '' });
+    setMobileDraftSearch('');
+    setMobileDraftCategoryId('');
+    setMobileDraftMetal('');
+    setMobileDraftPurity('');
+    setSearchParams(new URLSearchParams());
+    setMobileFiltersOpen(false);
+  };
+
+  const openMobileDrawer = () => {
+    setMobileDraftSearch(searchInput);
+    setMobileDraftCategoryId(effectiveCategoryId);
+    setMobileDraftMetal(metalType);
+    setMobileDraftPurity(purity);
+    setMobileFiltersOpen(true);
+  };
+
+  const handleApplyMobileDrawer = () => {
+    if (searchDebounceRef.current !== null) {
+      window.clearTimeout(searchDebounceRef.current);
+      searchDebounceRef.current = null;
+    }
+    const trimmed = mobileDraftSearch.trim();
+    setSearchDraftState({ urlValue: trimmed, text: trimmed });
+    const next = new URLSearchParams();
+    if (trimmed) next.set('search', trimmed);
+    if (mobileDraftCategoryId) next.set('categoryId', mobileDraftCategoryId);
+    if (mobileDraftMetal) next.set('metalType', mobileDraftMetal);
+    if (mobileDraftPurity) next.set('purity', mobileDraftPurity);
+    if (sort && sort !== 'display_order') next.set('sort', sort);
+    setSearchParams(next);
+    setMobileFiltersOpen(false);
+  };
+
+  const activeFilterChips: Array<{ key: string; label: string; onClear: () => void }> = [];
+  if (urlSearch.trim()) {
+    activeFilterChips.push({
+      key: 'search',
+      label: `Search: "${urlSearch.trim()}"`,
+      onClear: () => {
+        setSearchDraftState({ urlValue: '', text: '' });
+        commitKeywordSearch('');
+      }
+    });
+  }
+  if (resolvedCategory || effectiveCategoryId || effectiveCategorySlug) {
+    const catLabel =
+      resolvedCategory?.name ||
+      categories.find((c) => c._id === effectiveCategoryId)?.name ||
+      urlCategorySlug;
+    activeFilterChips.push({
+      key: 'category',
+      label: `Category: ${catLabel}`,
+      onClear: () => handleCategoryChange('')
+    });
+  }
+  if (metalType) {
+    const metalLabel = METAL_OPTIONS.find((m) => m.value === metalType)?.label || metalType;
+    activeFilterChips.push({
+      key: 'metal',
+      label: `Metal: ${metalLabel}`,
+      onClear: () => handleToggleMetal(metalType)
+    });
+  }
+  if (purity) {
+    activeFilterChips.push({
+      key: 'purity',
+      label: `Purity: ${purity}`,
+      onClear: () => handleTogglePurity(purity)
+    });
+  }
+
+  const activeFilterCount = activeFilterChips.length;
+  const activeSortLabel =
+    SORT_OPTIONS.find((opt) => opt.value === sort)?.label || 'Curated Order';
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      {/* Top Banner / Heading */}
+      <ScrollReveal variant="fade-up" immediate>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-stone-200 pb-5">
+          <div>
+            <span className="text-[11px] font-bold uppercase tracking-widest text-gold-700">
+              Sri Ramas Jewellery Catalogue
+            </span>
+            <h1 className="font-serif text-2xl sm:text-3xl font-bold text-burgundy-950">
+              Jewellery Showcase
+            </h1>
+            <p className="text-xs text-stone-500 mt-0.5">
+              Browse curated heirloom gold, silver, diamond, and platinum creations.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+            <button
+              type="button"
+              onClick={openMobileDrawer}
+              className="lg:hidden flex items-center gap-2 px-3 py-2 rounded-lg border border-gold-600 bg-white text-burgundy-900 text-xs font-semibold transition-all duration-200 hover:bg-gold-50 active:scale-[0.98]"
+            >
+              <Filter className="w-4 h-4 text-gold-600" />
+              <span>Filter Catalogue</span>
+              {activeFilterCount > 0 && (
+                <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-burgundy-900 text-gold-200 text-[10px] font-bold">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
+
+            <div className="flex items-center gap-2">
+              <label htmlFor="catalog-sort-select" className="text-xs text-stone-500 hidden sm:inline">
+                Sort:
+              </label>
+              <select
+                id="catalog-sort-select"
+                value={sort}
+                onChange={(e) => handleSortChange(e.target.value)}
+                aria-label="Sort products by"
+                className="text-xs bg-white border border-stone-300 rounded-lg px-2.5 py-2 outline-none focus:border-gold-500 font-medium text-stone-800 transition-colors"
+              >
+                {SORT_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+      </ScrollReveal>
+
+      {/* Main Layout: Filters Sidebar + Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        {/* Desktop Filter Sidebar */}
+        <aside className="hidden lg:block space-y-6 bg-white p-5 rounded-xl border border-stone-200 shadow-sm self-start sticky top-28">
+          <div className="flex items-center justify-between pb-3 border-b border-stone-200">
+            <h2 className="font-serif font-bold text-sm text-burgundy-950 flex items-center gap-2">
+              <Filter className="w-4 h-4 text-gold-600" />
+              <span>Filters</span>
+            </h2>
+            {activeFilterCount > 0 && (
+              <button
+                type="button"
+                onClick={handleClearAllFilters}
+                className="text-[11px] text-burgundy-700 hover:text-burgundy-900 font-semibold flex items-center gap-1"
+              >
+                <RotateCcw className="w-3 h-3" />
+                Clear All
+              </button>
+            )}
+          </div>
+
+          {/* Keyword Search */}
+          <div className="space-y-1.5">
+            <label
+              htmlFor="catalog-keyword-search"
+              className="text-xs font-semibold uppercase tracking-wider text-stone-700"
+            >
+              Keyword Search
+            </label>
+            <div className="relative">
+              <input
+                id="catalog-keyword-search"
+                type="text"
+                value={searchInput}
+                onChange={(e) => handleSearchInputChange(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleImmediateSearchSubmit();
+                  }
+                }}
+                placeholder="Name, SKU, description..."
+                className="w-full text-xs pl-3 pr-14 py-2 border border-stone-300 rounded-lg outline-none focus:border-gold-500"
+              />
+              {searchInput && (
+                <button
+                  type="button"
+                  aria-label="Clear search"
+                  onClick={() => {
+                    if (searchDebounceRef.current !== null) {
+                      window.clearTimeout(searchDebounceRef.current);
+                    }
+                    setSearchDraftState({ urlValue: '', text: '' });
+                    commitKeywordSearch('');
+                  }}
+                  className="absolute right-8 top-2 text-stone-400 hover:text-stone-700"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+              <button
+                type="button"
+                aria-label="Search products"
+                onClick={handleImmediateSearchSubmit}
+                className="absolute right-2.5 top-2 text-stone-400 hover:text-gold-600"
+              >
+                <Search className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Categories (Dynamic from Admin CMS) */}
+          <div className="space-y-1.5">
+            <label
+              htmlFor="catalog-category-select"
+              className="text-xs font-semibold uppercase tracking-wider text-stone-700"
+            >
+              Category
+            </label>
+            <select
+              id="catalog-category-select"
+              value={effectiveCategoryId}
+              onChange={(e) => handleCategoryChange(e.target.value)}
+              aria-label="Filter by category"
+              className="w-full text-xs p-2 border border-stone-300 rounded-lg outline-none focus:border-gold-500 bg-white"
+            >
+              <option value="">All Categories</option>
+              {categories.map((c) => (
+                <option key={c._id} value={c._id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+            {!categoriesLoading && categories.length === 0 && (
+              <p className="text-[11px] text-stone-400">
+                No active categories published yet.
+              </p>
+            )}
+          </div>
+
+          {/* Precious Metal Type */}
+          <div className="space-y-1.5">
+            <span className="block text-xs font-semibold uppercase tracking-wider text-stone-700">
+              Precious Metal
+            </span>
+            <div className="flex flex-wrap gap-1.5">
+              <button
+                type="button"
+                onClick={() => {
+                  if (metalType) handleToggleMetal(metalType);
+                }}
+                aria-pressed={metalType === ''}
+                className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
+                  metalType === ''
+                    ? 'bg-burgundy-900 text-gold-200 border-burgundy-900 font-semibold'
+                    : 'border-stone-200 text-stone-600 hover:bg-stone-50'
+                }`}
+              >
+                All Metals
+              </button>
+              {METAL_OPTIONS.map((metal) => (
+                <button
+                  key={metal.value}
+                  type="button"
+                  onClick={() => handleToggleMetal(metal.value)}
+                  aria-pressed={metalType === metal.value}
+                  className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
+                    metalType === metal.value
+                      ? 'bg-burgundy-900 text-gold-200 border-burgundy-900 font-semibold'
+                      : 'border-stone-200 text-stone-600 hover:bg-stone-50'
+                  }`}
+                >
+                  {metal.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Purity (Metal-aware options) */}
+          {getCompatiblePurityOptions(metalType).length > 0 && (
+            <div className="space-y-1.5">
+              <span className="block text-xs font-semibold uppercase tracking-wider text-stone-700">
+                Purity
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (purity) handleTogglePurity(purity);
+                  }}
+                  aria-pressed={purity === ''}
+                  className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
+                    purity === ''
+                      ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold'
+                      : 'border-stone-200 text-stone-600 hover:bg-stone-50'
+                  }`}
+                >
+                  All
+                </button>
+                {getCompatiblePurityOptions(metalType).map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    title={opt.description}
+                    onClick={() => handleTogglePurity(opt.value)}
+                    aria-pressed={purity === opt.value}
+                    className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
+                      purity === opt.value
+                        ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold'
+                        : 'border-stone-200 text-stone-600 hover:bg-stone-50'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </aside>
+
+        {/* Products Grid Area */}
+        <div className="lg:col-span-3 space-y-5">
+          {/* Active Count & Active Filter Chips Bar */}
+          <div className="bg-white rounded-xl border border-stone-200 px-4 py-3 flex flex-col gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+              <p className="font-medium text-stone-700" aria-live="polite">
+                {isLoading ? (
+                  'Loading curated jewellery pieces...'
+                ) : (
+                  <>
+                    Showing <span className="font-bold text-burgundy-950">{products.length}</span> of{' '}
+                    <span className="font-bold text-burgundy-950">{totalCount}</span>{' '}
+                    {totalCount === 1 ? 'creation' : 'creations'}
+                  </>
+                )}
+              </p>
+              <span className="text-[11px] text-stone-500">
+                Sorted by <strong className="text-stone-700">{activeSortLabel}</strong>
+                {isFetching && !isLoading ? ' • Updating...' : ''}
+              </span>
+            </div>
+
+            {activeFilterChips.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-stone-100">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-stone-500">
+                  Active Filters:
+                </span>
+                {activeFilterChips.map((chip) => (
+                  <button
+                    key={chip.key}
+                    type="button"
+                    onClick={chip.onClear}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gold-50 border border-gold-400/70 text-burgundy-950 text-[11px] font-semibold hover:bg-gold-100 transition-colors"
+                  >
+                    <span>{chip.label}</span>
+                    <X className="w-3 h-3 text-burgundy-800" />
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={handleClearAllFilters}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold text-burgundy-800 hover:bg-burgundy-50 transition-colors ml-auto"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  <span>Clear All Filters</span>
+                </button>
+              </div>
+            )}
+          </div>
+
+          {isLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="aspect-[3/4] bg-stone-200 rounded-xl" />
+              ))}
+            </div>
+          ) : products.length > 0 ? (
+            <StaggerReveal
+              key={`${effectiveCategoryId}-${effectiveCategorySlug}-${metalType}-${purity}-${sort}-${page}-${urlSearch}`}
+              staggerMs={55}
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+            >
+              {products.map((product) => (
+                <ProductCard key={product._id} product={product} />
+              ))}
+            </StaggerReveal>
+          ) : (
+            <div className="bg-white rounded-xl p-12 text-center border border-stone-200 space-y-3">
+              <h3 className="font-serif font-bold text-lg text-burgundy-950">
+                No matching jewellery found
+              </h3>
+              <p className="text-xs text-stone-500 max-w-sm mx-auto">
+                We could not find any pieces matching your selected criteria. Try adjusting or clearing your filters to explore our full showcase.
+              </p>
+              {activeFilterCount > 0 && (
+                <button
+                  type="button"
+                  onClick={handleClearAllFilters}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-burgundy-900 text-gold-200 text-xs font-semibold hover:bg-burgundy-800"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Clear All Filters</span>
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Pagination */}
+          {meta && totalPages > 1 && (
+            <div className="flex flex-wrap items-center justify-center gap-2 pt-6 border-t border-stone-200">
+              <button
+                type="button"
+                disabled={page <= 1}
+                onClick={() => handlePageChange(page - 1)}
+                className="px-3 py-1.5 rounded-lg border border-stone-300 bg-white text-xs font-medium text-stone-700 hover:border-gold-500 disabled:opacity-40"
+              >
+                Previous
+              </button>
+              {Array.from({ length: totalPages }, (_, idx) => idx + 1)
+                .filter((p) => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
+                .map((p, idx, arr) => {
+                  const prevPageNum = arr[idx - 1];
+                  const showEllipsis = prevPageNum && p - prevPageNum > 1;
+                  return (
+                    <React.Fragment key={p}>
+                      {showEllipsis && <span className="text-xs text-stone-400 px-1">…</span>}
+                      <button
+                        type="button"
+                        onClick={() => handlePageChange(p)}
+                        aria-current={p === page ? 'page' : undefined}
+                        className={`min-w-[32px] px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
+                          p === page
+                            ? 'bg-burgundy-900 text-gold-200 border-burgundy-900'
+                            : 'bg-white text-stone-700 border-stone-300 hover:border-gold-500'
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    </React.Fragment>
+                  );
+                })}
+              <button
+                type="button"
+                disabled={page >= totalPages}
+                onClick={() => handlePageChange(page + 1)}
+                className="px-3 py-1.5 rounded-lg border border-stone-300 bg-white text-xs font-medium text-stone-700 hover:border-gold-500 disabled:opacity-40"
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Mobile Filters Drawer */}
+      {mobileFiltersOpen && (
+        <div
+          className="fixed inset-0 z-50 flex bg-charcoal-950/70 backdrop-blur-sm lg:hidden animate-fade-in"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setMobileFiltersOpen(false);
+          }}
+        >
+          <div className="w-4/5 max-w-xs bg-white h-full p-5 flex flex-col justify-between overflow-y-auto shadow-2xl border-r border-gold-400/30 animate-drawer-enter">
+            <div className="space-y-5">
+              <div className="flex items-center justify-between pb-3 border-b border-stone-200">
+                <h3 className="font-serif font-bold text-base text-burgundy-950">
+                  Filter Catalogue
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setMobileFiltersOpen(false)}
+                  className="p-1 text-stone-400 hover:text-stone-700"
+                  aria-label="Close filters drawer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Mobile Inputs */}
+              <div className="space-y-4 text-xs">
+                <div>
+                  <label htmlFor="mobile-filter-search" className="block font-semibold uppercase mb-1">
+                    Keyword Search
+                  </label>
+                  <input
+                    id="mobile-filter-search"
+                    type="text"
+                    value={mobileDraftSearch}
+                    onChange={(e) => setMobileDraftSearch(e.target.value)}
+                    placeholder="Name, SKU, description..."
+                    className="w-full p-2 border border-stone-300 rounded-lg outline-none focus:border-gold-500"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="mobile-filter-category" className="block font-semibold uppercase mb-1">
+                    Category
+                  </label>
+                  <select
+                    id="mobile-filter-category"
+                    value={mobileDraftCategoryId}
+                    onChange={(e) => setMobileDraftCategoryId(e.target.value)}
+                    className="w-full p-2 border border-stone-300 rounded-lg bg-white outline-none focus:border-gold-500"
+                  >
+                    <option value="">All Categories</option>
+                    {categories.map((c) => (
+                      <option key={c._id} value={c._id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <span className="block font-semibold uppercase mb-1.5">Precious Metal</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setMobileDraftMetal('')}
+                      className={`px-2.5 py-1.5 rounded-md border transition-colors ${
+                        mobileDraftMetal === ''
+                          ? 'bg-burgundy-900 text-gold-200 border-burgundy-900 font-semibold'
+                          : 'border-stone-200 text-stone-700'
+                      }`}
+                    >
+                      All Metals
+                    </button>
+                    {METAL_OPTIONS.map((metal) => (
+                      <button
+                        key={metal.value}
+                        type="button"
+                        onClick={() => {
+                          const nextMetal = mobileDraftMetal === metal.value ? '' : metal.value;
+                          setMobileDraftMetal(nextMetal);
+                          if (
+                            mobileDraftPurity &&
+                            !getCompatiblePurityOptions(nextMetal).some(
+                              (opt) => opt.value === mobileDraftPurity
+                            )
+                          ) {
+                            setMobileDraftPurity('');
+                          }
+                        }}
+                        className={`px-2.5 py-1.5 rounded-md border transition-colors ${
+                          mobileDraftMetal === metal.value
+                            ? 'bg-burgundy-900 text-gold-200 border-burgundy-900 font-semibold'
+                            : 'border-stone-200 text-stone-700'
+                        }`}
+                      >
+                        {metal.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {getCompatiblePurityOptions(mobileDraftMetal).length > 0 && (
+                  <div>
+                    <span className="block font-semibold uppercase mb-1.5">Purity</span>
+                    <div className="flex flex-wrap gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setMobileDraftPurity('')}
+                        className={`px-2.5 py-1.5 rounded-md border transition-colors ${
+                          mobileDraftPurity === ''
+                            ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold'
+                            : 'border-stone-200 text-stone-700'
+                        }`}
+                      >
+                        All
+                      </button>
+                      {getCompatiblePurityOptions(mobileDraftMetal).map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() =>
+                            setMobileDraftPurity(
+                              mobileDraftPurity === opt.value ? '' : opt.value
+                            )
+                          }
+                          className={`px-2.5 py-1.5 rounded-md border transition-colors ${
+                            mobileDraftPurity === opt.value
+                              ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold'
+                              : 'border-stone-200 text-stone-700'
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-stone-200 flex gap-2">
+              <button
+                type="button"
+                onClick={handleClearAllFilters}
+                className="w-1/2 py-2 border border-stone-300 rounded-lg text-xs font-semibold text-stone-700"
+              >
+                Clear All
+              </button>
+              <button
+                type="button"
+                onClick={handleApplyMobileDrawer}
+                className="w-1/2 py-2 bg-burgundy-900 text-gold-200 rounded-lg text-xs font-semibold"
+              >
+                Show Results
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};

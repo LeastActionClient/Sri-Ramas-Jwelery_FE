@@ -1,0 +1,203 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Custom Luxury Scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #F5EFEB;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #C59B27;
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #8A6715;
+  }
+}
+
+@layer utilities {
+  .text-gold-gradient {
+    background: linear-gradient(135deg, #DECD96 0%, #D4AF37 50%, #B38728 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .border-gold-gradient {
+    border-image: linear-gradient(135deg, #DECD96, #D4AF37, #8A6715) 1;
+  }
+
+  .gold-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #D4AF37, transparent);
+  }
+
+  /* Expanding gold hairline underline for editorial links & nav items */
+  .luxury-underline {
+    position: relative;
+  }
+  .luxury-underline::after {
+    content: '';
+    position: absolute;
+    left: 0.65rem;
+    right: 0.65rem;
+    bottom: 0.2rem;
+    height: 1.5px;
+    background: linear-gradient(90deg, #E4CB75, #C39A2E);
+    transform: scaleX(0);
+    transform-origin: center;
+    transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .luxury-underline:hover::after,
+  .luxury-underline-active::after {
+    transform: scaleX(1);
+  }
+
+  /* Subtle gold rim illumination on hover without flashing overlays */
+  .gold-rim-glow {
+    transition: border-color 380ms cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 420ms cubic-bezier(0.22, 1, 0.36, 1),
+      transform 400ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .animate-page-enter {
+    animation: luxuryPageEnter 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .animate-modal-enter {
+    animation: luxuryModalEnter 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .animate-fade-in {
+    animation: luxuryFadeIn 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .animate-rate-update {
+    animation: luxuryRatePulse 550ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .animate-toast-enter {
+    animation: luxuryToastEnter 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .animate-drawer-enter {
+    animation: luxuryDrawerEnter 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  @keyframes luxuryPageEnter {
+    from {
+      opacity: 0.88;
+      transform: translate3d(0, 8px, 0);
+    }
+    to {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+    }
+  }
+
+  @keyframes luxuryModalEnter {
+    from {
+      opacity: 0;
+      transform: translate3d(0, 10px, 0) scale(0.975);
+    }
+    to {
+      opacity: 1;
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+  }
+
+  @keyframes luxuryFadeIn {
+    from {
+      opacity: 0;
+      transform: translate3d(0, -4px, 0);
+    }
+    to {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+    }
+  }
+
+  @keyframes luxuryRatePulse {
+    0% {
+      opacity: 0.45;
+      transform: translate3d(0, 5px, 0);
+    }
+    100% {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+    }
+  }
+
+  @keyframes luxuryToastEnter {
+    from {
+      opacity: 0;
+      transform: translate3d(0, -6px, 0);
+    }
+    to {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+    }
+  }
+
+  @keyframes luxuryDrawerEnter {
+    from {
+      opacity: 0;
+      transform: translate3d(-18px, 0, 0);
+    }
+    to {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+    }
+  }
+
+  /* Slow ambient showcase float used only on desktop hero jewel frame */
+  .animate-hero-float {
+    animation: luxuryHeroFloat 7s ease-in-out infinite;
+  }
+
+  @keyframes luxuryHeroFloat {
+    0%, 100% {
+      transform: translate3d(0, 0, 0);
+    }
+    50% {
+      transform: translate3d(0, -7px, 0);
+    }
+  }
+
+  /* Clean SVG gold line drawing helper */
+  .svg-line-draw {
+    stroke-dasharray: 220;
+    stroke-dashoffset: 220;
+    transition: stroke-dashoffset 950ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .svg-line-draw-active {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Mandatory Accessibility: honor prefers-reduced-motion globally */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .animate-hero-float {
+    animation: none !important;
+  }
+}
