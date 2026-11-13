@@ -162,7 +162,7 @@ export const ContactPage: React.FC = () => {
                     {primaryStore?.name || 'Showroom Address'}
                   </strong>
                   <span>
-                    {storeAddress || 'Showroom details are managed in our directory.'}
+                    {storeAddress || 'Showroom advisory and viewing by appointment.'}
                   </span>
                 </div>
               </div>

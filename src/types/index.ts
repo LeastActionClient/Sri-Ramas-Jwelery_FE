@@ -173,7 +173,18 @@ export interface Product {
   images: ProductImage[];
   imagePublicIds?: string[];
   gender?: 'WOMEN' | 'MEN' | 'UNISEX' | 'KIDS';
+  occasion?: string[];
   collectionType?: 'BRIDAL' | 'HERITAGE' | 'DAILY_WEAR' | 'FESTIVE' | 'TEMPLE' | 'SOLITAIRE';
+  categoryAttributes?: Record<string, any>;
+  metalDetails?: Record<string, any>;
+  certification?: {
+    agency?: string;
+    certificateNumber?: string;
+    certificateUrl?: string;
+  };
+  stoneWeightGrams?: number | null;
+  otherWeightGrams?: number | null;
+  stockStatus?: string;
   isFeatured: boolean;
   isNewArrival: boolean;
   displayOrder?: number;

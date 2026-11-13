@@ -22,12 +22,6 @@ const PURITY_OPTIONS = [
   { value: '925', label: '925', description: '925 Sterling Silver' }
 ] as const;
 
-const SORT_OPTIONS = [
-  { value: 'display_order', label: 'Curated Order' },
-  { value: 'newest', label: 'Newest Arrivals' },
-  { value: 'name_asc', label: 'Name: A to Z' }
-] as const;
-
 const GOLD_PURITY_SET = new Set(['24K', '22K', '18K']);
 const SILVER_PURITY_SET = new Set(['999', '925']);
 
@@ -54,7 +48,6 @@ export const ProductCatalogPage: React.FC = () => {
   const urlCategorySlug = searchParams.get('category') || '';
   const metalType = (searchParams.get('metalType') || '').toUpperCase();
   const purity = (searchParams.get('purity') || '').toUpperCase();
-  const sort = searchParams.get('sort') || 'display_order';
   const page = Math.max(1, Number(searchParams.get('page')) || 1);
 
   // Local keyword input synchronized with URL search without effect-driven state mutations
@@ -107,11 +100,11 @@ export const ProductCatalogPage: React.FC = () => {
       category: effectiveCategorySlug || undefined,
       metalType: metalType || undefined,
       purity: purity || undefined,
-      sort,
+      sort: 'display_order',
       page,
       limit: 12
     }),
-    [urlSearch, effectiveCategoryId, effectiveCategorySlug, metalType, purity, sort, page]
+    [urlSearch, effectiveCategoryId, effectiveCategorySlug, metalType, purity, page]
   );
 
   const { data, isLoading, isFetching } = useQuery({
@@ -190,13 +183,6 @@ export const ProductCatalogPage: React.FC = () => {
     });
   };
 
-  const handleSortChange = (nextSort: string) => {
-    updateUrlParams((next) => {
-      if (nextSort && nextSort !== 'display_order') next.set('sort', nextSort);
-      else next.delete('sort');
-    });
-  };
-
   const handlePageChange = (nextPage: number) => {
     const clamped = Math.max(1, Math.min(totalPages, nextPage));
     updateUrlParams((next) => {
@@ -240,7 +226,6 @@ export const ProductCatalogPage: React.FC = () => {
     if (mobileDraftCategoryId) next.set('categoryId', mobileDraftCategoryId);
     if (mobileDraftMetal) next.set('metalType', mobileDraftMetal);
     if (mobileDraftPurity) next.set('purity', mobileDraftPurity);
-    if (sort && sort !== 'display_order') next.set('sort', sort);
     setSearchParams(next);
     setMobileFiltersOpen(false);
   };
@@ -284,8 +269,6 @@ export const ProductCatalogPage: React.FC = () => {
   }
 
   const activeFilterCount = activeFilterChips.length;
-  const activeSortLabel =
-    SORT_OPTIONS.find((opt) => opt.value === sort)?.label || 'Curated Order';
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
@@ -318,25 +301,6 @@ export const ProductCatalogPage: React.FC = () => {
                 </span>
               )}
             </button>
-
-            <div className="flex items-center gap-2">
-              <label htmlFor="catalog-sort-select" className="text-xs text-stone-500 hidden sm:inline">
-                Sort:
-              </label>
-              <select
-                id="catalog-sort-select"
-                value={sort}
-                onChange={(e) => handleSortChange(e.target.value)}
-                aria-label="Sort products by"
-                className="text-xs bg-white border border-stone-300 rounded-lg px-2.5 py-2 outline-none focus:border-gold-500 font-medium text-stone-800 transition-colors"
-              >
-                {SORT_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </div>
           </div>
         </div>
       </ScrollReveal>
@@ -537,10 +501,11 @@ export const ProductCatalogPage: React.FC = () => {
                   </>
                 )}
               </p>
-              <span className="text-[11px] text-stone-500">
-                Sorted by <strong className="text-stone-700">{activeSortLabel}</strong>
-                {isFetching && !isLoading ? ' • Updating...' : ''}
-              </span>
+              {isFetching && !isLoading && (
+                <span className="text-[11px] text-stone-500 italic">
+                  Updating...
+                </span>
+              )}
             </div>
 
             {activeFilterChips.length > 0 && (
@@ -579,7 +544,7 @@ export const ProductCatalogPage: React.FC = () => {
             </div>
           ) : products.length > 0 ? (
             <StaggerReveal
-              key={`${effectiveCategoryId}-${effectiveCategorySlug}-${metalType}-${purity}-${sort}-${page}-${urlSearch}`}
+              key={`${effectiveCategoryId}-${effectiveCategorySlug}-${metalType}-${purity}-${page}-${urlSearch}`}
               staggerMs={55}
               className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
             >

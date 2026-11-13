@@ -12,6 +12,7 @@ import {
   Scale,
   Lock,
   MessageCircle,
+  ArrowRight,
 } from 'lucide-react';
 import { categoriesApi } from '@/services/api/categories.api';
 import { ScrollReveal, StaggerReveal } from '@/components/motion';
@@ -29,6 +30,16 @@ export const Footer: React.FC = () => {
     .filter((category) => category.isActive !== false)
     .sort((a, b) => (a.sortOrder ?? a.displayOrder ?? 0) - (b.sortOrder ?? b.displayOrder ?? 0))
     .slice(0, 6);
+
+  const formatCategoryName = (name: string) => {
+    if (!name) return '';
+    const trimmed = name.trim();
+    if (trimmed.toLowerCase() === 'new') return 'New Arrivals';
+    return trimmed
+      .split(' ')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
 
   const storeAddress = primaryStore
     ? [
@@ -61,51 +72,67 @@ export const Footer: React.FC = () => {
   });
 
   return (
-    <footer className="bg-burgundy-950 text-gold-100 border-t-2 border-gold-600/40 mt-auto">
+    <footer className="bg-[#180306] text-gold-100 border-t-2 border-[#C49A3A]/40 mt-auto">
       {/* Trust Badges Bar */}
-      <div className="border-b border-gold-800/50 bg-burgundy-900/60 py-6 px-4">
+      <div className="border-b border-[#C49A3A]/25 bg-gradient-to-r from-[#180306] via-[#2A050D] to-[#180306] py-7 px-4">
         <StaggerReveal staggerMs={75} className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-          <div className="group flex flex-col items-center gap-2">
-            <div className="w-12 h-12 rounded-full bg-gold-400/10 border border-gold-400/30 group-hover:border-gold-400 group-hover:bg-gold-400/20 flex items-center justify-center text-gold-300 transition-all duration-300">
-              <Award className="w-6 h-6 transition-transform duration-300 group-hover:scale-105" />
+          <div className="group flex flex-col items-center gap-2.5 p-2">
+            <div className="w-13 h-13 p-3 rounded-full bg-gradient-to-br from-[#C49A3A]/20 to-[#180306] border border-[#C49A3A]/40 group-hover:border-[#FFE28A] group-hover:bg-[#C49A3A]/25 flex items-center justify-center text-[#F5DE9C] transition-all duration-300 shadow-md">
+              <Award className="w-6 h-6 transition-transform duration-300 group-hover:scale-110 text-[#FFE28A]" />
             </div>
-            <h4 className="font-serif font-bold text-sm text-gold-200">Since 1987 Legacy</h4>
-            <p className="text-xs text-gold-300/70">39+ Years of Unwavering Trust</p>
+            <h4 className="font-serif font-bold text-sm tracking-wide text-[#F5DE9C] group-hover:text-white transition-colors">
+              Since 1987 Legacy
+            </h4>
+            <p className="text-[11px] sm:text-xs text-gold-300/75 leading-tight">
+              39+ Years of Unwavering Trust
+            </p>
           </div>
 
-          <div className="group flex flex-col items-center gap-2">
-            <div className="w-12 h-12 rounded-full bg-gold-400/10 border border-gold-400/30 group-hover:border-gold-400 group-hover:bg-gold-400/20 flex items-center justify-center text-gold-300 transition-all duration-300">
-              <ShieldCheck className="w-6 h-6 transition-transform duration-300 group-hover:scale-105" />
+          <div className="group flex flex-col items-center gap-2.5 p-2">
+            <div className="w-13 h-13 p-3 rounded-full bg-gradient-to-br from-[#C49A3A]/20 to-[#180306] border border-[#C49A3A]/40 group-hover:border-[#FFE28A] group-hover:bg-[#C49A3A]/25 flex items-center justify-center text-[#F5DE9C] transition-all duration-300 shadow-md">
+              <ShieldCheck className="w-6 h-6 transition-transform duration-300 group-hover:scale-110 text-[#FFE28A]" />
             </div>
-            <h4 className="font-serif font-bold text-sm text-gold-200">100% BIS Hallmarked</h4>
-            <p className="text-xs text-gold-300/70">Certified 916 Gold with Unique HUID</p>
+            <h4 className="font-serif font-bold text-sm tracking-wide text-[#F5DE9C] group-hover:text-white transition-colors">
+              100% BIS Hallmarked
+            </h4>
+            <p className="text-[11px] sm:text-xs text-gold-300/75 leading-tight">
+              Certified 916 Gold with Unique HUID
+            </p>
           </div>
 
-          <div className="group flex flex-col items-center gap-2">
-            <div className="w-12 h-12 rounded-full bg-gold-400/10 border border-gold-400/30 group-hover:border-gold-400 group-hover:bg-gold-400/20 flex items-center justify-center text-gold-300 transition-all duration-300">
-              <Gem className="w-6 h-6 transition-transform duration-300 group-hover:scale-105" />
+          <div className="group flex flex-col items-center gap-2.5 p-2">
+            <div className="w-13 h-13 p-3 rounded-full bg-gradient-to-br from-[#C49A3A]/20 to-[#180306] border border-[#C49A3A]/40 group-hover:border-[#FFE28A] group-hover:bg-[#C49A3A]/25 flex items-center justify-center text-[#F5DE9C] transition-all duration-300 shadow-md">
+              <Gem className="w-6 h-6 transition-transform duration-300 group-hover:scale-110 text-[#FFE28A]" />
             </div>
-            <h4 className="font-serif font-bold text-sm text-gold-200">Certified Diamonds</h4>
-            <p className="text-xs text-gold-300/70">Conflict-Free IGI &amp; SGL Graded Gems</p>
+            <h4 className="font-serif font-bold text-sm tracking-wide text-[#F5DE9C] group-hover:text-white transition-colors">
+              Certified Diamonds
+            </h4>
+            <p className="text-[11px] sm:text-xs text-gold-300/75 leading-tight">
+              Conflict-Free IGI &amp; SGL Graded Gems
+            </p>
           </div>
 
-          <div className="group flex flex-col items-center gap-2">
-            <div className="w-12 h-12 rounded-full bg-gold-400/10 border border-gold-400/30 group-hover:border-gold-400 group-hover:bg-gold-400/20 flex items-center justify-center text-gold-300 transition-all duration-300">
-              <Scale className="w-6 h-6 transition-transform duration-300 group-hover:scale-105" />
+          <div className="group flex flex-col items-center gap-2.5 p-2">
+            <div className="w-13 h-13 p-3 rounded-full bg-gradient-to-br from-[#C49A3A]/20 to-[#180306] border border-[#C49A3A]/40 group-hover:border-[#FFE28A] group-hover:bg-[#C49A3A]/25 flex items-center justify-center text-[#F5DE9C] transition-all duration-300 shadow-md">
+              <Scale className="w-6 h-6 transition-transform duration-300 group-hover:scale-110 text-[#FFE28A]" />
             </div>
-            <h4 className="font-serif font-bold text-sm text-gold-200">Exact Weight Precision</h4>
-            <p className="text-xs text-gold-300/70">Certified Purity &amp; Exact Gram Specifications</p>
+            <h4 className="font-serif font-bold text-sm tracking-wide text-[#F5DE9C] group-hover:text-white transition-colors">
+              Exact Weight Precision
+            </h4>
+            <p className="text-[11px] sm:text-xs text-gold-300/75 leading-tight">
+              Certified Purity &amp; Exact Gram Specs
+            </p>
           </div>
         </StaggerReveal>
       </div>
 
       {/* Main 4-Column Footer Links & Showroom Info */}
       <ScrollReveal variant="fade-up" distance={16} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-12">
           {/* Column 1: Brand Identity */}
           <div className="lg:col-span-4 space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-gold-400 bg-burgundy-900 p-0.5 shadow-luxury-gold shrink-0">
+            <div className="flex items-center gap-3.5">
+              <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-[#C49A3A] bg-[#24050B] p-0.5 shadow-lg shadow-black/50 shrink-0">
                 <img
                   src="/logo.jpg"
                   alt="Sri Ramas Jewellery"
@@ -113,125 +140,154 @@ export const Footer: React.FC = () => {
                 />
               </div>
               <div>
-                <h3 className="font-serif text-xl font-bold tracking-wider text-gold-100">
+                <h3 className="font-serif text-xl sm:text-2xl font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-[#FAF7F0] via-[#FFE28A] to-[#F5DE9C]">
                   SRI RAMAS JEWELLERY
                 </h3>
-                <p className="text-xs text-gold-400 font-serif">ஸ்ரீ ராமாஸ் ஜுவல்லரி • Since 1987</p>
+                <p className="text-xs text-[#C49A3A] font-serif tracking-wide">ஸ்ரீ ராமாஸ் ஜுவல்லரி • Since 1987</p>
               </div>
             </div>
 
-            <p className="text-xs sm:text-sm text-gold-200/80 leading-relaxed">
-              Established in 1987, Sri Ramas Jewellery is a distinguished South Indian destination for temple heirlooms, bridal gold ornaments, silver treasures, and certified diamonds.
+            <p className="text-xs sm:text-[13px] text-gold-200/80 leading-relaxed font-sans">
+              Established in 1987, Sri Ramas Jewellery is a distinguished South Indian destination for authentic temple heirlooms, bridal gold ornaments, silver treasures, and certified solitaires.
             </p>
 
-            <div className="bg-burgundy-900/80 border border-gold-600/30 rounded-lg p-3 text-xs text-gold-300/80 space-y-1">
-              <div className="flex items-center gap-1.5 font-semibold text-gold-400">
-                <ShieldCheck className="w-4 h-4 shrink-0" />
-                <span>Showroom Showcase &amp; Advisory Platform</span>
-              </div>
-              <p className="text-[11px] leading-relaxed">
-                Online checkout, shopping carts, and payment processing are disabled platform-wide. Every selection and enrolment is personally guided at our physical showrooms.
-              </p>
+            <div className="pt-2 flex flex-wrap items-center gap-2.5">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#C49A3A]/10 border border-[#C49A3A]/30 text-[11px] font-medium text-[#F5DE9C]">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                BIS 916 Hallmarked
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#C49A3A]/10 border border-[#C49A3A]/30 text-[11px] font-medium text-[#F5DE9C]">
+                South Indian Heritage
+              </span>
             </div>
           </div>
 
           {/* Column 2: Jewellery Categories */}
           <div className="lg:col-span-2">
-            <h4 className="font-serif font-bold text-sm tracking-wider uppercase text-gold-300 mb-4 border-b border-gold-800 pb-2">
-              Jewellery Categories
-            </h4>
-            <ul className="space-y-2.5 text-xs text-gold-200/85">
+            <div>
+              <h4 className="font-serif font-bold text-sm tracking-[0.14em] uppercase text-transparent bg-clip-text bg-gradient-to-r from-[#F5DE9C] to-[#C49A3A]">
+                Categories
+              </h4>
+              <div className="h-0.5 w-8 bg-gradient-to-r from-[#C49A3A] to-transparent mt-1.5 mb-4" />
+            </div>
+            <ul className="space-y-2.5 text-xs sm:text-[13px]">
               {activeFooterCategories.length > 0 ? (
                 activeFooterCategories.map((category) => (
                   <li key={category._id}>
                     <Link
                       to={`/products?categoryId=${category._id}`}
-                      className="hover:text-gold-300 transition-colors inline-block"
+                      className="group inline-flex items-center gap-2 text-gold-200/80 hover:text-[#FFE28A] transition-all duration-200 hover:translate-x-1"
                     >
-                      {category.name}
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#C49A3A]/60 group-hover:bg-[#FFE28A] group-hover:scale-125 transition-all shrink-0" />
+                      <span>{formatCategoryName(category.name)}</span>
                     </Link>
                   </li>
                 ))
               ) : (
                 <li>
-                  <Link to="/products" className="hover:text-gold-300 transition-colors">
-                    Complete Collection Showcase
+                  <Link
+                    to="/products"
+                    className="group inline-flex items-center gap-2 text-gold-200/80 hover:text-[#FFE28A] transition-all duration-200 hover:translate-x-1"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#C49A3A]/60 group-hover:bg-[#FFE28A] transition-all shrink-0" />
+                    <span>Complete Collections</span>
                   </Link>
                 </li>
               )}
-              <li className="pt-1">
-                <Link to="/categories" className="hover:text-gold-300 transition-colors font-semibold text-gold-400">
-                  View All Categories →
-                </Link>
-              </li>
             </ul>
           </div>
 
           {/* Column 3: Services & Programmes */}
           <div className="lg:col-span-3">
-            <h4 className="font-serif font-bold text-sm tracking-wider uppercase text-gold-300 mb-4 border-b border-gold-800 pb-2">
-              Services &amp; Programmes
-            </h4>
-            <ul className="space-y-2.5 text-xs text-gold-200/85">
+            <div>
+              <h4 className="font-serif font-bold text-sm tracking-[0.14em] uppercase text-transparent bg-clip-text bg-gradient-to-r from-[#F5DE9C] to-[#C49A3A]">
+                Services &amp; Programmes
+              </h4>
+              <div className="h-0.5 w-8 bg-gradient-to-r from-[#C49A3A] to-transparent mt-1.5 mb-4" />
+            </div>
+            <ul className="space-y-2.5 text-xs sm:text-[13px]">
               <li>
-                <Link to="/schemes" className="hover:text-gold-300 transition-colors">
-                  Jewellery Savings Schemes
+                <Link
+                  to="/schemes"
+                  className="group inline-flex items-center gap-2 text-gold-200/80 hover:text-[#FFE28A] transition-all duration-200 hover:translate-x-1"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#C49A3A]/60 group-hover:bg-[#FFE28A] group-hover:scale-125 transition-all shrink-0" />
+                  <span>Jewellery Savings Schemes</span>
                 </Link>
               </li>
               <li>
-                <Link to="/digigold" className="hover:text-gold-300 transition-colors">
-                  DigiGold Rates &amp; Calculator
+                <Link
+                  to="/digigold"
+                  className="group inline-flex items-center gap-2 text-gold-200/80 hover:text-[#FFE28A] transition-all duration-200 hover:translate-x-1"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#C49A3A]/60 group-hover:bg-[#FFE28A] group-hover:scale-125 transition-all shrink-0" />
+                  <span>DigiGold Rates &amp; Calculator</span>
                 </Link>
               </li>
               <li>
-                <Link to="/digisilver" className="hover:text-gold-300 transition-colors">
-                  DigiSilver Rates &amp; Calculator
+                <Link
+                  to="/digisilver"
+                  className="group inline-flex items-center gap-2 text-gold-200/80 hover:text-[#FFE28A] transition-all duration-200 hover:translate-x-1"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#C49A3A]/60 group-hover:bg-[#FFE28A] group-hover:scale-125 transition-all shrink-0" />
+                  <span>DigiSilver Rates &amp; Calculator</span>
                 </Link>
               </li>
               <li>
-                <Link to="/rates" className="hover:text-gold-300 transition-colors">
-                  Live Gold &amp; Silver Bullion Rates
+                <Link
+                  to="/about"
+                  className="group inline-flex items-center gap-2 text-gold-200/80 hover:text-[#FFE28A] transition-all duration-200 hover:translate-x-1"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#C49A3A]/60 group-hover:bg-[#FFE28A] group-hover:scale-125 transition-all shrink-0" />
+                  <span>Our Heritage &amp; Craftsmanship</span>
                 </Link>
               </li>
               <li>
-                <Link to="/about" className="hover:text-gold-300 transition-colors">
-                  Our Heritage &amp; Craftsmanship
-                </Link>
-              </li>
-              <li>
-                <Link to="/stores" className="hover:text-gold-300 transition-colors">
-                  Showroom Directory
+                <Link
+                  to="/contact"
+                  className="group inline-flex items-center gap-2 text-gold-200/80 hover:text-[#FFE28A] transition-all duration-200 hover:translate-x-1"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#C49A3A]/60 group-hover:bg-[#FFE28A] group-hover:scale-125 transition-all shrink-0" />
+                  <span>Contact &amp; Showroom Advisory</span>
                 </Link>
               </li>
             </ul>
           </div>
 
           {/* Column 4: Showroom Details & Contact */}
-          <div className="lg:col-span-3">
-            <h4 className="font-serif font-bold text-sm tracking-wider uppercase text-gold-300 mb-4 border-b border-gold-800 pb-2">
-              {primaryStore?.storeName || primaryStore?.name || 'Showroom Contact'}
-            </h4>
-            <div className="space-y-3 text-xs text-gold-200/85">
+          <div className="lg:col-span-3 space-y-3.5">
+            <div>
+              <h4 className="font-serif font-bold text-sm tracking-[0.14em] uppercase text-transparent bg-clip-text bg-gradient-to-r from-[#F5DE9C] to-[#C49A3A]">
+                {primaryStore?.storeName || primaryStore?.name || 'Showroom Contact'}
+              </h4>
+              <div className="h-0.5 w-8 bg-gradient-to-r from-[#C49A3A] to-transparent mt-1.5 mb-4" />
+            </div>
+
+            <div className="space-y-3 text-xs sm:text-[13px] text-gold-200/85">
               {storeAddress ? (
                 <div className="flex items-start gap-2.5">
-                  <MapPin className="w-4 h-4 text-gold-400 shrink-0 mt-0.5" />
-                  <span className="leading-relaxed">{storeAddress}</span>
+                  <MapPin className="w-4 h-4 text-[#C49A3A] shrink-0 mt-0.5" />
+                  <span className="leading-relaxed text-gold-200/90">{storeAddress}</span>
                 </div>
               ) : (
                 <div className="flex items-start gap-2.5">
-                  <MapPin className="w-4 h-4 text-gold-400 shrink-0 mt-0.5" />
-                  <Link to="/stores" className="hover:text-gold-300 underline">
-                    View Showroom Directory
+                  <MapPin className="w-4 h-4 text-[#C49A3A] shrink-0 mt-0.5" />
+                  <Link to="/contact" className="hover:text-[#FFE28A] underline">
+                    Showroom Advisory &amp; Location
                   </Link>
                 </div>
               )}
 
               {primaryPhones.length > 0 && (
                 <div className="flex items-start gap-2.5">
-                  <Phone className="w-4 h-4 text-gold-400 shrink-0 mt-0.5" />
+                  <Phone className="w-4 h-4 text-[#C49A3A] shrink-0 mt-0.5" />
                   <div className="flex flex-wrap gap-x-2 gap-y-1">
                     {primaryPhones.map((num, idx) => (
-                      <a key={idx} href={`tel:${num.replace(/\s+/g, '')}`} className="hover:text-gold-300">
+                      <a
+                        key={idx}
+                        href={`tel:${num.replace(/\s+/g, '')}`}
+                        className="hover:text-[#FFE28A] text-gold-100 font-medium transition-colors"
+                      >
                         {num}
                       </a>
                     ))}
@@ -240,31 +296,32 @@ export const Footer: React.FC = () => {
               )}
 
               {whatsappNumber && (
-                <div className="flex items-center gap-2.5">
-                  <MessageCircle className="w-4 h-4 text-[#25D366] shrink-0" />
+                <div className="pt-1">
                   <a
                     href={showroomWhatsAppUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="hover:text-gold-300 font-medium text-gold-200"
+                    className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-[#25D366]/15 hover:bg-[#25D366]/25 border border-[#25D366]/40 text-[#25D366] hover:text-white transition-all duration-200 font-medium text-xs sm:text-[13px] group shadow-sm"
                   >
-                    WhatsApp Showroom Desk →
+                    <MessageCircle className="w-4 h-4 text-[#25D366] group-hover:scale-110 transition-transform" />
+                    <span>WhatsApp Showroom Desk</span>
+                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                   </a>
                 </div>
               )}
 
               {primaryStore?.email && (
-                <div className="flex items-center gap-2.5">
-                  <Mail className="w-4 h-4 text-gold-400 shrink-0" />
-                  <a href={`mailto:${primaryStore.email}`} className="hover:text-gold-300 break-all">
+                <div className="flex items-center gap-2.5 pt-0.5">
+                  <Mail className="w-4 h-4 text-[#C49A3A] shrink-0" />
+                  <a href={`mailto:${primaryStore.email}`} className="hover:text-[#FFE28A] break-all transition-colors">
                     {primaryStore.email}
                   </a>
                 </div>
               )}
 
               {hasOpeningHours && (
-                <div className="flex items-start gap-2.5">
-                  <Clock className="w-4 h-4 text-gold-400 shrink-0 mt-0.5" />
+                <div className="flex items-start gap-2.5 text-gold-300/80">
+                  <Clock className="w-4 h-4 text-[#C49A3A] shrink-0 mt-0.5" />
                   <span>{primaryStore?.openingHours}</span>
                 </div>
               )}
@@ -273,22 +330,22 @@ export const Footer: React.FC = () => {
         </div>
 
         {/* Bottom Bar: Copyright & Compliance */}
-        <div className="border-t border-gold-800/40 mt-12 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-gold-400/80">
+        <div className="border-t border-[#C49A3A]/25 mt-12 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] sm:text-xs text-gold-300/70">
           <div>
-            © 1987–2026 <span className="text-gold-300 font-semibold">Sri Ramas Jewellery</span>. All Rights Reserved. Master Crafted in India.
+            © 1987–2026 <span className="text-gold-200 font-semibold">Sri Ramas Jewellery</span>. All Rights Reserved. Master Crafted in India.
           </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-4">
-            <Link to="/privacy-policy" className="hover:text-gold-200 transition-colors">
+          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
+            <Link to="/privacy-policy" className="hover:text-[#FFE28A] transition-colors">
               Privacy Policy
             </Link>
-            <span>•</span>
-            <Link to="/terms" className="hover:text-gold-200 transition-colors">
+            <span className="text-[#C49A3A]/40">•</span>
+            <Link to="/terms" className="hover:text-[#FFE28A] transition-colors">
               Terms of Service
             </Link>
-            <span>•</span>
-            <Link to="/admin/login" className="hover:text-gold-200 flex items-center gap-1 transition-colors">
-              <Lock className="w-3 h-3 text-gold-400" />
+            <span className="text-[#C49A3A]/40">•</span>
+            <Link to="/admin/login" className="hover:text-[#FFE28A] flex items-center gap-1.5 transition-colors">
+              <Lock className="w-3.5 h-3.5 text-[#C49A3A]" />
               <span>Administrative Portal</span>
             </Link>
           </div>

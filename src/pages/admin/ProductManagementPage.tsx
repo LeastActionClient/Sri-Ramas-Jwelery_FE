@@ -53,8 +53,17 @@ interface ProductFormState {
   categoryId: string;
   metalType: 'GOLD' | 'SILVER' | 'PLATINUM' | 'DIAMOND';
   purity: string;
+  jewelleryType: string;
   grossWeightGrams: string;
   netMetalWeightGrams: string;
+  stoneWeightGrams: string;
+  stoneDetails: string;
+  gemstone: string;
+  design: string;
+  craftsmanship: string;
+  gender: 'WOMEN' | 'MEN' | 'UNISEX' | 'KIDS';
+  occasion: string;
+  huid: string;
   hallmarkStatus: boolean;
   description: string;
   imageUrl: string;
@@ -76,8 +85,17 @@ const createEmptyProductForm = (defaultCategoryId = ''): ProductFormState => ({
   categoryId: defaultCategoryId,
   metalType: 'GOLD',
   purity: '',
+  jewelleryType: '',
   grossWeightGrams: '',
   netMetalWeightGrams: '',
+  stoneWeightGrams: '',
+  stoneDetails: '',
+  gemstone: '',
+  design: '',
+  craftsmanship: '',
+  gender: 'WOMEN',
+  occasion: '',
+  huid: '',
   hallmarkStatus: false,
   description: '',
   imageUrl: '',
@@ -269,6 +287,7 @@ export const ProductManagementPage: React.FC = () => {
       categoryId: product.categoryId || '',
       metalType: (product.metalType || product.metal?.metalType || 'GOLD') as any,
       purity: product.purity || product.metal?.purity || '',
+      jewelleryType: String(product.categoryAttributes?.jewelleryType || product.categoryAttributes?.productType || ''),
       grossWeightGrams:
         product.grossWeightGrams && product.grossWeightGrams > 0
           ? String(product.grossWeightGrams)
@@ -277,6 +296,17 @@ export const ProductManagementPage: React.FC = () => {
         product.netMetalWeightGrams && product.netMetalWeightGrams > 0
           ? String(product.netMetalWeightGrams)
           : '',
+      stoneWeightGrams:
+        product.stoneWeightGrams && Number(product.stoneWeightGrams) > 0
+          ? String(product.stoneWeightGrams)
+          : '',
+      stoneDetails: String(product.categoryAttributes?.stoneDetails || product.categoryAttributes?.stones || ''),
+      gemstone: String(product.categoryAttributes?.gemstone || product.categoryAttributes?.gemstones || ''),
+      design: String(product.categoryAttributes?.design || product.categoryAttributes?.designDetails || ''),
+      craftsmanship: String(product.categoryAttributes?.craftsmanship || product.categoryAttributes?.makingDetails || ''),
+      gender: (product.gender as any) || 'WOMEN',
+      occasion: Array.isArray(product.occasion) ? product.occasion.join(', ') : '',
+      huid: product.huid || '',
       hallmarkStatus: Boolean(product.hallmarkStatus),
       description: product.description || '',
       imageUrl: primaryUrl,
@@ -386,6 +416,16 @@ export const ProductManagementPage: React.FC = () => {
         ? Math.max(0, Math.trunc(Number(formState.displayOrder)))
         : 0;
 
+      const stoneWeightNum = formState.stoneWeightGrams.trim() ? Number(formState.stoneWeightGrams) : 0;
+      const categoryAttributes = {
+        ...(editingProduct?.categoryAttributes || {}),
+        ...(formState.jewelleryType.trim() ? { jewelleryType: formState.jewelleryType.trim() } : {}),
+        ...(formState.stoneDetails.trim() ? { stoneDetails: formState.stoneDetails.trim() } : {}),
+        ...(formState.gemstone.trim() ? { gemstone: formState.gemstone.trim() } : {}),
+        ...(formState.design.trim() ? { design: formState.design.trim() } : {}),
+        ...(formState.craftsmanship.trim() ? { craftsmanship: formState.craftsmanship.trim() } : {}),
+      };
+
       const payload: ProductAdminPayload = {
         name: formState.name.trim(),
         ...(shouldSendSku ? { sku: cleanedSku } : {}),
@@ -395,6 +435,11 @@ export const ProductManagementPage: React.FC = () => {
         description: formState.description.trim(),
         grossWeightGrams: gross,
         netMetalWeightGrams: net,
+        stoneWeightGrams: stoneWeightNum > 0 ? stoneWeightNum : 0,
+        gender: formState.gender,
+        occasion: formState.occasion.split(',').map((s) => s.trim()).filter(Boolean),
+        huid: formState.huid.trim() || null,
+        categoryAttributes,
         hallmarkStatus: formState.hallmarkStatus,
         isFeatured: formState.isFeatured,
         isNewArrival: formState.isNewArrival,
@@ -1089,6 +1134,139 @@ export const ProductManagementPage: React.FC = () => {
                     </div>
                   );
                 })()}
+
+                {/* Additional Jewellery Specifications & Craftsmanship */}
+                <div className="bg-[#FAF7F0] border border-gold-300/70 rounded-xl p-4 space-y-3.5">
+                  <h3 className="font-serif font-bold text-xs uppercase tracking-wider text-burgundy-950 flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-gold-600" />
+                    <span>Jewellery Specifications &amp; Craftsmanship (Public Website)</span>
+                  </h3>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block font-semibold uppercase text-stone-700 mb-1">
+                        Jewellery Type / Subtype
+                      </label>
+                      <input
+                        type="text"
+                        value={formState.jewelleryType}
+                        onChange={(e) => setFormState({ ...formState, jewelleryType: e.target.value })}
+                        placeholder="e.g. Traditional Ring, Choker"
+                        className="w-full p-2 border rounded-lg bg-white outline-none focus:border-gold-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-semibold uppercase text-stone-700 mb-1">
+                        Stone Weight (g, Optional)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={formState.stoneWeightGrams}
+                        onChange={(e) => setFormState({ ...formState, stoneWeightGrams: e.target.value })}
+                        placeholder="e.g. 0.45"
+                        className="w-full p-2 border rounded-lg bg-white outline-none focus:border-gold-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-semibold uppercase text-stone-700 mb-1">
+                        HUID Hallmark No.
+                      </label>
+                      <input
+                        type="text"
+                        value={formState.huid}
+                        onChange={(e) => setFormState({ ...formState, huid: e.target.value.toUpperCase() })}
+                        placeholder="e.g. AB1234"
+                        className="w-full p-2 border rounded-lg bg-white font-mono uppercase outline-none focus:border-gold-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-semibold uppercase text-stone-700 mb-1">
+                        Stone Details &amp; Inlays
+                      </label>
+                      <input
+                        type="text"
+                        value={formState.stoneDetails}
+                        onChange={(e) => setFormState({ ...formState, stoneDetails: e.target.value })}
+                        placeholder="e.g. Natural Kemp Rubies & Emerald Inlays"
+                        className="w-full p-2 border rounded-lg bg-white outline-none focus:border-gold-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-semibold uppercase text-stone-700 mb-1">
+                        Gemstone / Diamond Details
+                      </label>
+                      <input
+                        type="text"
+                        value={formState.gemstone}
+                        onChange={(e) => setFormState({ ...formState, gemstone: e.target.value })}
+                        placeholder="e.g. Cabochon Rubies, Cultured Pearls"
+                        className="w-full p-2 border rounded-lg bg-white outline-none focus:border-gold-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-semibold uppercase text-stone-700 mb-1">
+                        Design &amp; Style
+                      </label>
+                      <input
+                        type="text"
+                        value={formState.design}
+                        onChange={(e) => setFormState({ ...formState, design: e.target.value })}
+                        placeholder="e.g. Heritage Floral Temple Nakshi"
+                        className="w-full p-2 border rounded-lg bg-white outline-none focus:border-gold-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-semibold uppercase text-stone-700 mb-1">
+                        Craftsmanship &amp; Making
+                      </label>
+                      <input
+                        type="text"
+                        value={formState.craftsmanship}
+                        onChange={(e) => setFormState({ ...formState, craftsmanship: e.target.value })}
+                        placeholder="e.g. Master Artisans of Tamil Nadu"
+                        className="w-full p-2 border rounded-lg bg-white outline-none focus:border-gold-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-semibold uppercase text-stone-700 mb-1">
+                        Gender / Ideal For
+                      </label>
+                      <select
+                        value={formState.gender}
+                        onChange={(e) => setFormState({ ...formState, gender: e.target.value as any })}
+                        className="w-full p-2 border rounded-lg bg-white outline-none focus:border-gold-500"
+                      >
+                        <option value="WOMEN">Women</option>
+                        <option value="MEN">Men</option>
+                        <option value="UNISEX">Unisex</option>
+                        <option value="KIDS">Kids</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block font-semibold uppercase text-stone-700 mb-1">
+                        Occasions (Comma Separated)
+                      </label>
+                      <input
+                        type="text"
+                        value={formState.occasion}
+                        onChange={(e) => setFormState({ ...formState, occasion: e.target.value })}
+                        placeholder="e.g. Bridal, Festive, Heirloom Gifting"
+                        className="w-full p-2 border rounded-lg bg-white outline-none focus:border-gold-500"
+                      />
+                    </div>
+                  </div>
+                </div>
 
                 <div className="space-y-2">
                   <div className="flex flex-wrap items-center justify-between gap-2">

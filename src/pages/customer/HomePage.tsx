@@ -10,10 +10,8 @@ import {
   Gem,
   Clock,
   MapPin,
-  MessageSquare,
   Phone,
   RefreshCw,
-  Building2,
   ExternalLink
 } from 'lucide-react';
 import heroVideo from '@/assets/gemini_generated_video_069d4352.mp4';
@@ -29,7 +27,6 @@ import { PromotionalBannerCarousel } from '@/components/customer/PromotionalBann
 import {
   AnimatedCTA,
   AnimatedHeading,
-  ImageReveal,
   ScrollReveal,
   StaggerReveal
 } from '@/components/motion';
@@ -42,7 +39,6 @@ const ShowroomCard: React.FC<{
   isSingleLayout: boolean;
   whatsappHref: string;
 }> = ({ store, isSingleLayout, whatsappHref }) => {
-  const [imgFailed, setImgFailed] = useState(false);
   const fullAddress = [
     store.addressLine1 || store.address,
     store.addressLine2,
@@ -59,163 +55,150 @@ const ShowroomCard: React.FC<{
       ? [store.phone]
       : [];
 
-  const showroomPhoto = store.imageUrl || store.images?.[0];
-  const hasPhoto = Boolean(showroomPhoto) && !imgFailed;
+  const directionsUrl =
+    store.googleMapsUrl && store.googleMapsUrl.trim()
+      ? store.googleMapsUrl.trim()
+      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+          [store.name || store.storeName, fullAddress].filter(Boolean).join(', ')
+        )}`;
+
+  // Use CMS-configured image if provided, otherwise the generated South Indian gold jewellery background
+  const bgImage = store.imageUrl || store.images?.[0] || '/images/showroom-jewellery-bg.jpg';
 
   return (
-    <ScrollReveal variant="fade-up" distance={22}>
+    <ScrollReveal variant="fade-up" distance={20}>
       <article
-        className={`group/showroom bg-gradient-to-br from-[#FCF7EC] via-[#FFFDF8] to-[#F7EBD2] rounded-2xl border border-[#C69B3D]/55 hover:border-[#C69B3D] shadow-luxury hover:shadow-[0_18px_40px_-12px_rgba(69,10,19,0.28)] transition-all duration-[420ms] ease-[cubic-bezier(0.22,1,0.36,1)] overflow-hidden ${
-          isSingleLayout ? 'grid grid-cols-1 md:grid-cols-12' : 'flex flex-col justify-between'
+        className={`group/showroom relative overflow-hidden rounded-2xl sm:rounded-3xl border-2 border-[#C49A3A]/70 hover:border-[#E5C775] shadow-luxury hover:shadow-[0_24px_50px_-10px_rgba(56,7,17,0.55)] transition-all duration-500 ease-out bg-[#1A0307] ${
+          isSingleLayout ? 'max-w-6xl mx-auto w-full' : 'w-full'
         }`}
       >
-        {/* Optional Showroom Visual / Heritage Architectural Frame */}
-        <div
-          className={`relative overflow-hidden bg-gradient-to-br from-[#4D0F18] via-[#35060E] to-[#1D0206] ${
-            isSingleLayout ? 'md:col-span-5 min-h-[240px] md:min-h-full' : 'h-52'
-          }`}
-        >
-          {/* Warm ambient golden radial lighting behind showroom visual */}
+        {/* Background South Indian Gold Jewellery Visual */}
+        <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
+          <img
+            src={bgImage}
+            alt="Sri Ramas Showroom Jewellery Ambiance"
+            className="w-full h-full object-cover object-center transition-transform duration-700 ease-out group-hover/showroom:scale-[1.04]"
+          />
+          {/* Deep Burgundy & Dark Wine Gradient Scrim - Horizontal (Left-to-Right contrast protection) */}
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute -top-12 -right-12 w-48 h-48 rounded-full bg-[#D4AF37]/15 blur-2xl group-hover/showroom:bg-[#D4AF37]/25 transition-colors duration-500"
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background:
+                'linear-gradient(90deg, rgba(20, 2, 5, 0.97) 0%, rgba(36, 5, 11, 0.92) 42%, rgba(24, 3, 7, 0.68) 72%, rgba(20, 2, 5, 0.35) 100%)',
+            }}
           />
-
-          {hasPhoto ? (
-            <ImageReveal
-              src={showroomPhoto}
-              alt={store.name}
-              loading="lazy"
-              className="w-full h-full object-cover object-center transition-transform duration-[480ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/showroom:scale-[1.06]"
-              onImageError={() => setImgFailed(true)}
-            />
-          ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center relative transition-transform duration-[450ms] ease-out group-hover/showroom:scale-[1.02]">
-              <div
-                className="absolute inset-3 rounded-xl border border-[#D4AF37]/30 group-hover/showroom:border-[#E6C56F]/60 transition-colors duration-400 pointer-events-none"
-                aria-hidden="true"
-              />
-              {/* Architectural archway flourish */}
-              <svg
-                viewBox="0 0 120 50"
-                className="w-24 h-10 text-[#D4AF37]/45 mb-2 pointer-events-none"
-                fill="none"
-                aria-hidden="true"
-              >
-                <path
-                  d="M12 45 C12 22, 34 8, 60 8 C86 8, 108 22, 108 45"
-                  stroke="currentColor"
-                  strokeWidth="1.2"
-                  className="svg-line-draw svg-line-draw-active"
-                />
-                <circle cx="60" cy="8" r="2.5" fill="currentColor" />
-              </svg>
-              <div className="w-12 h-12 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/45 group-hover/showroom:border-[#E6C56F]/75 group-hover/showroom:bg-[#D4AF37]/25 transition-all duration-400 flex items-center justify-center mb-3">
-                <Building2 className="w-6 h-6 text-[#E6C56F]" />
-              </div>
-              <p className="font-serif text-xs uppercase tracking-[0.22em] text-[#E6C56F] font-semibold">
-                {store.city || 'Sri Ramas Showroom'}
-              </p>
-              {store.branchCode && (
-                <p className="text-[11px] text-[#E7D4AF]/75 mt-1 font-mono">
-                  Branch Code: {store.branchCode}
-                </p>
-              )}
-              <p className="text-[10.5px] text-[#E7D4AF]/65 mt-2 max-w-[190px]">
-                Showroom interior photograph managed via Admin CMS
-              </p>
-            </div>
-          )}
-
-          {store.isFlagship && (
-            <span className="absolute top-3 left-3 inline-flex items-center px-2.5 py-0.5 rounded bg-brand-gold-gradient text-burgundy-950 text-[10px] font-bold uppercase tracking-wider shadow z-10">
-              Flagship Boutique
-            </span>
-          )}
+          {/* Top-to-Bottom Vignette (Softens top chandelier light for 100% badge & title visibility) */}
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background:
+                'linear-gradient(180deg, rgba(18, 2, 5, 0.82) 0%, rgba(24, 3, 7, 0.30) 45%, rgba(18, 2, 5, 0.85) 100%)',
+            }}
+          />
+          {/* Warm Ambient Golden Corner Aura */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -top-16 -right-16 w-80 h-80 rounded-full bg-[#C49A3A]/20 blur-3xl group-hover/showroom:bg-[#C49A3A]/30 transition-colors duration-500"
+          />
         </div>
 
-        {/* Showroom Details Body with Staggered Reveal */}
-        <div
-          className={`p-6 sm:p-7 flex flex-col justify-between gap-5 ${
-            isSingleLayout ? 'md:col-span-7' : 'flex-1'
-          }`}
-        >
-          <StaggerReveal staggerMs={65} className="space-y-3.5">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div>
-                {store.city && (
-                  <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#9A7220]">
-                    {[store.city, store.state].filter(Boolean).join(' • ')}
-                  </span>
-                )}
-                <h3 className="font-serif font-bold text-xl text-[#450A13] group-hover/showroom:text-[#6B1220] transition-colors mt-0.5">
-                  {store.name}
-                </h3>
-              </div>
+        {/* Showroom Details Content Layer (Expanded Card Size & High-Visibility Content) */}
+        <div className="relative z-10 p-8 sm:p-10 lg:p-14 flex flex-col justify-between gap-8 min-h-[380px] sm:min-h-[420px] lg:min-h-[460px]">
+          <div className="space-y-5 max-w-3xl">
+            {/* Showroom Location / City Badge (100% High Visibility Solid Pill) */}
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#1A0307]/95 border-2 border-[#D4AF37] text-[#FFE28A] text-xs sm:text-sm font-extrabold uppercase tracking-[0.24em] shadow-xl backdrop-blur-md">
+                <MapPin className="w-4 h-4 text-[#FFE28A] shrink-0" />
+                <span className="drop-shadow-sm">
+                  {[store.city, store.state].filter(Boolean).join(' • ') || 'Showroom Location'}
+                </span>
+              </span>
+
+              {store.isFlagship && (
+                <span className="inline-flex items-center px-3.5 py-1.5 rounded-full bg-brand-gold-gradient text-burgundy-950 text-xs font-bold uppercase tracking-wider shadow-lg">
+                  Flagship Boutique
+                </span>
+              )}
             </div>
 
-            <div className="text-xs sm:text-[13px] text-[#4A2E28] space-y-2.5 pt-1">
+            {/* Showroom Name (Bold & Large with Strong Contrast Shadow) */}
+            <div>
+              <h3
+                className="font-serif font-black text-3xl sm:text-4xl lg:text-5xl text-white tracking-wide leading-tight group-hover/showroom:text-[#FFE8A3] transition-colors"
+                style={{
+                  textShadow:
+                    '0 4px 20px rgba(0, 0, 0, 0.95), 0 2px 6px rgba(0, 0, 0, 0.85)',
+                }}
+              >
+                {store.name || store.storeName}
+              </h3>
+            </div>
+
+            {/* Address & Phone (High Contrast Pure White & Gold, Large & Clearly Visible) */}
+            <div className="space-y-4 pt-2">
               {fullAddress && (
-                <p className="flex items-start gap-2.5 leading-relaxed">
-                  <MapPin className="w-4 h-4 text-[#A4792B] shrink-0 mt-0.5 transition-transform duration-300 group-hover/showroom:-translate-y-0.5" />
-                  <span>{fullAddress}</span>
+                <p
+                  className="flex items-start gap-3.5 text-sm sm:text-base lg:text-lg font-medium text-white leading-relaxed"
+                  style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.85)' }}
+                >
+                  <MapPin className="w-5 h-5 sm:w-6 sm:h-6 text-[#E5C775] shrink-0 mt-0.5" />
+                  <span className="text-white font-semibold">{fullAddress}</span>
                 </p>
               )}
 
-              <div className="flex items-start gap-2.5">
-                <Phone className="w-4 h-4 text-[#A4792B] shrink-0 mt-0.5" />
-                {phones.length > 0 ? (
-                  <div className="flex flex-wrap gap-x-3 gap-y-1">
+              {phones.length > 0 ? (
+                <div
+                  className="flex items-start gap-3.5 text-sm sm:text-base lg:text-lg"
+                  style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.85)' }}
+                >
+                  <Phone className="w-5 h-5 sm:w-6 sm:h-6 text-[#E5C775] shrink-0 mt-0.5" />
+                  <div className="flex flex-wrap gap-x-4 gap-y-1">
                     {phones.map((num, idx) => (
                       <a
                         key={idx}
                         href={`tel:${num.replace(/\s+/g, '')}`}
-                        className="font-medium text-[#450A13] hover:text-[#9A7220] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 rounded"
+                        className="font-bold text-[#FFE8A3] hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5C775] rounded underline-offset-4 hover:underline"
                       >
                         {num}
                       </a>
                     ))}
                   </div>
-                ) : (
-                  <span className="text-[#6E4F47] italic">Contact number awaits showroom update</span>
-                )}
-              </div>
-
-              {store.openingHours && !store.openingHours.toLowerCase().includes('confirm') && (
-                <div className="flex items-start gap-2.5">
-                  <Clock className="w-4 h-4 text-[#A4792B] shrink-0 mt-0.5" />
-                  <span>{store.openingHours}</span>
                 </div>
-              )}
+              ) : null}
             </div>
+          </div>
 
-            <div className="pt-4 border-t border-[#DFC389]/60 flex flex-wrap items-center justify-between gap-3">
-              {store.googleMapsUrl ? (
-                <AnimatedCTA
-                  href={store.googleMapsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  variant="outline"
-                  icon={<ExternalLink className="w-3.5 h-3.5 text-[#8A621C]" />}
-                  className="px-4 py-2 rounded-lg text-xs"
-                >
-                  <span>Get Directions</span>
-                </AnimatedCTA>
-              ) : (
-                <span />
-              )}
-              <AnimatedCTA
-                variant="burgundy"
-                href={whatsappHref}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-5 py-2 rounded-lg bg-[#450A13] hover:bg-[#5E111E] text-[#F8E2AF] text-xs"
+          {/* Action Buttons: Get Directions & Enquire on WhatsApp */}
+          <div className="pt-6 border-t border-[#C49A3A]/40 flex flex-wrap items-center justify-between gap-4">
+            <a
+              href={directionsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2.5 px-6 sm:px-8 py-3.5 rounded-xl border-2 border-[#E5C775] hover:border-[#FFF1C2] bg-[#1A0307]/80 hover:bg-[#C49A3A]/25 text-[#FFE8A3] hover:text-white font-bold text-xs sm:text-sm tracking-wide transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5C775]"
+            >
+              <ExternalLink className="w-4 h-4 text-[#E5C775]" />
+              <span>Get Directions</span>
+            </a>
+
+            <a
+              href={whatsappHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2.5 px-7 sm:px-9 py-3.5 rounded-xl bg-[#25D366] hover:bg-[#20ba59] text-white font-bold text-xs sm:text-sm tracking-wide transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] shadow-[0_6px_24px_rgba(37,211,102,0.4)] hover:shadow-[0_8px_30px_rgba(37,211,102,0.55)] border border-emerald-400/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="w-5 h-5 text-white shrink-0"
+                aria-hidden="true"
               >
-                <MessageSquare className="w-3.5 h-3.5 text-[#E6C56F]" />
-                <span>Enquire on WhatsApp</span>
-              </AnimatedCTA>
-            </div>
-          </StaggerReveal>
+                <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2m.01 1.67c2.2 0 4.26.86 5.82 2.42a8.225 8.225 0 0 1 2.41 5.83c0 4.54-3.7 8.24-8.24 8.24-1.48 0-2.93-.39-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.196 8.196 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24m4.52 11.66c-.25-.13-1.47-.72-1.7-.81-.23-.08-.39-.13-.56.13-.17.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.13-1.06-.39-2.03-1.25-.75-.67-1.26-1.5-1.41-1.75-.15-.25-.02-.39.11-.51.11-.11.25-.29.37-.44.13-.15.17-.25.25-.42.08-.17.04-.31-.02-.44-.06-.13-.56-1.34-.76-1.84-.2-.49-.4-.42-.56-.43h-.48c-.17 0-.44.06-.67.31-.23.25-.88.86-.88 2.1 0 1.24.9 2.44 1.03 2.61.13.17 1.78 2.71 4.3 3.8 2.53 1.09 2.53.73 2.98.69.46-.04 1.47-.6 1.68-1.18.21-.58.21-1.08.15-1.18-.06-.1-.23-.17-.48-.29" />
+              </svg>
+              <span>Enquire on WhatsApp</span>
+            </a>
+          </div>
         </div>
       </article>
     </ScrollReveal>
@@ -420,37 +403,35 @@ export const HomePage: React.FC = () => {
                 Welcome to Sri Ramas Jewellery. Celebrating 39 years of royal South Indian craftsmanship, BIS 916 Hallmarked bridal gold, exquisite temple jewellery, and certified diamonds.
               </p>
 
-              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2.5 sm:gap-3 pt-1">
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 sm:gap-4 pt-1.5">
                 <div className="hero-cta-item">
                   <AnimatedCTA
                     to="/products"
                     variant="gold"
                     icon={<ArrowRight className="w-4 h-4" />}
-                    className="px-5 sm:px-6 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm uppercase tracking-wider shadow-lg"
+                    className="px-6 sm:px-7 py-3 sm:py-3.5 rounded-xl text-xs sm:text-sm uppercase tracking-wider font-bold shadow-luxury-gold"
                   >
                     <span>Explore Collections</span>
                   </AnimatedCTA>
                 </div>
                 <div className="hero-cta-item">
-                  <AnimatedCTA
-                    to="/stores"
-                    variant="burgundy"
-                    className="px-4 sm:px-5 py-2.5 sm:py-3 rounded-lg bg-burgundy-900/80 border border-gold-400/70 text-gold-100 hover:bg-burgundy-900 text-xs sm:text-sm backdrop-blur-md"
-                  >
-                    <MapPin className="w-4 h-4 text-gold-300" />
-                    <span>Visit Our Showrooms</span>
-                  </AnimatedCTA>
-                </div>
-                <div className="hero-cta-item">
-                  <AnimatedCTA
+                  <a
                     href={buildWhatsAppUrl({ type: 'GENERAL' })}
                     target="_blank"
                     rel="noopener noreferrer"
-                    variant="whatsapp"
-                    className="px-4 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm backdrop-blur-md"
+                    aria-label="Connect with Sri Ramas Jewellery WhatsApp Advisor"
+                    className="group inline-flex items-center justify-center gap-2.5 px-6 sm:px-7 py-3 sm:py-3.5 rounded-xl bg-[#25D366] hover:bg-[#20ba59] text-white font-bold text-xs sm:text-sm tracking-wide shadow-[0_8px_24px_rgba(37,211,102,0.38)] hover:shadow-[0_12px_32px_rgba(37,211,102,0.52)] hover:scale-[1.03] active:scale-[0.98] transition-all duration-300 border border-emerald-400/50 backdrop-blur-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
                   >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      className="w-4 h-4 sm:w-5 sm:h-5 text-white shrink-0 transition-transform duration-300 group-hover:scale-110"
+                      aria-hidden="true"
+                    >
+                      <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2m.01 1.67c2.2 0 4.26.86 5.82 2.42a8.225 8.225 0 0 1 2.41 5.83c0 4.54-3.7 8.24-8.24 8.24-1.48 0-2.93-.39-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.196 8.196 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24m4.52 11.66c-.25-.13-1.47-.72-1.7-.81-.23-.08-.39-.13-.56.13-.17.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.13-1.06-.39-2.03-1.25-.75-.67-1.26-1.5-1.41-1.75-.15-.25-.02-.39.11-.51.11-.11.25-.29.37-.44.13-.15.17-.25.25-.42.08-.17.04-.31-.02-.44-.06-.13-.56-1.34-.76-1.84-.2-.49-.4-.42-.56-.43h-.48c-.17 0-.44.06-.67.31-.23.25-.88.86-.88 2.1 0 1.24.9 2.44 1.03 2.61.13.17 1.78 2.71 4.3 3.8 2.53 1.09 2.53.73 2.98.69.46-.04 1.47-.6 1.68-1.18.21-.58.21-1.08.15-1.18-.06-.1-.23-.17-.48-.29" />
+                    </svg>
                     <span>WhatsApp Advisor</span>
-                  </AnimatedCTA>
+                  </a>
                 </div>
               </div>
 
@@ -490,14 +471,14 @@ export const HomePage: React.FC = () => {
       />
 
       {/* 4. JEWELLERY CATEGORIES SECTION */}
-      <div className="bg-[#FDFBF5] border-y border-[#E9D7B7]/60">
+      <section className="bg-white py-10 sm:py-14">
         <CategoryCarousel
-          categories={categories}
+          categories={activeCategories.length > 0 ? activeCategories : categories}
           isLoading={categoriesLoading}
           isError={categoriesError}
           onRetry={() => refetchCategories()}
         />
-      </div>
+      </section>
 
       {/* 4. FEATURED BRIDAL & HEIRLOOM PIECES */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
@@ -789,24 +770,13 @@ export const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* 6. SHOWROOM LOCATIONS & APPOINTMENTS */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-        <AnimatedHeading
-          kicker="Personal Showroom Hospitality"
-          title="Visit Our Showrooms"
-          subtitle="Step into an ambience of heritage luxury. Experience our collections with dedicated personal jewellery specialists."
-          align="center"
-          showRule
-          className="max-w-2xl mx-auto"
-          titleClassName="text-3xl font-bold text-burgundy-950"
-          kickerClassName="text-gold-700 tracking-widest"
-        />
-
+      {/* 6. SHOWROOM LOCATIONS & APPOINTMENTS (Red-boxed heading removed & card expanded) */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
         {storesLoading ? (
-          <div className="max-w-4xl mx-auto bg-white rounded-2xl p-8 border border-[#DEC48C] animate-pulse space-y-4">
-            <div className="h-6 bg-stone-200 rounded w-1/3" />
-            <div className="h-4 bg-stone-200 rounded w-2/3" />
-            <div className="h-4 bg-stone-200 rounded w-1/2" />
+          <div className="max-w-6xl mx-auto bg-white rounded-3xl p-10 border border-[#DEC48C] animate-pulse space-y-4">
+            <div className="h-8 bg-stone-200 rounded w-1/3" />
+            <div className="h-5 bg-stone-200 rounded w-2/3" />
+            <div className="h-5 bg-stone-200 rounded w-1/2" />
           </div>
         ) : storesError ? (
           <div className="max-w-xl mx-auto bg-[#FCF7EC] rounded-xl p-8 border border-[#DEC48C] text-center space-y-3">
@@ -826,10 +796,10 @@ export const HomePage: React.FC = () => {
           <div
             className={
               stores.length === 1
-                ? 'max-w-4xl mx-auto'
+                ? 'max-w-6xl mx-auto w-full'
                 : stores.length === 2
-                ? 'grid grid-cols-1 md:grid-cols-2 max-w-5xl mx-auto gap-6'
-                : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
+                ? 'grid grid-cols-1 lg:grid-cols-2 max-w-6xl mx-auto gap-8 w-full'
+                : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full'
             }
           >
             {stores.map((store) => (

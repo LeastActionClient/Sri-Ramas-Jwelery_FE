@@ -2,7 +2,6 @@ import React from 'react';
 import { useRates } from '@/hooks/useRates';
 import { formatPaiseToInr } from '@/utils/currency';
 import { Sparkles, TrendingUp, Clock } from 'lucide-react';
-import { Link } from 'react-router-dom';
 
 export const RateTicker: React.FC = () => {
   const { data: rates, isLoading } = useRates();
@@ -76,20 +75,17 @@ export const RateTicker: React.FC = () => {
           </div>
         </div>
 
-        {/* Right: Disclaimer link & Time */}
-        <div className="hidden lg:flex items-center gap-4 text-[11px] text-gold-300/70">
+        {/* Right: Live Benchmark Status & Time */}
+        <div className="hidden lg:flex items-center gap-3 text-[11px] text-gold-300/70">
           <span className="flex items-center gap-1">
             <Clock className="w-3 h-3 text-gold-400/80" />
             Updated Today
           </span>
           <span className="text-gold-700">•</span>
-          <Link
-            to="/rates"
-            className="hover:text-gold-300 underline underline-offset-2 transition-colors flex items-center gap-1"
-          >
+          <span className="text-gold-300/80 flex items-center gap-1">
             <Sparkles className="w-3 h-3 text-gold-400" />
-            View Complete Rate Card & GST Details
-          </Link>
+            Showroom 916 Benchmark Purity
+          </span>
         </div>
       </div>
     </div>

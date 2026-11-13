@@ -89,7 +89,14 @@ export function adaptProduct(raw: any): Product {
     images,
     imagePublicIds: publicIds,
     gender: raw.gender,
+    occasion: Array.isArray(raw.occasion) ? raw.occasion : [],
     collectionType: raw.collectionType,
+    categoryAttributes: raw.categoryAttributes && typeof raw.categoryAttributes === 'object' ? raw.categoryAttributes : {},
+    metalDetails: raw.metalDetails && typeof raw.metalDetails === 'object' ? raw.metalDetails : {},
+    certification: raw.certification,
+    stoneWeightGrams: raw.stoneWeightGrams ?? null,
+    otherWeightGrams: raw.otherWeightGrams ?? null,
+    stockStatus: raw.stockStatus || 'IN_STOCK',
     isFeatured: Boolean(raw.isFeatured),
     isNewArrival: Boolean(raw.isNewArrival),
     displayOrder: typeof raw.displayOrder === 'number' ? raw.displayOrder : 0,
@@ -110,8 +117,13 @@ export interface ProductAdminPayload {
   description?: string;
   grossWeightGrams?: number | null;
   netMetalWeightGrams?: number | null;
+  stoneWeightGrams?: number | null;
   hallmarkStatus?: boolean;
   huid?: string | null;
+  gender?: 'WOMEN' | 'MEN' | 'UNISEX' | 'KIDS';
+  occasion?: string[];
+  categoryAttributes?: Record<string, any>;
+  metalDetails?: Record<string, any>;
   isFeatured?: boolean;
   isNewArrival?: boolean;
   displayOrder?: number;
@@ -207,6 +219,22 @@ export function serializeProductPayload(
   if (!isPartial || adminData.visibility !== undefined || prodData.isActive !== undefined) {
     payload.visibility =
       adminData.visibility ?? (prodData.isActive === false ? 'DRAFT' : 'PUBLISHED');
+  }
+  if (!isPartial || (data as any).stoneWeightGrams !== undefined) {
+    const sw = (data as any).stoneWeightGrams;
+    payload.stoneWeightGrams = sw && Number(sw) > 0 ? Number(sw) : 0;
+  }
+  if (!isPartial || (data as any).gender !== undefined) {
+    payload.gender = (data as any).gender || 'WOMEN';
+  }
+  if (!isPartial || (data as any).occasion !== undefined) {
+    payload.occasion = Array.isArray((data as any).occasion) ? (data as any).occasion : [];
+  }
+  if (!isPartial || (data as any).categoryAttributes !== undefined) {
+    payload.categoryAttributes = (data as any).categoryAttributes || {};
+  }
+  if (!isPartial || (data as any).metalDetails !== undefined) {
+    payload.metalDetails = (data as any).metalDetails || {};
   }
   if (!isPartial || data.images !== undefined) {
     payload.images = imageUrls;

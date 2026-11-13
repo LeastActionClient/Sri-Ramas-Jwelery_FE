@@ -79,7 +79,7 @@ const QUICK_CTA_PRESETS = [
   { label: 'Gold Collection', url: '/products?metalType=GOLD' },
   { label: 'Diamond Collection', url: '/products?metalType=DIAMOND' },
   { label: 'Platinum Collection', url: '/products?metalType=PLATINUM' },
-  { label: 'All Categories', url: '/categories' },
+  { label: 'All Collections', url: '/products' },
   { label: 'Savings Schemes', url: '/schemes' }
 ];
 

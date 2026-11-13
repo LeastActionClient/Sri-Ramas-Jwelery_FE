@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { ArrowRight, ChevronLeft, ChevronRight, RefreshCw, Sparkles } from 'lucide-react';
+import React, { useRef, useState } from 'react';
+import { RefreshCw, Sparkles } from 'lucide-react';
 import { Category } from '@/types';
 import { CategoryCard } from './CategoryCard';
-import { AnimatedCTA, AnimatedHeading, ScrollReveal } from '@/components/motion';
+import { ScrollReveal } from '@/components/motion';
 
 interface CategoryCarouselProps {
   categories: Category[];
@@ -11,118 +11,96 @@ interface CategoryCarouselProps {
   onRetry?: () => void;
 }
 
-function getVisibleCardsCount(width: number): number {
-  if (width >= 1280) return 5;
-  if (width >= 1024) return 4;
-  if (width >= 768) return 3;
-  return 2;
-}
-
 export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({
   categories,
   isLoading = false,
   isError = false,
   onRetry,
 }) => {
-  const [visibleCount, setVisibleCount] = useState<number>(() =>
-    typeof window !== 'undefined' ? getVisibleCardsCount(window.innerWidth) : 5
-  );
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const touchStartXRef = useRef<number | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const isDownRef = useRef(false);
+  const startXRef = useRef(0);
+  const scrollLeftRef = useRef(0);
+  const hasMovedRef = useRef(false);
+  const [isGrabbing, setIsGrabbing] = useState(false);
 
-  useEffect(() => {
-    const handleResize = () => {
-      setVisibleCount(getVisibleCardsCount(window.innerWidth));
-    };
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  // Filter out any explicitly disabled categories
+  const validCategories = categories.filter((c) => c.isActive !== false);
+  const effectiveList = validCategories.length > 0 ? validCategories : categories;
+  const totalItems = effectiveList.length;
 
-  const totalItems = categories.length;
-  const maxIndex = Math.max(0, totalItems - visibleCount);
-  const safeIndex = Math.min(currentIndex, maxIndex);
-  const totalStops = maxIndex + 1;
-
-  const handlePrev = useCallback(() => {
-    setCurrentIndex((prev) => Math.max(0, Math.min(prev, maxIndex) - 1));
-  }, [maxIndex]);
-
-  const handleNext = useCallback(() => {
-    setCurrentIndex((prev) => Math.min(maxIndex, Math.min(prev, maxIndex) + 1));
-  }, [maxIndex]);
-
-  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
-    touchStartXRef.current = e.touches[0]?.clientX ?? null;
+  // Hand-scrolling mouse drag handlers (desktop grab & scroll)
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!scrollContainerRef.current) return;
+    isDownRef.current = true;
+    hasMovedRef.current = false;
+    startXRef.current = e.pageX - scrollContainerRef.current.offsetLeft;
+    scrollLeftRef.current = scrollContainerRef.current.scrollLeft;
+    setIsGrabbing(true);
   };
 
-  const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
-    if (touchStartXRef.current === null) return;
-    const endX = e.changedTouches[0]?.clientX ?? touchStartXRef.current;
-    const deltaX = endX - touchStartXRef.current;
-    touchStartXRef.current = null;
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isDownRef.current || !scrollContainerRef.current) return;
+    const x = e.pageX - scrollContainerRef.current.offsetLeft;
+    const walk = (x - startXRef.current) * 1.3;
+    if (Math.abs(walk) > 4) {
+      hasMovedRef.current = true;
+    }
+    scrollContainerRef.current.scrollLeft = scrollLeftRef.current - walk;
+  };
 
-    if (Math.abs(deltaX) < 40) return;
-    if (deltaX < 0) {
-      handleNext();
-    } else {
-      handlePrev();
+  const handleMouseUpOrLeave = () => {
+    isDownRef.current = false;
+    setIsGrabbing(false);
+    // Keep hasMovedRef for a tiny tick to prevent accidental navigation after drag
+    setTimeout(() => {
+      hasMovedRef.current = false;
+    }, 60);
+  };
+
+  // Prevent link navigation if the user was hand-scrolling / dragging
+  const handleClickCapture = (e: React.MouseEvent) => {
+    if (hasMovedRef.current) {
+      e.preventDefault();
+      e.stopPropagation();
     }
   };
 
-  const cardWidthPercent = 100 / Math.max(1, visibleCount);
-  const translatePercent = safeIndex * cardWidthPercent;
-
   return (
-    <section
+    <div
       aria-label="Explore Our Jewellery Categories"
-      className="max-w-[1440px] mx-auto px-3 sm:px-5 lg:px-8 py-8 sm:py-10 lg:py-12 space-y-6 sm:space-y-8"
+      className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 space-y-6 sm:space-y-8"
     >
-      {/* Top Heading & Aligned View All CTA */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[#DFC389]/50 pb-4">
-        <AnimatedHeading
-          kicker="Handcrafted Treasures"
-          title="Explore Our Jewellery Categories"
-          subtitle="From timeless traditions to contemporary elegance, discover collections crafted for every occasion."
-          showRule
-          titleClassName="text-2xl sm:text-3xl lg:text-[34px] font-extrabold uppercase tracking-wide text-[#450A13]"
-          subtitleClassName="text-[#5C3D35] max-w-xl"
-          kickerClassName="tracking-[0.26em] text-[#A4792B]"
-        />
-
-        <AnimatedCTA
-          to="/categories"
-          variant="outline"
-          icon={<ArrowRight className="w-4 h-4 text-[#7A5216]" />}
-          className="self-start sm:self-end shrink-0 px-6 py-2.5 rounded-full bg-gradient-to-b from-[#FCF4E2] to-[#F4E1BA] text-[#3B060E] font-bold text-xs uppercase tracking-wider shadow-sm hover:shadow-md hover:from-[#FAF0D6] hover:to-[#EED7A5]"
-        >
-          <span>View All Categories</span>
-        </AnimatedCTA>
+      {/* Clean, Minimal Luxury Heading */}
+      <div className="text-center max-w-2xl mx-auto space-y-1">
+        <span className="text-[10px] sm:text-[11px] font-serif uppercase tracking-[0.25em] text-[#A4792B] font-semibold block">
+          Curated Showroom Collections
+        </span>
+        <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#380711] tracking-wide">
+          Shop By Category
+        </h2>
       </div>
 
       {/* Loading State */}
       {isLoading ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 animate-pulse">
-          {[...Array(5)].map((_, idx) => (
-            <div key={idx} className="rounded-xl overflow-hidden border border-[#DEC48C]/60 bg-[#FAF1DE]">
-              <div className="aspect-square bg-[#E9D7B7]" />
-              <div className="h-10 bg-[#F4E6CA]" />
+        <div className="flex items-center justify-center gap-4 sm:gap-6 lg:gap-8 animate-pulse py-6">
+          {[...Array(6)].map((_, idx) => (
+            <div key={idx} className="flex flex-col items-center gap-3">
+              <div className="w-28 h-28 sm:w-36 sm:h-36 md:w-44 md:h-44 rounded-full bg-stone-100" />
+              <div className="h-3 w-16 bg-stone-100 rounded" />
             </div>
           ))}
         </div>
       ) : isError ? (
-        <div className="bg-[#FCF7EC] rounded-2xl border border-[#DEC48C] p-8 text-center space-y-3">
-          <p className="font-serif font-bold text-base text-[#450A13]">
+        <div className="p-8 text-center space-y-3">
+          <p className="font-serif font-bold text-base text-[#380711]">
             Unable to load jewellery categories right now.
-          </p>
-          <p className="text-xs text-[#6B4A3E]">
-            Please verify backend connectivity or try refreshing the categories showcase.
           </p>
           {onRetry && (
             <button
               type="button"
               onClick={onRetry}
-              className="inline-flex items-center gap-1.5 px-5 py-2 rounded-full bg-[#4D0F18] text-[#FBE9C2] text-xs font-semibold hover:bg-[#661622] transition-colors"
+              className="inline-flex items-center gap-1.5 px-5 py-2 rounded-full bg-[#380711] text-[#FBE9C2] text-xs font-semibold hover:bg-[#520A19] transition-colors"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               <span>Retry</span>
@@ -130,88 +108,45 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({
           )}
         </div>
       ) : totalItems === 0 ? (
-        <div className="bg-[#FCF7EC] rounded-2xl border border-[#DEC48C] p-10 text-center space-y-2">
+        <div className="p-10 text-center space-y-2">
           <Sparkles className="w-6 h-6 text-[#A4792B] mx-auto" />
-          <p className="font-serif font-bold text-base text-[#450A13]">
+          <p className="font-serif font-bold text-base text-[#380711]">
             No Published Categories Available
-          </p>
-          <p className="text-xs text-[#6B4A3E]">
-            Active jewellery categories added by the showroom team will appear here automatically.
           </p>
         </div>
       ) : (
-        <ScrollReveal variant="fade-up" distance={18}>
-          {/* Carousel Track + Side Controls */}
-          <div className="relative flex items-center gap-2 sm:gap-3">
-            <button
-              type="button"
-              onClick={handlePrev}
-              disabled={safeIndex <= 0}
-              aria-label="Previous categories"
-              className="relative z-10 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/95 border border-[#C99B3B]/70 text-[#450A13] shadow-sm flex items-center justify-center shrink-0 transition-all duration-200 hover:bg-[#FAF0DC] hover:border-[#A87D24] hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 disabled:opacity-35 disabled:cursor-not-allowed disabled:hover:scale-100"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-
-            <div
-              className="flex-1 min-w-0 overflow-hidden py-2 touch-pan-y"
-              onTouchStart={handleTouchStart}
-              onTouchEnd={handleTouchEnd}
-            >
-              <div
-                className="flex transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform"
-                style={{ transform: `translate3d(-${translatePercent}%, 0, 0)` }}
-              >
-                {categories.map((cat) => (
-                  <div
-                    key={cat._id}
-                    className="shrink-0 px-1.5 sm:px-2.5"
-                    style={{ width: `${cardWidthPercent}%` }}
-                  >
-                    <CategoryCard category={cat} />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleNext}
-              disabled={safeIndex >= maxIndex}
-              aria-label="Next categories"
-              className="relative z-10 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/95 border border-[#C99B3B]/70 text-[#450A13] shadow-sm flex items-center justify-center shrink-0 transition-all duration-200 hover:bg-[#FAF0DC] hover:border-[#A87D24] hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 disabled:opacity-35 disabled:cursor-not-allowed disabled:hover:scale-100"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          </div>
-
-          {/* Pagination Indicator Dots */}
+        <ScrollReveal variant="fade-up" distance={16}>
+          {/* 
+            Hand Scrolling UI (Smooth Drag & Touch):
+            - Arrows removed completely.
+            - Mouse click-and-drag hand scroll on desktop with grab cursor.
+            - Native touch swipe with momentum on mobile/tablet.
+            - Centered when fitting screen width; horizontally scrollable with tight, elegant spacing.
+          */}
           <div
-            className="flex items-center justify-center gap-2 mt-4"
-            role="tablist"
-            aria-label="Category carousel pagination"
+            ref={scrollContainerRef}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUpOrLeave}
+            onMouseLeave={handleMouseUpOrLeave}
+            onClickCapture={handleClickCapture}
+            className={`w-full overflow-x-auto select-none touch-pan-x py-2 px-1 scroll-smooth ${
+              isGrabbing ? 'cursor-grabbing' : 'cursor-grab'
+            } [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]`}
+            style={{
+              WebkitOverflowScrolling: 'touch',
+            }}
           >
-            {[...Array(totalStops)].map((_, idx) => {
-              const isActive = idx === safeIndex;
-              return (
-                <button
-                  key={idx}
-                  type="button"
-                  role="tab"
-                  aria-selected={isActive}
-                  aria-label={`Show category slide ${idx + 1} of ${totalStops}`}
-                  onClick={() => setCurrentIndex(idx)}
-                  className={`h-2 rounded-full transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 ${
-                    isActive
-                      ? 'w-5 bg-[#4D0F18] ring-2 ring-[#C99B3B]/35'
-                      : 'w-2 bg-[#DFC389] hover:bg-[#C69C46]'
-                  }`}
-                />
-              );
-            })}
+            <div className="flex items-start gap-6 sm:gap-8 md:gap-10 lg:gap-12 xl:gap-14 w-max min-w-full justify-center px-4 sm:px-6 md:px-8">
+              {effectiveList.map((cat) => (
+                <div key={cat._id} className="shrink-0 flex justify-center px-1 sm:px-2">
+                  <CategoryCard category={cat} />
+                </div>
+              ))}
+            </div>
           </div>
         </ScrollReveal>
       )}
-    </section>
+    </div>
   );
 };

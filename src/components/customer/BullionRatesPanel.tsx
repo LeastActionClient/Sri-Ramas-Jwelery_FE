@@ -1,6 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowRight, Clock, Info, RefreshCw, ShieldCheck } from 'lucide-react';
+import { Clock, Info, RefreshCw, ShieldCheck } from 'lucide-react';
 import { LiveRatesResponse } from '@/types';
 import { formatPaiseToInr } from '@/utils/currency';
 import { formatDateTime } from '@/utils/date';
@@ -175,13 +174,6 @@ export const BullionRatesPanel: React.FC<BullionRatesPanelProps> = ({
                 <span>Retry</span>
               </button>
             )}
-            <Link
-              to="/rates"
-              className="text-xs font-semibold text-[#7B5218] hover:text-[#450A13] flex items-center gap-1 underline underline-offset-4"
-            >
-              <span>View Rates Page</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
           </div>
         </div>
       </section>
@@ -244,16 +236,6 @@ export const BullionRatesPanel: React.FC<BullionRatesPanelProps> = ({
               kickerClassName="text-[10px] sm:text-[11px] tracking-[0.22em] text-[#A4792B]"
               titleClassName="text-xl sm:text-2xl lg:text-[26px] font-extrabold uppercase tracking-wide text-[#450A13]"
             />
-
-            <Link
-              to="/rates"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#6F4812] hover:text-[#450A13] transition-colors self-start sm:self-center group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 rounded"
-            >
-              <span className="relative pb-0.5 after:content-[''] after:absolute after:left-0 after:right-0 after:bottom-0 after:h-[1.5px] after:bg-[#C69C46] after:transition-all after:duration-300 group-hover:after:bg-[#450A13] group-hover:after:scale-x-105">
-                Historical Trends &amp; Calculation Details
-              </span>
-              <ArrowRight className="w-3.5 h-3.5 text-[#A4792B] group-hover:translate-x-1 transition-transform duration-300" />
-            </Link>
           </div>
 
           {/* 5 Metal Tiles with Staggered Reveal & Verified Value Transition */}

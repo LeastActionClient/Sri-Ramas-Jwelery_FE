@@ -7,16 +7,13 @@ import { AdminLayout } from '@/components/admin/AdminLayout';
 
 // Customer Pages
 import { HomePage } from '@/pages/customer/HomePage';
-import { CategoriesPage } from '@/pages/customer/CategoriesPage';
 import { ProductCatalogPage } from '@/pages/customer/ProductCatalogPage';
 import { ProductDetailPage } from '@/pages/customer/ProductDetailPage';
-import { RatesPage } from '@/pages/customer/RatesPage';
 import { SchemesPage } from '@/pages/customer/SchemesPage';
 import { SchemeDetailPage } from '@/pages/customer/SchemeDetailPage';
 import { DigiGoldPage } from '@/pages/customer/DigiGoldPage';
 import { DigiSilverPage } from '@/pages/customer/DigiSilverPage';
 import { AboutPage } from '@/pages/customer/AboutPage';
-import { StoresPage } from '@/pages/customer/StoresPage';
 import { ContactPage } from '@/pages/customer/ContactPage';
 import { PrivacyPolicyPage, TermsPage } from '@/pages/customer/LegalPages';
 
@@ -37,17 +34,17 @@ export const AppRoutes: React.FC = () => {
       {/* Customer-Facing Showcase Website Routes */}
       <Route element={<CustomerLayout />}>
         <Route path="/" element={<HomePage />} />
-        <Route path="/categories" element={<CategoriesPage />} />
+        <Route path="/categories" element={<Navigate to="/products" replace />} />
         <Route path="/products" element={<ProductCatalogPage />} />
         <Route path="/collections" element={<Navigate to="/products" replace />} />
         <Route path="/products/:slug" element={<ProductDetailPage />} />
-        <Route path="/rates" element={<RatesPage />} />
+        <Route path="/rates" element={<Navigate to="/" replace />} />
         <Route path="/schemes" element={<SchemesPage />} />
         <Route path="/schemes/:slug" element={<SchemeDetailPage />} />
         <Route path="/digigold" element={<DigiGoldPage />} />
         <Route path="/digisilver" element={<DigiSilverPage />} />
         <Route path="/about" element={<AboutPage />} />
-        <Route path="/stores" element={<StoresPage />} />
+        <Route path="/stores" element={<Navigate to="/" replace />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
         <Route path="/terms" element={<TermsPage />} />

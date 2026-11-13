@@ -249,13 +249,6 @@ export const SchemeDetailPage: React.FC = () => {
               >
                 Call Showroom ({displayPhone})
               </AnimatedCTA>
-
-              <Link
-                to="/stores"
-                className="w-full inline-flex items-center justify-center py-2.5 rounded-xl border border-stone-300 hover:bg-stone-50 text-xs font-semibold text-burgundy-900 transition-colors"
-              >
-                View Showroom Locations
-              </Link>
             </div>
 
             <p className="text-[11px] text-stone-500 leading-relaxed pt-2 border-t border-stone-200">
