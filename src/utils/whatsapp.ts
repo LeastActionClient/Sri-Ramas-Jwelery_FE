@@ -18,6 +18,49 @@ export function normalizeWhatsAppNumber(rawPhone?: string | null): string {
   return DEFAULT_WHATSAPP_NUMBER;
 }
 
+/**
+ * Strict normalizer for customer-provided WhatsApp numbers.
+ * Returns null if the number is missing or invalid.
+ * NEVER falls back to the company showroom number.
+ */
+export function normalizeCustomerWhatsAppNumber(rawPhone?: string | null): string | null {
+  if (!rawPhone) return null;
+  const digits = rawPhone.replace(/\D/g, '');
+  if (digits.length === 10 && /^[6-9]/.test(digits)) {
+    return `91${digits}`;
+  }
+  if (digits.length === 12 && digits.startsWith('91') && /^[6-9]/.test(digits.slice(2))) {
+    return digits;
+  }
+  if (digits.length >= 10 && digits.length <= 15) {
+    return digits;
+  }
+  return null;
+}
+
+/**
+ * Generates an administrative WhatsApp conversation URL addressed directly
+ * to the customer's personal mobile/WhatsApp number.
+ * NEVER uses the company's own number. Returns null if invalid or missing.
+ */
+export function getAdminCustomerWhatsAppUrl(params: {
+  customerPhone?: string | null;
+  customerName?: string;
+  enquiryNumber?: string;
+  enquiryType?: string;
+}): string | null {
+  const targetNumber = normalizeCustomerWhatsAppNumber(params.customerPhone);
+  if (!targetNumber) return null;
+
+  const greeting = params.customerName?.trim() ? `Namaste ${params.customerName.trim()}` : 'Namaste';
+  const typeText = params.enquiryType ? ` regarding your ${params.enquiryType.replace(/_/g, ' ')} enquiry` : '';
+  const refText = params.enquiryNumber ? ` (Ref: ${params.enquiryNumber})` : '';
+
+  const message = `${greeting},\nThank you for reaching out to Sri Ramas Jewellery (Estd. 1987)${typeText}${refText}. How may our showroom specialist assist you today?`;
+
+  return `https://wa.me/${targetNumber}?text=${encodeURIComponent(message)}`;
+}
+
 export interface WhatsAppEnquiryParams {
   type?:
     | 'GENERAL'

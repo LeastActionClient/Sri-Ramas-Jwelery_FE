@@ -129,50 +129,30 @@ export const ImageDropzone: React.FC<ImageDropzoneProps> = ({
         return;
       }
 
-      if (uploadFolder) {
-        setIsUploading(true);
-        setFeedback({ type: 'info', message: 'Saving image to studio storage...' });
-        try {
-          const uploaded = await mediaApi.uploadImageToCloudinary(
-            file,
-            uploadFolder,
-            altText || label
-          );
-          onPublicIdChangeRef.current?.(uploaded.publicId);
-          onChangeRef.current(uploaded.secureUrl);
-          setShowUrlInput(false);
-          setFeedback({
-            type: 'success',
-            message: successMessage
-              ? `${successMessage} Kept in ${uploaded.storageProvider === 'local' ? 'backend studio storage' : 'Cloudinary'}.`
-              : `Image saved and kept in ${uploaded.storageProvider === 'local' ? 'backend studio storage' : 'Cloudinary'}.`,
-          });
-        } catch (err: any) {
-          setFeedback({
-            type: 'error',
-            message: err?.message || 'Image upload failed. Please try again.',
-          });
-        } finally {
-          setIsUploading(false);
-        }
-        return;
+      const targetFolder = uploadFolder || 'products';
+      setIsUploading(true);
+      setFeedback({ type: 'info', message: 'Uploading to Cloudinary...' });
+      try {
+        const uploaded = await mediaApi.uploadImageToCloudinary(
+          file,
+          targetFolder,
+          altText || label
+        );
+        onPublicIdChangeRef.current?.(uploaded.publicId);
+        onChangeRef.current(uploaded.secureUrl);
+        setShowUrlInput(false);
+        setFeedback({
+          type: 'success',
+          message: successMessage || 'Image uploaded securely to Cloudinary.',
+        });
+      } catch (err: any) {
+        setFeedback({
+          type: 'error',
+          message: err?.message || 'Image upload failed. Please try again.',
+        });
+      } finally {
+        setIsUploading(false);
       }
-
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const result = event.target?.result as string;
-        if (result) {
-          onChangeRef.current(result);
-          onPublicIdChangeRef.current?.('');
-          setShowUrlInput(false);
-          if (successMessage) {
-            setFeedback({ type: 'success', message: successMessage });
-          } else {
-            setFeedback(null);
-          }
-        }
-      };
-      reader.readAsDataURL(file);
     },
     [altText, label, uploadFolder]
   );
@@ -271,52 +251,63 @@ export const ImageDropzone: React.FC<ImageDropzoneProps> = ({
     }
 
     try {
+      let handled = false;
       if (typeof navigator.clipboard.read === 'function') {
-        const clipboardItems = await navigator.clipboard.read();
+        try {
+          const clipboardItems = await navigator.clipboard.read();
 
-        for (const item of clipboardItems) {
-          const imageType = item.types.find((t) => t.startsWith('image/'));
-          if (imageType) {
-            const blob = await item.getType(imageType);
-            processBlobOrFile(blob, 'Image pasted from clipboard.');
+          for (const item of clipboardItems) {
+            const imageType = item.types.find((t) => t.startsWith('image/'));
+            if (imageType) {
+              const blob = await item.getType(imageType);
+              processBlobOrFile(blob, 'Image pasted from clipboard.');
+              return;
+            }
+          }
+
+          for (const item of clipboardItems) {
+            if (item.types.includes('text/html')) {
+              const htmlBlob = await item.getType('text/html');
+              const imgSrc = extractImageSrcFromHtml(await htmlBlob.text());
+              if (imgSrc) {
+                applyExternalUrl(imgSrc, 'Page image link pasted from clipboard.');
+                return;
+              }
+            }
+            if (item.types.includes('text/plain')) {
+              const textBlob = await item.getType('text/plain');
+              const text = (await textBlob.text()).trim();
+              if (isLikelyImageText(text, true)) {
+                applyExternalUrl(text, 'Image URL pasted from clipboard.');
+                return;
+              }
+            }
+          }
+        } catch {
+          // If read() was blocked or rejected, fallback to readText()
+        }
+      }
+
+      if (typeof navigator.clipboard.readText === 'function') {
+        try {
+          const text = (await navigator.clipboard.readText()).trim();
+          if (isLikelyImageText(text, true)) {
+            applyExternalUrl(text, 'Image URL pasted from clipboard.');
             return;
           }
-        }
-
-        for (const item of clipboardItems) {
-          if (item.types.includes('text/html')) {
-            const htmlBlob = await item.getType('text/html');
-            const imgSrc = extractImageSrcFromHtml(await htmlBlob.text());
-            if (imgSrc) {
-              applyExternalUrl(imgSrc, 'Page image link pasted from clipboard.');
-              return;
-            }
-          }
-          if (item.types.includes('text/plain')) {
-            const textBlob = await item.getType('text/plain');
-            const text = (await textBlob.text()).trim();
-            if (isLikelyImageText(text, true)) {
-              applyExternalUrl(text, 'Image URL pasted from clipboard.');
-              return;
-            }
-          }
-        }
-      } else if (typeof navigator.clipboard.readText === 'function') {
-        const text = (await navigator.clipboard.readText()).trim();
-        if (isLikelyImageText(text, true)) {
-          applyExternalUrl(text, 'Image URL pasted from clipboard.');
-          return;
+        } catch {
+          // readText blocked
         }
       }
 
       setFeedback({
         type: 'info',
-        message: 'No image found in clipboard. Right-click any image → Copy image, then click Paste Image or press Ctrl+V.',
+        message: 'No image found in clipboard. Copy an image (Right-click → Copy image or Win+Shift+S), then click Paste Image or press Ctrl+V.',
       });
     } catch {
       setFeedback({
         type: 'info',
-        message: 'Clipboard permission required — click inside the Dropbox and press Ctrl+V to paste.',
+        message: 'Clipboard permission required — click inside the Dropzone and press Ctrl+V to paste.',
       });
     }
   };
@@ -393,6 +384,20 @@ export const ImageDropzone: React.FC<ImageDropzoneProps> = ({
           {label}
         </label>
         <div className="flex items-center gap-3">
+          {value && (
+            <>
+              <button
+                type="button"
+                onClick={handleRemove}
+                className="text-[11px] text-red-600 hover:text-red-700 font-bold flex items-center gap-1 transition-colors"
+                title="Cancel uploaded image and remove"
+              >
+                <X className="w-3.5 h-3.5" />
+                <span>Cancel Image</span>
+              </button>
+              <span className="text-stone-300 text-[10px]">|</span>
+            </>
+          )}
           <button
             type="button"
             onClick={handlePasteButtonClick}
@@ -436,6 +441,15 @@ export const ImageDropzone: React.FC<ImageDropzoneProps> = ({
               <ClipboardPaste className="w-3.5 h-3.5" />
               <span>Paste</span>
             </button>
+            <button
+              type="button"
+              onClick={() => setShowUrlInput(false)}
+              className="px-3 py-2 text-[11px] font-semibold bg-white hover:bg-stone-50 border border-stone-300 text-stone-700 rounded-lg flex items-center gap-1 shrink-0 transition-colors"
+              title="Cancel URL input"
+            >
+              <X className="w-3.5 h-3.5 text-stone-500" />
+              <span>Cancel</span>
+            </button>
           </div>
           <p className="text-[10px] text-stone-400">Direct image link from web or Cloudinary</p>
         </div>
@@ -445,6 +459,17 @@ export const ImageDropzone: React.FC<ImageDropzoneProps> = ({
             <Loader2 className="w-6 h-6 text-burgundy-900 animate-spin" />
             <p className="text-xs font-bold text-burgundy-950">Saving Studio Image...</p>
             <p className="text-[10px] text-stone-500">Validating & persisting asset to media storage</p>
+            <button
+              type="button"
+              onClick={() => {
+                setIsUploading(false);
+                if (fileInputRef.current) fileInputRef.current.value = '';
+              }}
+              className="mt-1 px-3 py-1 text-xs font-bold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg inline-flex items-center gap-1 transition-colors"
+            >
+              <X className="w-3.5 h-3.5 text-red-600" />
+              <span>Cancel Upload</span>
+            </button>
           </div>
         </div>
       ) : value ? (
@@ -463,6 +488,14 @@ export const ImageDropzone: React.FC<ImageDropzoneProps> = ({
                   'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23f5f5f4"/><text x="50" y="50" font-size="12" text-anchor="middle" fill="%23a8a29e">No Preview</text></svg>';
               }}
             />
+            <button
+              type="button"
+              onClick={handleRemove}
+              className="absolute top-1 right-1 p-1 rounded-full bg-red-600/90 hover:bg-red-700 text-white opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+              title="Cancel / Remove Image"
+            >
+              <X className="w-3 h-3" />
+            </button>
           </div>
 
           <div className="flex-1 min-w-0">
@@ -518,10 +551,11 @@ export const ImageDropzone: React.FC<ImageDropzoneProps> = ({
               <button
                 type="button"
                 onClick={handleRemove}
-                className="px-2.5 py-1 text-[11px] font-semibold bg-red-50 border border-red-200 text-red-700 rounded-md hover:bg-red-100 flex items-center gap-1 transition-colors"
+                className="px-2.5 py-1 text-[11px] font-bold bg-red-50 border border-red-200 text-red-700 rounded-md hover:bg-red-100 flex items-center gap-1.5 transition-colors shadow-2xs"
+                title="Cancel uploaded image and remove"
               >
-                <X className="w-3 h-3" />
-                <span>Remove</span>
+                <X className="w-3.5 h-3.5 text-red-600" />
+                <span>Cancel / Remove Image</span>
               </button>
             </div>
           </div>

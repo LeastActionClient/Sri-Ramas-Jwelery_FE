@@ -339,6 +339,7 @@ export const HomePage: React.FC = () => {
   } = useQuery({
     queryKey: ['banners', 'HOME_HERO'],
     queryFn: () => cmsApi.getPublicBanners('HOME_HERO'),
+    staleTime: 5000,
   });
 
   const activeCategories = useMemo(
@@ -464,14 +465,8 @@ export const HomePage: React.FC = () => {
         onRetry={() => refetchRates()}
       />
 
-      {/* 3. PROMOTIONAL SILVER & HERITAGE CAMPAIGN CAROUSEL (CMS Driven) */}
-      <PromotionalBannerCarousel
-        banners={promotionalBanners}
-        isLoading={bannersLoading}
-      />
-
-      {/* 4. JEWELLERY CATEGORIES SECTION */}
-      <section className="bg-white py-10 sm:py-14">
+      {/* 3. JEWELLERY CATEGORIES SECTION (SHOP BY CATEGORY) */}
+      <section className="bg-white py-10 sm:py-14 w-full">
         <CategoryCarousel
           categories={activeCategories.length > 0 ? activeCategories : categories}
           isLoading={categoriesLoading}
@@ -479,6 +474,14 @@ export const HomePage: React.FC = () => {
           onRetry={() => refetchCategories()}
         />
       </section>
+
+      {/* 4. PROMOTIONAL SILVER & HERITAGE CAMPAIGN CAROUSEL (CMS Driven) - Full-Bleed Banner Section */}
+      <div className="!mt-0 !mb-0 w-full max-w-full p-0">
+        <PromotionalBannerCarousel
+          banners={promotionalBanners}
+          isLoading={bannersLoading}
+        />
+      </div>
 
       {/* 4. FEATURED BRIDAL & HEIRLOOM PIECES */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">

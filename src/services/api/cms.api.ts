@@ -30,6 +30,12 @@ export interface BannerAdminPayload {
   imageAlt?: string;
   ctaText?: string;
   ctaLink?: string;
+  buttonName?: string;
+  navigationDestination?: string;
+  destinationType?: 'PAGE' | 'CATEGORY' | 'PRODUCT';
+  destinationId?: string;
+  mediaType?: 'IMAGE' | 'VIDEO';
+  mediaUrl?: string;
   position: BannerPosition;
   contentMode: BannerContentMode;
   textAlignment: BannerTextAlignment;
@@ -46,8 +52,8 @@ export interface BannerAdminPayload {
 
 export function adaptBanner(raw: any): HeroBanner {
   if (!raw) return raw;
-  const desktopImageUrl = raw.desktopImageUrl || raw.imageUrl || '';
-  const ctaLink = raw.ctaLink || raw.targetLink || '';
+  const desktopImageUrl = raw.desktopImageUrl || raw.imageUrl || raw.mediaUrl || '';
+  const ctaLink = raw.navigationDestination || raw.ctaLink || raw.targetLink || '';
   const displayOrder = typeof raw.displayOrder === 'number' ? raw.displayOrder : raw.sortOrder ?? 0;
 
   return {
@@ -60,10 +66,16 @@ export function adaptBanner(raw: any): HeroBanner {
     desktopImageUrl,
     desktopImagePublicId: raw.desktopImagePublicId || '',
     imageUrl: desktopImageUrl,
+    mediaUrl: raw.mediaUrl || desktopImageUrl,
+    mediaType: raw.mediaType === 'VIDEO' ? 'VIDEO' : 'IMAGE',
+    buttonName: raw.buttonName || raw.ctaText || '',
+    navigationDestination: ctaLink,
+    destinationType: raw.destinationType || 'PAGE',
+    destinationId: raw.destinationId || '',
     mobileImageUrl: raw.mobileImageUrl || '',
     mobileImagePublicId: raw.mobileImagePublicId || '',
     imageAlt: raw.imageAlt || raw.title || 'Promotional Jewellery Banner',
-    ctaText: raw.ctaText || '',
+    ctaText: raw.buttonName || raw.ctaText || '',
     ctaLink,
     targetLink: ctaLink,
     position: (raw.position as BannerPosition) || 'HOME_HERO',
@@ -161,6 +173,24 @@ export function serializeBannerPayload(
   }
   if (!isPartial || data.endDate !== undefined) {
     payload.endDate = data.endDate ? data.endDate : null;
+  }
+  if (!isPartial || (data as any).mediaType !== undefined) {
+    payload.mediaType = (data as any).mediaType || 'IMAGE';
+  }
+  if (!isPartial || (data as any).mediaUrl !== undefined) {
+    payload.mediaUrl = (data as any).mediaUrl || '';
+  }
+  if (!isPartial || (data as any).buttonName !== undefined) {
+    payload.buttonName = (data as any).buttonName || '';
+  }
+  if (!isPartial || (data as any).navigationDestination !== undefined) {
+    payload.navigationDestination = (data as any).navigationDestination || '';
+  }
+  if (!isPartial || (data as any).destinationType !== undefined) {
+    payload.destinationType = (data as any).destinationType || 'PAGE';
+  }
+  if (!isPartial || (data as any).destinationId !== undefined) {
+    payload.destinationId = (data as any).destinationId || '';
   }
   if (!isPartial || displayOrder !== undefined) payload.displayOrder = Number(displayOrder ?? 0);
   if (!isPartial || data.isActive !== undefined) payload.isActive = data.isActive ?? true;
@@ -449,6 +479,18 @@ export const cmsApi = {
   adminGetBanners: async (): Promise<HeroBanner[]> => {
     const res = await apiClient.get<ApiResponse<any[]>>('/admin/cms/banners');
     return (res.data.data || []).map(adaptBanner);
+  },
+
+  adminGetBannerDestinations: async (
+    search?: string
+  ): Promise<{
+    pages: Array<{ label: string; value: string }>;
+    categories: Array<{ id: string; label: string; value: string }>;
+    products: Array<{ id: string; label: string; value: string }>;
+  }> => {
+    const query = search ? `?search=${encodeURIComponent(search)}` : '';
+    const res = await apiClient.get<ApiResponse<any>>(`/admin/cms/banner-destinations${query}`);
+    return res.data.data;
   },
 
   adminUpdateBanner: async (

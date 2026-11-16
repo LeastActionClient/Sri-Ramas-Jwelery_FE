@@ -48,12 +48,21 @@ const ISOLATED_CATEGORY_ASSET_MAP: Record<string, string> = {
 };
 
 /**
- * Resolves the isolated jewellery image on clean white background for any category.
- * Always resolves to the pristine studio-isolated cutouts on pure white background,
- * bypassing any legacy database images containing burgundy velvet or promotional graphics.
+ * Resolves the jewellery image for a category:
+ * 1. Priority goes to custom image uploaded/saved by admin (Cloudinary, /uploads, or external URL).
+ * 2. Fallback to curated isolated jewellery cutouts when no image is configured or available.
  */
 export function resolveCategoryIsolatedImage(category: Partial<Category>): string {
-  // Normalize slug and name to match against curated isolated jewellery cutouts
+  // 1. Check custom uploaded or configured image URL
+  const customUrl = (category.imageUrl || '').trim();
+  if (customUrl) {
+    if (customUrl.startsWith('/images/categories/') && !customUrl.includes('?')) {
+      return `${customUrl}?v=2`;
+    }
+    return customUrl;
+  }
+
+  // 2. Fallback to curated isolated jewellery assets
   const rawIdentifier = `${category.slug || ''} ${category.name || ''}`.toLowerCase();
 
   if (rawIdentifier.includes('necklace') || rawIdentifier.includes('choker') || rawIdentifier.includes('nck')) {
@@ -107,11 +116,6 @@ export function resolveCategoryIsolatedImage(category: Partial<Category>): strin
     return '/images/categories/gold-jewellery.jpg?v=2';
   }
 
-  const rawUrl = (category.imageUrl || '').trim();
-  if (rawUrl.startsWith('/images/categories/')) {
-    return `${rawUrl}?v=2`;
-  }
-
   const slug = (category.slug || category.name || 'necklaces')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-');
@@ -127,16 +131,21 @@ export const CategoryCard: React.FC<CategoryCardProps> = ({
   const primarySrc = resolveCategoryIsolatedImage(category);
   const fallbackSrc = '/images/categories/necklaces.jpg?v=2';
 
+  React.useEffect(() => {
+    setImgFailed(false);
+  }, [category.imageUrl, category.imagePublicId, category.name, category.slug]);
+
   const itemContent = (
     <div
       className={`group flex flex-col items-center justify-start text-center cursor-pointer select-none py-1 transition-transform duration-300 ${className}`}
     >
       {/* 
-        1. Isolated Jewellery Product Image (140px–176px visual presence)
+        1. Isolated Jewellery Product Image (Expanded visual presence)
         Naturally floating on the clean white background with generous breathing space
       */}
-      <div className="relative w-32 h-32 sm:w-36 sm:h-36 md:w-40 md:h-40 lg:w-44 lg:h-44 flex items-center justify-center pointer-events-none p-1 sm:p-2">
+      <div className="relative w-36 h-36 sm:w-44 sm:h-44 md:w-52 md:h-52 lg:w-60 lg:h-60 xl:w-68 xl:h-68 2xl:w-72 2xl:h-72 flex items-center justify-center pointer-events-none p-1 sm:p-2">
         <img
+          key={primarySrc}
           src={imgFailed ? fallbackSrc : primarySrc}
           alt={category.name}
           loading="lazy"
@@ -144,12 +153,12 @@ export const CategoryCard: React.FC<CategoryCardProps> = ({
           onError={() => {
             if (!imgFailed) setImgFailed(true);
           }}
-          className="w-full h-full object-contain filter drop-shadow-[0_4px_12px_rgba(56,7,17,0.06)] transition-transform duration-300 ease-out group-hover:scale-106 pointer-events-none select-none"
+          className="w-full h-full object-contain filter drop-shadow-[0_6px_16px_rgba(56,7,17,0.08)] transition-transform duration-300 ease-out group-hover:scale-108 pointer-events-none select-none"
         />
       </div>
 
       {/* 2. Category Name Directly Below (Dark Burgundy #380711, hover antique gold #C49A3A) */}
-      <span className="mt-3 font-serif text-xs sm:text-[13px] md:text-sm font-bold tracking-wider uppercase text-[#380711] group-hover:text-[#C49A3A] transition-colors duration-200 text-center leading-snug line-clamp-2 max-w-[170px]">
+      <span className="mt-3 sm:mt-4 font-serif text-xs sm:text-sm md:text-base lg:text-[17px] font-bold tracking-wider uppercase text-[#380711] group-hover:text-[#C49A3A] transition-colors duration-200 text-center leading-snug line-clamp-2 max-w-[240px]">
         {category.name}
       </span>
     </div>

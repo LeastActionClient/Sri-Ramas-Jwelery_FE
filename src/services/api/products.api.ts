@@ -18,6 +18,13 @@ export interface ProductFilters {
   page?: number;
   limit?: number;
   search?: string;
+  diamondCut?: string;
+  diamondColor?: string;
+  diamondClarity?: string;
+  diamondShape?: string;
+  diamondCert?: string;
+  minCarat?: number;
+  maxCarat?: number;
 }
 
 export function adaptProduct(raw: any): Product {
@@ -96,6 +103,12 @@ export function adaptProduct(raw: any): Product {
     certification: raw.certification,
     stoneWeightGrams: raw.stoneWeightGrams ?? null,
     otherWeightGrams: raw.otherWeightGrams ?? null,
+    actualWastagePercent: raw.actualWastagePercent ?? (typeof raw.actualWastage === 'number' ? raw.actualWastage : null),
+    offerWastagePercent: raw.offerWastagePercent ?? (typeof raw.offerWastage === 'number' ? raw.offerWastage : null),
+    stockQuantity: typeof raw.stockQuantity === 'number' ? raw.stockQuantity : 1,
+    videos: Array.isArray(raw.videos) ? raw.videos : [],
+    videoPublicIds: Array.isArray(raw.videoPublicIds) ? raw.videoPublicIds : [],
+    media: Array.isArray(raw.media) ? raw.media : undefined,
     stockStatus: raw.stockStatus || 'IN_STOCK',
     isFeatured: Boolean(raw.isFeatured),
     isNewArrival: Boolean(raw.isNewArrival),
@@ -118,6 +131,9 @@ export interface ProductAdminPayload {
   grossWeightGrams?: number | null;
   netMetalWeightGrams?: number | null;
   stoneWeightGrams?: number | null;
+  actualWastagePercent?: number | null;
+  offerWastagePercent?: number | null;
+  stockQuantity?: number;
   hallmarkStatus?: boolean;
   huid?: string | null;
   gender?: 'WOMEN' | 'MEN' | 'UNISEX' | 'KIDS';
@@ -130,6 +146,9 @@ export interface ProductAdminPayload {
   visibility?: 'PUBLISHED' | 'DRAFT' | 'ARCHIVED';
   images?: string[];
   imagePublicIds?: string[];
+  videos?: string[];
+  videoPublicIds?: string[];
+  media?: Array<{ type: 'IMAGE' | 'VIDEO'; url: string; publicId?: string; isPrimary?: boolean; order?: number }>;
   pricingModel?: {
     wastageType?: 'PERCENTAGE' | 'FIXED_WEIGHT';
     wastageValue?: number;
@@ -223,6 +242,27 @@ export function serializeProductPayload(
   if (!isPartial || (data as any).stoneWeightGrams !== undefined) {
     const sw = (data as any).stoneWeightGrams;
     payload.stoneWeightGrams = sw && Number(sw) > 0 ? Number(sw) : 0;
+  }
+  if (!isPartial || (data as any).actualWastagePercent !== undefined) {
+    const aw = (data as any).actualWastagePercent;
+    payload.actualWastagePercent = aw != null && aw !== '' && !Number.isNaN(Number(aw)) ? Number(aw) : null;
+  }
+  if (!isPartial || (data as any).offerWastagePercent !== undefined) {
+    const ow = (data as any).offerWastagePercent;
+    payload.offerWastagePercent = ow != null && ow !== '' && !Number.isNaN(Number(ow)) ? Number(ow) : null;
+  }
+  if (!isPartial || (data as any).stockQuantity !== undefined) {
+    const sq = (data as any).stockQuantity;
+    payload.stockQuantity = sq != null && sq !== '' && !Number.isNaN(Number(sq)) ? Math.max(0, Math.trunc(Number(sq))) : 1;
+  }
+  if (!isPartial || (data as any).videos !== undefined) {
+    payload.videos = Array.isArray((data as any).videos) ? (data as any).videos : [];
+  }
+  if (!isPartial || (data as any).videoPublicIds !== undefined) {
+    payload.videoPublicIds = Array.isArray((data as any).videoPublicIds) ? (data as any).videoPublicIds : [];
+  }
+  if (!isPartial || (data as any).media !== undefined) {
+    payload.media = Array.isArray((data as any).media) ? (data as any).media : undefined;
   }
   if (!isPartial || (data as any).gender !== undefined) {
     payload.gender = (data as any).gender || 'WOMEN';

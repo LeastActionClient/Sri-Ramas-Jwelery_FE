@@ -37,24 +37,19 @@ export const RateManagementPage: React.FC = () => {
     queryFn: ratesApi.getLiveRates,
   });
 
-  const { data: history = [] } = useQuery({
-    queryKey: ['rates', 'history', 30],
-    queryFn: () => ratesApi.getRateHistory(30),
-  });
-
   const effectiveGold = useMemo(
     () => ({
-      r24: goldDraft.r24 ?? String(liveRates ? paiseToRupees(liveRates.gold['24K']) : 8100),
-      r22: goldDraft.r22 ?? String(liveRates ? paiseToRupees(liveRates.gold['22K']) : 7450),
-      r18: goldDraft.r18 ?? String(liveRates ? paiseToRupees(liveRates.gold['18K']) : 6100),
+      r24: goldDraft.r24 ?? (liveRates?.gold?.['24K'] ? String(paiseToRupees(liveRates.gold['24K'])) : ''),
+      r22: goldDraft.r22 ?? (liveRates?.gold?.['22K'] ? String(paiseToRupees(liveRates.gold['22K'])) : ''),
+      r18: goldDraft.r18 ?? (liveRates?.gold?.['18K'] ? String(paiseToRupees(liveRates.gold['18K'])) : ''),
     }),
     [goldDraft, liveRates]
   );
 
   const effectiveSilver = useMemo(
     () => ({
-      r999: silverDraft.r999 ?? String(liveRates ? paiseToRupees(liveRates.silver['999']) : 100),
-      r925: silverDraft.r925 ?? String(liveRates ? paiseToRupees(liveRates.silver['925']) : 93),
+      r999: silverDraft.r999 ?? (liveRates?.silver?.['999'] ? String(paiseToRupees(liveRates.silver['999'])) : ''),
+      r925: silverDraft.r925 ?? (liveRates?.silver?.['925'] ? String(paiseToRupees(liveRates.silver['925'])) : ''),
     }),
     [silverDraft, liveRates]
   );
@@ -403,73 +398,6 @@ export const RateManagementPage: React.FC = () => {
             </button>
           </div>
         </form>
-      </div>
-
-      {/* Rate History Audit Trail */}
-      <div className="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden">
-        <div className="p-5 border-b border-stone-200">
-          <h2 className="font-serif font-bold text-base text-burgundy-950">
-            30-Day Rate History &amp; Provider Audit Trail
-          </h2>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-stone-50 border-b border-stone-200 text-stone-500 uppercase font-semibold">
-              <tr>
-                <th className="p-4">Metal</th>
-                <th className="p-4">Effective From</th>
-                <th className="p-4">Recorded Rates</th>
-                <th className="p-4">Source / Type</th>
-                <th className="p-4">Override Audit Reason</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-stone-100">
-              {history.length > 0 ? (
-                history.map((item) => (
-                  <tr key={item._id} className="hover:bg-stone-50">
-                    <td className="p-4 font-bold text-burgundy-900">{item.metal}</td>
-                    <td className="p-4 text-stone-600">{formatDateTime(item.effectiveFrom)}</td>
-                    <td className="p-4 font-mono">
-                      {Array.isArray(item.rates) ? (
-                        item.rates.map((r) => (
-                          <span key={r.purity} className="mr-3">
-                            {r.purity}: {formatPaiseToInr(r.ratePerGramPaise)}
-                          </span>
-                        ))
-                      ) : (
-                        <span>
-                          {item.purity ? `${item.purity}: ` : ''}
-                          {formatPaiseToInr(item.ratePerGramPaise || 0)}
-                        </span>
-                      )}
-                    </td>
-                    <td className="p-4">
-                      {item.isManualOverride || item.source === 'MANUAL' ? (
-                        <span className="px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-bold text-[10px]">
-                          MANUAL OVERRIDE
-                        </span>
-                      ) : (
-                        <span className="px-2 py-0.5 rounded bg-stone-100 text-stone-600 text-[10px]">
-                          {item.source || item.sourceProvider || 'AUTO_FEED'}
-                        </span>
-                      )}
-                    </td>
-                    <td className="p-4 text-stone-500 italic">
-                      {item.reason || item.overrideReason || 'Standard scheduled sync'}
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={5} className="p-8 text-center text-stone-400">
-                    No rate history entries found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
       </div>
     </div>
   );

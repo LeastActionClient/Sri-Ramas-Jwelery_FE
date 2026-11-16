@@ -15,7 +15,7 @@ import { adminApi } from '@/services/api/admin.api';
 import { enquiriesApi } from '@/services/api/enquiries.api';
 import { formatPaiseToInr } from '@/utils/currency';
 import { formatDate, getRelativeTime } from '@/utils/date';
-import { getWhatsAppEnquiryUrl } from '@/utils/whatsapp';
+import { getAdminCustomerWhatsAppUrl } from '@/utils/whatsapp';
 
 export const DashboardOverviewPage: React.FC = () => {
   const { data: stats, isLoading: statsLoading } = useQuery({
@@ -81,10 +81,16 @@ export const DashboardOverviewPage: React.FC = () => {
             </div>
           </div>
           <div className="text-2xl font-serif font-bold text-burgundy-950">
-            {stats?.currentRates?.gold?.['22K']
-              ? formatPaiseToInr(stats.currentRates.gold['22K'])
-              : '₹7,450.00'}
-            <span className="text-xs font-sans font-normal text-stone-500 ml-1">/ gram</span>
+            {statsLoading ? (
+              <span className="text-stone-300 animate-pulse text-lg">Loading...</span>
+            ) : stats?.currentRates?.gold?.['22K'] && stats.currentRates.gold['22K'] > 0 ? (
+              <>
+                {formatPaiseToInr(stats.currentRates.gold['22K'])}
+                <span className="text-xs font-sans font-normal text-stone-500 ml-1">/ gram</span>
+              </>
+            ) : (
+              <span className="text-stone-400 text-lg">Rate Awaits Publish</span>
+            )}
           </div>
           <p className="text-[11px] text-stone-500">
             Standard jewellery hallmark benchmark
@@ -102,10 +108,14 @@ export const DashboardOverviewPage: React.FC = () => {
             </div>
           </div>
           <div className="text-2xl font-serif font-bold text-burgundy-950">
-            {stats?.activeEnquiries ?? recentEnquiries.length}
+            {statsLoading ? (
+              <span className="text-stone-300 animate-pulse text-lg">...</span>
+            ) : (
+              stats?.activeEnquiries ?? 0
+            )}
           </div>
           <p className="text-[11px] text-stone-500">
-            Pending response & follow-up
+            Pending response &amp; follow-up
           </p>
         </div>
 
@@ -120,7 +130,11 @@ export const DashboardOverviewPage: React.FC = () => {
             </div>
           </div>
           <div className="text-2xl font-serif font-bold text-burgundy-950">
-            {stats?.totalProducts ?? 48}
+            {statsLoading ? (
+              <span className="text-stone-300 animate-pulse text-lg">...</span>
+            ) : (
+              stats?.totalProducts ?? 0
+            )}
           </div>
           <p className="text-[11px] text-stone-500">
             Active jewellery items on public site
@@ -138,10 +152,14 @@ export const DashboardOverviewPage: React.FC = () => {
             </div>
           </div>
           <div className="text-2xl font-serif font-bold text-burgundy-950">
-            {stats?.newEnquiriesToday ?? 5}
+            {statsLoading ? (
+              <span className="text-stone-300 animate-pulse text-lg">...</span>
+            ) : (
+              stats?.newEnquiriesToday ?? 0
+            )}
           </div>
           <p className="text-[11px] text-stone-500">
-            Received in the last 24 hours
+            Received in current business day
           </p>
         </div>
       </div>
@@ -223,19 +241,29 @@ export const DashboardOverviewPage: React.FC = () => {
                       {getRelativeTime(enquiry.createdAt)}
                     </td>
                     <td className="p-4 text-right">
-                      <a
-                        href={getWhatsAppEnquiryUrl({
-                          type: enquiry.enquiryType,
-                          referenceId: enquiry.enquiryNumber,
+                      {(() => {
+                        const targetPhone = (enquiry as any).customerMobile || (enquiry as any).customerPhone;
+                        const chatUrl = getAdminCustomerWhatsAppUrl({
+                          customerPhone: targetPhone,
                           customerName: enquiry.customerName,
-                        })}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-[11px]"
-                      >
-                        <span>WhatsApp</span>
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
+                          enquiryNumber: enquiry.enquiryNumber,
+                          enquiryType: enquiry.enquiryType,
+                        });
+
+                        return chatUrl ? (
+                          <a
+                            href={chatUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-[11px]"
+                          >
+                            <span>WhatsApp</span>
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        ) : (
+                          <span className="text-[11px] text-stone-400 italic">No WhatsApp</span>
+                        );
+                      })()}
                     </td>
                   </tr>
                 ))

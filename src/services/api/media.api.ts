@@ -101,19 +101,35 @@ export const ALLOWED_IMAGE_MIME_TYPES = new Set([
   'image/jpg',
   'image/webp',
   'image/avif',
+  'image/gif',
 ]);
 
-export const MAX_UPLOAD_SIZE_BYTES = 10 * 1024 * 1024;
+export const ALLOWED_VIDEO_MIME_TYPES = new Set([
+  'video/mp4',
+  'video/webm',
+  'video/quicktime',
+]);
+
+export const MAX_IMAGE_UPLOAD_BYTES = 10 * 1024 * 1024; // 10MB
+export const MAX_VIDEO_UPLOAD_BYTES = 50 * 1024 * 1024; // 50MB
 
 /**
- * Validates file type and size before uploading to cloud or persistent backend storage.
+ * Validates file type and size before uploading to Cloudinary.
  */
 export function validateImageFile(file: Blob): void {
-  if (file.type && !ALLOWED_IMAGE_MIME_TYPES.has(file.type.toLowerCase())) {
-    throw new Error('Unsupported image format. Please upload a PNG, JPG, WEBP, or AVIF file.');
+  const type = file.type?.toLowerCase() || '';
+  const isVideo = type.startsWith('video/') || ALLOWED_VIDEO_MIME_TYPES.has(type);
+  const isImage = type.startsWith('image/') || ALLOWED_IMAGE_MIME_TYPES.has(type);
+
+  if (!isVideo && !isImage) {
+    throw new Error('Unsupported media format. Please upload PNG, JPG, WEBP, AVIF, MP4, WEBM, or MOV.');
   }
-  if (file.size > MAX_UPLOAD_SIZE_BYTES) {
-    throw new Error('Image file exceeds the 10MB upload limit.');
+
+  const maxBytes = isVideo ? MAX_VIDEO_UPLOAD_BYTES : MAX_IMAGE_UPLOAD_BYTES;
+  if (file.size > maxBytes) {
+    throw new Error(
+      `${isVideo ? 'Video' : 'Image'} file exceeds the ${isVideo ? '50MB' : '10MB'} upload limit.`
+    );
   }
 }
 
@@ -312,6 +328,9 @@ export const mediaApi = {
       });
     }
 
+    const isVideo = file.type?.toLowerCase().startsWith('video/') || false;
+    const resourceType = isVideo ? 'video' : 'image';
+
     const formData = new FormData();
     formData.append('file', file);
     formData.append('api_key', sig.apiKey);
@@ -319,20 +338,21 @@ export const mediaApi = {
     formData.append('signature', sig.signature);
     formData.append('folder', sig.folder);
 
-    const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${encodeURIComponent(sig.cloudName)}/image/upload`;
+    const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${encodeURIComponent(sig.cloudName)}/${resourceType}/upload`;
 
     let uploadRes;
     try {
       uploadRes = await axios.post(cloudinaryUrl, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-    } catch (error: any) {
-      const cloudErr = error?.response?.data?.error?.message;
-      throw new Error(
-        cloudErr
-          ? `Cloudinary upload failed: ${cloudErr}`
-          : 'Cloudinary upload failed. Please check network connectivity or Cloudinary configuration.'
-      );
+    } catch {
+      // Fallback: Upload through authenticated backend service directly into Cloudinary
+      return mediaApi.uploadLocalMedia({
+        file,
+        folder,
+        fileName: file instanceof File ? file.name : undefined,
+        altText,
+      });
     }
 
     const { secure_url, public_id, format, width, height, bytes } = uploadRes.data || {};
@@ -360,6 +380,11 @@ export const mediaApi = {
       bytes,
       storageProvider: 'cloudinary',
     };
+  },
+
+  deleteMediaByPublicId: async (publicId: string): Promise<void> => {
+    if (!publicId) return;
+    await apiClient.post('/admin/media/delete-by-public-id', { publicId });
   },
 
   generateProductImage: async (

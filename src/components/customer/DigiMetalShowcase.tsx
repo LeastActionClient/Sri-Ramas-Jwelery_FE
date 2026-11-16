@@ -20,6 +20,7 @@ import { useStoreWhatsApp } from '@/hooks/useStoreWhatsApp';
 import { formatPaiseToInr } from '@/utils/currency';
 import { formatDateTime } from '@/utils/date';
 import { AnimatedCTA, ScrollReveal, StaggerReveal } from '@/components/motion';
+import { DigiEducationalSection } from './DigiEducationalSection';
 
 interface DigiMetalShowcaseProps {
   metal: 'GOLD' | 'SILVER';
@@ -244,6 +245,22 @@ export const DigiMetalShowcase: React.FC<DigiMetalShowcaseProps> = ({ metal }) =
         : undefined,
   });
 
+  const confirmWhatsAppHref = useMemo(() => {
+    const formattedAmount = Number(computedResult.amountNum || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+    const formattedWeight = computedResult.weightNum.toFixed(calcConfig.decimalPrecision);
+    const rateFormatted = formatPaiseToInr(ratePerGramPaise);
+
+    const message =
+      computedResult.amountNum > 0 && computedResult.weightNum > 0
+        ? `Namaste Sri Ramas Jewellery,\n\nI would like to confirm my Digi${isGold ? 'Gold' : 'Silver'} estimation from your website:\n• Entered Amount: ₹${formattedAmount}\n• Estimated ${calcConfig.purityKey} ${isGold ? 'Gold' : 'Silver'} Weight: ${formattedWeight} grams\n• Current Displayed Reference Rate: ₹${rateFormatted}/g\n\nPlease connect with me regarding showroom consultation and guidance.\n\nThank you!`
+        : `Namaste Sri Ramas Jewellery,\n\nI am interested in Digi${isGold ? 'Gold' : 'Silver'} (${calcConfig.purityKey}) live rates and showroom guidance. Please assist me.`;
+
+    return buildWhatsAppUrl({
+      type: isGold ? 'DIGIGOLD' : 'DIGISILVER',
+      customMessage: message,
+    });
+  }, [buildWhatsAppUrl, computedResult, calcConfig, isGold, ratePerGramPaise]);
+
   const rateLabelText =
     content?.rateLabel ||
     (isGold
@@ -263,140 +280,188 @@ export const DigiMetalShowcase: React.FC<DigiMetalShowcaseProps> = ({ metal }) =
     calcConfig.disclaimerText ||
     'Indicative estimation based on the current reference rate per gram. No online purchase, order booking, or payment occurs on this website. Final showroom valuation is confirmed at the counter.';
 
+  const heroBgImage = isGold
+    ? '/images/generated/digigold-hero-bg.jpg'
+    : '/images/generated/digisilver-hero-bg.jpg';
+
+  const eyebrowText = isGold
+    ? 'SRI RAMAS DIGIGOLD | 24K PURE GOLD'
+    : 'SRI RAMAS DIGISILVER | PURE SILVER';
+
+  const headingText = isGold
+    ? 'DIGIGOLD – SAVE IN PURE 24K GOLD'
+    : 'DIGISILVER – BUILD YOUR SILVER SAVINGS';
+
+  const descriptionText = isGold
+    ? 'Start your gold savings journey with flexible investments and track your accumulated digital gold value with ease.'
+    : 'Discover a smarter way to save in digital silver and track your silver holdings conveniently.';
+
+  const secondaryCtaLabel = isGold ? 'EXPLORE DIGISILVER' : 'EXPLORE DIGIGOLD';
+  const secondaryCtaHref = isGold ? '/digisilver' : '/digigold';
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
-      {/* 1. Unified Burgundy & Gold Header Banner with Brand Crest */}
-      <ScrollReveal variant="fade-up" immediate>
-        <div className="relative overflow-hidden rounded-3xl border-2 border-gold-500/45 bg-brand-maroon-gradient text-gold-100 shadow-luxury p-7 sm:p-12">
-          {bannerSrc && (
-            <img
-              src={bannerSrc}
-              alt={content?.headline || `Digi${isGold ? 'Gold' : 'Silver'} Showcase`}
-              className="absolute inset-0 w-full h-full object-cover object-center opacity-25 mix-blend-luminosity"
-            />
-          )}
+    <div className="w-full min-h-screen">
+      {/* 1. Full-Viewport Luxury Hero Section (No Outer Card Container) */}
+      <section className="relative w-full min-h-[85vh] lg:min-h-[88vh] flex items-center overflow-hidden bg-[#1A0307] text-gold-100 py-16 sm:py-20 lg:py-24 border-b-2 border-gold-500/30">
+        {/* Full-bleed Background Luxury Bullion Imagery */}
+        <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
+          <img
+            src={heroBgImage}
+            alt={headingText}
+            className="w-full h-full object-cover object-center scale-[1.02]"
+          />
+          {/* Deep Burgundy Contrast Vignette Scrim for 100% Readability */}
           <div
             aria-hidden="true"
-            className="absolute inset-0 bg-gradient-to-r from-[#260309]/95 via-[#3B060E]/90 to-[#520C18]/75"
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background:
+                'linear-gradient(180deg, rgba(20, 2, 5, 0.88) 0%, rgba(36, 5, 11, 0.80) 45%, rgba(20, 2, 5, 0.94) 100%)',
+            }}
           />
+          {/* Side Scrim for Left-Aligned Luxury Editorial Legibility */}
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 bg-gradient-to-r from-[#140205]/95 via-[#24050B]/85 to-transparent/60 pointer-events-none"
+          />
+          {/* Ambient Champagne Gold Radiance */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 w-[48rem] h-[25rem] rounded-full bg-[#C49A3A]/20 blur-3xl"
+          />
+        </div>
 
-          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
-            <div className="space-y-4 max-w-2xl">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-gold-400 bg-burgundy-950 p-0.5 shadow-luxury-gold shrink-0">
-                  <img
-                    src="/logo.jpg"
-                    alt="Sri Ramas Jewellery Crest"
-                    className="w-full h-full object-cover rounded-full"
-                  />
+        {/* Hero Content Container */}
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-10">
+            {/* Left Content Column */}
+            <div className="space-y-6 max-w-2xl">
+              <ScrollReveal variant="fade-up" immediate>
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-gold-400 bg-burgundy-950 p-0.5 shadow-luxury-gold shrink-0">
+                    <img
+                      src="/logo.jpg"
+                      alt="Sri Ramas Jewellery Crest"
+                      className="w-full h-full object-cover rounded-full"
+                    />
+                  </div>
+                  <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-gold-400/20 text-gold-300 text-xs font-bold uppercase tracking-widest border border-gold-400/40 shadow-sm backdrop-blur-xs">
+                    <ShieldCheck className="w-3.5 h-3.5 text-gold-400" />
+                    <span>{eyebrowText}</span>
+                  </div>
                 </div>
-                <div>
-                  <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-gold-400/20 text-gold-300 text-[11px] font-bold uppercase tracking-widest border border-gold-400/35">
-                    <ShieldCheck className="w-3.5 h-3.5" />
-                    <span>
-                      Sri Ramas Digi{isGold ? 'Gold' : 'Silver'} ({calcConfig.purityKey})
-                    </span>
+              </ScrollReveal>
+
+              <ScrollReveal variant="fade-up" delay={80}>
+                <h1
+                  className="font-serif text-3xl sm:text-5xl lg:text-6xl font-extrabold text-[#FCE7B2] leading-tight tracking-wide"
+                  style={{
+                    textShadow:
+                      '0 4px 20px rgba(0, 0, 0, 0.95), 0 2px 6px rgba(0, 0, 0, 0.85)',
+                  }}
+                >
+                  {headingText}
+                </h1>
+              </ScrollReveal>
+
+              <ScrollReveal variant="fade-up" delay={120}>
+                <p
+                  className="text-sm sm:text-base lg:text-lg text-gold-100/90 font-light leading-relaxed max-w-xl"
+                  style={{
+                    textShadow: '0 2px 10px rgba(0, 0, 0, 0.85)',
+                  }}
+                >
+                  {descriptionText}
+                </p>
+              </ScrollReveal>
+
+              {/* Action Buttons */}
+              <ScrollReveal variant="fade-up" delay={160}>
+                <div className="flex flex-wrap items-center gap-4 pt-2">
+                  <AnimatedCTA
+                    variant="gold"
+                    href={defaultWhatsAppHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    icon={<MessageCircle className="w-4 h-4" />}
+                    className="px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-wider shadow-luxury-gold"
+                  >
+                    ENQUIRE ON WHATSAPP
+                  </AnimatedCTA>
+
+                  <Link
+                    to={secondaryCtaHref}
+                    className="px-5 py-3 rounded-xl border-2 border-gold-400/60 bg-burgundy-950/60 text-gold-200 hover:bg-gold-400/20 hover:border-gold-300 text-xs font-bold uppercase tracking-wider transition-all duration-300 backdrop-blur-xs shadow-md"
+                  >
+                    {secondaryCtaLabel} →
+                  </Link>
+                </div>
+              </ScrollReveal>
+            </div>
+
+            {/* Right Column: Live Rate Display Card */}
+            <ScrollReveal variant="fade-up" delay={200} className="w-full lg:w-[380px] shrink-0">
+              <div className="bg-burgundy-950/85 backdrop-blur-md rounded-2xl border-2 border-gold-400/50 p-6 sm:p-7 shadow-luxury-gold space-y-4">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-gold-300">
+                    <TrendingUp className="w-3.5 h-3.5 text-gold-400" />
+                    <span>Live Rate Display</span>
+                  </span>
+                  <span className="px-2.5 py-0.5 rounded-full bg-gold-400/15 border border-gold-400/35 text-[10px] font-semibold text-gold-200">
+                    {sourceBadgeText}
                   </span>
                 </div>
-              </div>
 
-              <h1 className="font-serif text-3xl sm:text-5xl font-extrabold text-[#FCE7B2] leading-tight">
-                {content?.headline ||
-                  (isGold
-                    ? 'DigiGold — 24K Pure Gold Guide & Calculator'
-                    : 'DigiSilver — 999 Fine Silver Guide & Calculator')}
-              </h1>
+                <div>
+                  <p className="text-xs text-gold-200/80 mb-1">{rateLabelText}</p>
+                  {ratesLoading ? (
+                    <div className="h-10 w-44 rounded bg-gold-400/20 animate-pulse" />
+                  ) : ratesError || ratePerGramPaise <= 0 ? (
+                    <div className="space-y-2 py-1">
+                      <p className="text-sm font-semibold text-amber-200">
+                        Reference rate unavailable right now.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => refetchRates()}
+                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-gold-400/20 text-gold-200 text-xs"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" />
+                        <span>Refresh Rate</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-baseline gap-2">
+                      <span className="font-serif text-3xl sm:text-4xl font-extrabold text-[#FCE7B2] tabular-nums">
+                        {formatPaiseToInr(ratePerGramPaise)}
+                      </span>
+                      <span className="text-xs text-gold-300 font-medium">/ gram</span>
+                    </div>
+                  )}
+                </div>
 
-              {content?.subtitle && (
-                <p className="text-sm sm:text-base font-medium text-gold-200">
-                  {content.subtitle}
-                </p>
-              )}
-
-              <p className="text-xs sm:text-sm text-gold-100/85 font-light leading-relaxed">
-                {content?.description ||
-                  (isGold
-                    ? 'Monitor live 24K bullion reference rates, estimate gold gram equivalents effortlessly, and consult our showroom advisors for bridal & heirloom gold redemption.'
-                    : 'Track live 999 fine silver rates, calculate indicative silver weights instantly, and plan silver pooja silverware or ornamental acquisitions at our showrooms.')}
-              </p>
-
-              <div className="flex flex-wrap items-center gap-3 pt-1">
-                <AnimatedCTA
-                  variant="gold"
-                  href={defaultWhatsAppHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  icon={<MessageCircle className="w-4 h-4" />}
-                  className="px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider"
-                >
-                  {content?.ctaText || 'Enquire on WhatsApp'}
-                </AnimatedCTA>
-
-                <Link
-                  to={isGold ? '/digisilver' : '/digigold'}
-                  className="px-4 py-2.5 rounded-xl border border-gold-400/50 text-gold-200 hover:bg-gold-400/10 text-xs font-semibold transition-colors"
-                >
-                  Switch to {isGold ? 'DigiSilver' : 'DigiGold'} →
-                </Link>
-              </div>
-            </div>
-
-            {/* Live Rate Card inside Header */}
-            <div className="w-full lg:w-[370px] shrink-0 bg-burgundy-950/85 backdrop-blur-md rounded-2xl border border-gold-400/50 p-6 shadow-luxury-gold space-y-4">
-              <div className="flex items-center justify-between gap-2">
-                <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-gold-300">
-                  <TrendingUp className="w-3.5 h-3.5 text-gold-400" />
-                  <span>Live Rate Display</span>
-                </span>
-                <span className="px-2.5 py-0.5 rounded-full bg-gold-400/15 border border-gold-400/35 text-[10px] font-semibold text-gold-200">
-                  {sourceBadgeText}
-                </span>
-              </div>
-
-              <div>
-                <p className="text-xs text-gold-200/80 mb-1">{rateLabelText}</p>
-                {ratesLoading ? (
-                  <div className="h-10 w-44 rounded bg-gold-400/20 animate-pulse" />
-                ) : ratesError || ratePerGramPaise <= 0 ? (
-                  <div className="space-y-2 py-1">
-                    <p className="text-sm font-semibold text-amber-200">
-                      Reference rate unavailable right now.
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => refetchRates()}
-                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-gold-400/20 text-gold-200 text-xs"
-                    >
-                      <RefreshCw className="w-3.5 h-3.5" />
-                      <span>Refresh Rate</span>
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex items-baseline gap-2">
-                    <span className="font-serif text-3xl sm:text-4xl font-extrabold text-[#FCE7B2] tabular-nums">
-                      {formatPaiseToInr(ratePerGramPaise)}
-                    </span>
-                    <span className="text-xs text-gold-300 font-medium">/ gram</span>
+                {rates?.effectiveDate && (
+                  <div className="flex items-center gap-1.5 text-[11px] text-gold-200/75 border-t border-gold-500/25 pt-3">
+                    <Clock className="w-3.5 h-3.5 text-gold-400 shrink-0" />
+                    <span>Updated: {formatDateTime(rates.effectiveDate)}</span>
                   </div>
                 )}
+
+                <p className="text-[10.5px] text-gold-300/75 leading-relaxed">
+                  Advisory showroom reference. Visit showroom counter for final certified weights and confirmation.
+                </p>
               </div>
-
-              {rates?.effectiveDate && (
-                <div className="flex items-center gap-1.5 text-[11px] text-gold-200/75 border-t border-gold-500/25 pt-3">
-                  <Clock className="w-3.5 h-3.5 text-gold-400 shrink-0" />
-                  <span>Updated: {formatDateTime(rates.effectiveDate)}</span>
-                </div>
-              )}
-
-              <p className="text-[10.5px] text-gold-300/75 leading-relaxed">
-                Advisory showroom reference. Visit showroom counter for final certified weights and confirmation.
-              </p>
-            </div>
+            </ScrollReveal>
           </div>
         </div>
-      </ScrollReveal>
+      </section>
 
-      {/* 2. Interactive Bi-Directional Amount <-> Grams Calculator */}
+      {/* Main Content Sections: Educational Guide, Calculator, FAQs */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 space-y-12 sm:space-y-16">
+        {/* 2. Educational Section — What is DigiGold / DigiSilver? */}
+        <DigiEducationalSection metal={metal} />
+
+      {/* 3. Interactive Bi-Directional Amount <-> Grams Calculator */}
       {calcConfig.isEnabled ? (
         <ScrollReveal variant="fade-up">
           <section
@@ -553,11 +618,15 @@ export const DigiMetalShowcase: React.FC<DigiMetalShowcaseProps> = ({ metal }) =
                   <div className="flex flex-wrap gap-2.5 shrink-0">
                     <AnimatedCTA
                       variant="whatsapp"
-                      href={defaultWhatsAppHref}
+                      href={confirmWhatsAppHref}
                       target="_blank"
                       rel="noopener noreferrer"
-                      icon={<MessageCircle className="w-4 h-4" />}
-                      className="px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider"
+                      icon={
+                        <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-white shrink-0" aria-hidden="true">
+                          <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2m.01 1.67c2.2 0 4.26.86 5.82 2.42a8.225 8.225 0 0 1 2.41 5.83c0 4.54-3.7 8.24-8.24 8.24-1.48 0-2.93-.39-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.196 8.196 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24m4.52 11.66c-.25-.13-1.47-.72-1.7-.81-.23-.08-.39-.13-.56.13-.17.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.13-1.06-.39-2.03-1.25-.75-.67-1.26-1.5-1.41-1.75-.15-.25-.02-.39.11-.51.11-.11.25-.29.37-.44.13-.15.17-.25.25-.42.08-.17.04-.31-.02-.44-.06-.13-.56-1.34-.76-1.84-.2-.49-.4-.42-.56-.43h-.48c-.17 0-.44.06-.67.31-.23.25-.88.86-.88 2.1 0 1.24.9 2.44 1.03 2.61.13.17 1.78 2.71 4.3 3.8 2.53 1.09 2.53.73 2.98.69.46-.04 1.47-.6 1.68-1.18.21-.58.21-1.08.15-1.18-.06-.1-.23-.17-.48-.29" />
+                        </svg>
+                      }
+                      className="px-5 py-3 rounded-xl text-xs font-bold uppercase tracking-wider bg-[#25D366] hover:bg-[#20BD5A] text-white shadow-md hover:shadow-lg transition-all"
                     >
                       Confirm on WhatsApp
                     </AnimatedCTA>
@@ -565,7 +634,7 @@ export const DigiMetalShowcase: React.FC<DigiMetalShowcaseProps> = ({ metal }) =
                       variant="outline"
                       href={telHref}
                       icon={<Phone className="w-4 h-4 text-gold-700" />}
-                      className="px-4 py-2.5 rounded-xl text-xs font-semibold"
+                      className="px-4 py-3 rounded-xl text-xs font-semibold"
                     >
                       Call {displayPhone}
                     </AnimatedCTA>
@@ -679,6 +748,7 @@ export const DigiMetalShowcase: React.FC<DigiMetalShowcaseProps> = ({ metal }) =
           </section>
         </ScrollReveal>
       )}
+      </div>
     </div>
   );
 };

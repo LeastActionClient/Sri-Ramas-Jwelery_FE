@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 
 // Layouts
 import { CustomerLayout } from '@/components/customer/CustomerLayout';
@@ -25,8 +25,13 @@ import { CategoryManagementPage } from '@/pages/admin/CategoryManagementPage';
 import { RateManagementPage } from '@/pages/admin/RateManagementPage';
 import { EnquiryCrmPage } from '@/pages/admin/EnquiryCrmPage';
 import { SchemesManagementPage } from '@/pages/admin/SchemesManagementPage';
-import { AuditLogsPage } from '@/pages/admin/AuditLogsPage';
 import { HomepageCmsPage } from '@/pages/admin/HomepageCmsPage';
+
+// Helper component to preserve URL search query parameters on redirects (e.g., /collections?category=bangles -> /products?category=bangles)
+const RedirectWithSearch: React.FC<{ to: string }> = ({ to }) => {
+  const location = useLocation();
+  return <Navigate to={`${to}${location.search}`} replace />;
+};
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -34,9 +39,9 @@ export const AppRoutes: React.FC = () => {
       {/* Customer-Facing Showcase Website Routes */}
       <Route element={<CustomerLayout />}>
         <Route path="/" element={<HomePage />} />
-        <Route path="/categories" element={<Navigate to="/products" replace />} />
+        <Route path="/categories" element={<RedirectWithSearch to="/products" />} />
         <Route path="/products" element={<ProductCatalogPage />} />
-        <Route path="/collections" element={<Navigate to="/products" replace />} />
+        <Route path="/collections" element={<RedirectWithSearch to="/products" />} />
         <Route path="/products/:slug" element={<ProductDetailPage />} />
         <Route path="/rates" element={<Navigate to="/" replace />} />
         <Route path="/schemes" element={<SchemesPage />} />
@@ -62,9 +67,10 @@ export const AppRoutes: React.FC = () => {
         <Route path="rates" element={<RateManagementPage />} />
         <Route path="enquiries" element={<EnquiryCrmPage />} />
         <Route path="schemes" element={<SchemesManagementPage />} />
-        <Route path="audit-logs" element={<AuditLogsPage />} />
         <Route path="banners" element={<HomepageCmsPage key="admin-banners" defaultTab="BANNERS" />} />
-        <Route path="cms" element={<HomepageCmsPage key="admin-cms" defaultTab="STORES" />} />
+        <Route path="digi-cms" element={<Navigate to="/admin/banners" replace />} />
+        <Route path="cms" element={<Navigate to="/admin/banners" replace />} />
+        <Route path="audit-logs" element={<Navigate to="/admin/dashboard" replace />} />
       </Route>
 
       {/* Catch-all */}

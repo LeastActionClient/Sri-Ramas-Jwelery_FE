@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
-import { Menu, X, Phone, MessageCircle } from 'lucide-react';
+import { Menu, X, MessageCircle } from 'lucide-react';
 import { useStoreWhatsApp } from '@/hooks/useStoreWhatsApp';
 
 const HERO_NAVBAR_THRESHOLD = 96;
@@ -10,7 +10,7 @@ export const Navbar: React.FC = () => {
   const isHomePage = location.pathname === '/';
   const [mobileMenuPath, setMobileMenuPath] = useState<string | null>(null);
   const [isOverHero, setIsOverHero] = useState(true);
-  const { displayPhone, telHref, buildWhatsAppUrl } = useStoreWhatsApp();
+  const { buildWhatsAppUrl } = useStoreWhatsApp();
 
   const generalWhatsAppUrl = buildWhatsAppUrl({ type: 'GENERAL' });
   const mobileMenuOpen = mobileMenuPath === location.pathname;
@@ -134,18 +134,6 @@ export const Navbar: React.FC = () => {
           {/* Right: Actions */}
           <div className="flex items-center gap-2.5 shrink-0 ml-1">
             <a
-              href={telHref}
-              className={`hidden 2xl:flex items-center gap-1.5 text-gold-200 hover:text-gold-100 text-xs font-medium px-3 py-1.5 rounded-full border transition-all duration-300 whitespace-nowrap hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 ${
-                isHeroOverlay
-                  ? 'border-gold-400/50 bg-burgundy-950/35 backdrop-blur-sm hover:border-gold-400'
-                  : 'border-gold-700/50 hover:border-gold-500'
-              }`}
-            >
-              <Phone className="w-3.5 h-3.5 text-gold-400" />
-              <span>{displayPhone}</span>
-            </a>
-
-            <a
               href={generalWhatsAppUrl}
               target="_blank"
               rel="noopener noreferrer"
@@ -214,14 +202,7 @@ export const Navbar: React.FC = () => {
             <MessageCircle className="w-4 h-4" />
             <span>Enquire on WhatsApp</span>
           </a>
-          <div className="flex items-center justify-between text-xs text-gold-300/80 px-2 pt-1">
-            <a
-              href={telHref}
-              tabIndex={mobileMenuOpen ? 0 : -1}
-              className="flex items-center gap-1 hover:text-gold-200"
-            >
-              <Phone className="w-3.5 h-3.5" /> Call Store
-            </a>
+          <div className="flex items-center justify-end text-xs text-gold-300/80 px-2 pt-1">
             <Link
               to="/admin/login"
               tabIndex={mobileMenuOpen ? 0 : -1}

@@ -7,7 +7,6 @@ import {
   TrendingUp,
   MessageSquareText,
   Award,
-  ShieldAlert,
   LogOut,
   Menu,
   X,
@@ -17,13 +16,13 @@ import {
   AlertTriangle,
   Eye,
   EyeOff,
-  Store,
   Images
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useRates } from '@/hooks/useRates';
 import { formatPaiseToInr } from '@/utils/currency';
 import { authApi } from '@/services/api/auth.api';
+import { AdminModalPortal } from './AdminModalPortal';
 
 export const AdminLayout: React.FC = () => {
   const { user, isAuthenticated, isLoading, logout, refreshUser } = useAuth();
@@ -81,9 +80,7 @@ export const AdminLayout: React.FC = () => {
     { label: 'Bullion Rates', path: '/admin/rates', icon: TrendingUp },
     { label: 'Enquiry CRM', path: '/admin/enquiries', icon: MessageSquareText },
     { label: 'Savings Schemes', path: '/admin/schemes', icon: Award },
-    { label: 'Homepage Banners', path: '/admin/banners', icon: Images },
-    { label: 'Showrooms & CMS', path: '/admin/cms', icon: Store },
-    { label: 'System Audit Logs', path: '/admin/audit-logs', icon: ShieldAlert },
+    { label: 'Banners & Digi CMS', path: '/admin/banners', icon: Images },
   ];
 
   const handleLogout = async () => {
@@ -342,8 +339,9 @@ export const AdminLayout: React.FC = () => {
 
         {/* Change Password Modal */}
         {changePasswordOpen && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal-950/70 backdrop-blur-sm animate-fade-in"
+          <AdminModalPortal>
+            <div
+              className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-charcoal-950/70 backdrop-blur-sm animate-fade-in"
             role="dialog"
             aria-modal="true"
             onClick={(e) => {
@@ -484,6 +482,7 @@ export const AdminLayout: React.FC = () => {
               </form>
             </div>
           </div>
+        </AdminModalPortal>
         )}
 
         {/* Page Outlet */}

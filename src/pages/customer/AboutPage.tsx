@@ -1,11 +1,11 @@
 import React from 'react';
-import { Award, ShieldCheck, Gem, Users, Sparkles } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Award, ShieldCheck, Gem, Users, Sparkles, ArrowRight } from 'lucide-react';
 import { useStoreWhatsApp } from '@/hooks/useStoreWhatsApp';
 import {
   ScrollReveal,
   StaggerReveal,
   AnimatedHeading,
-  ImageReveal,
   AnimatedCTA,
 } from '@/components/motion';
 
@@ -13,53 +13,112 @@ export const AboutPage: React.FC = () => {
   const { buildWhatsAppUrl } = useStoreWhatsApp();
 
   return (
-    <>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-16">
-        {/* Banner with Official Logo */}
-        <ScrollReveal variant="fade-up" immediate>
-          <div className="bg-brand-maroon-gradient text-gold-100 rounded-3xl p-8 sm:p-16 border-2 border-gold-500/40 shadow-luxury text-center space-y-6 relative overflow-hidden">
-            {/* Subtle Radial Crest Glow */}
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 w-[36rem] h-[20rem] rounded-full bg-gold-500/10 blur-3xl"
-            />
-            <div className="relative z-10 space-y-4 max-w-3xl mx-auto">
-              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-2 border-gold-400 p-1 mx-auto bg-burgundy-950 shadow-luxury-gold transition-transform duration-500 ease-luxury hover:scale-[1.03]">
+    <div className="w-full min-h-screen">
+      {/* 1. Full-Viewport Luxury Heritage Hero Section (No Outer Card Container) */}
+      <section className="relative w-full min-h-[85vh] lg:min-h-[88vh] flex items-center justify-center overflow-hidden bg-[#1A0307] text-gold-100 py-16 sm:py-20 lg:py-24 border-b-2 border-gold-500/30">
+        {/* Full-bleed Background Luxury Temple Jewellery Artwork */}
+        <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
+          <img
+            src="/images/generated/heritage-hero-bg.jpg"
+            alt="Sri Ramas Jewellery Royal Heritage & Artistry"
+            className="w-full h-full object-cover object-center scale-[1.02]"
+          />
+          {/* Deep Burgundy & Royal Wine Contrast Vignette Scrim for 100% Readability */}
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background:
+                'linear-gradient(180deg, rgba(20, 2, 5, 0.88) 0%, rgba(36, 5, 11, 0.80) 50%, rgba(20, 2, 5, 0.94) 100%)',
+            }}
+          />
+          {/* Radial Backing Scrim Centered on Hero Content */}
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 bg-gradient-to-t from-[#140205] via-[#140205]/60 to-[#140205]/40 pointer-events-none"
+          />
+          {/* Ambient Champagne Gold Glow in Top Center */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 w-[48rem] h-[25rem] rounded-full bg-[#C49A3A]/20 blur-3xl"
+          />
+        </div>
+
+        {/* Hero Content (No Enclosing Card Container) */}
+        <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
+          {/* Elegant Brand Crest & Eyebrow Badge */}
+          <ScrollReveal variant="fade-up" immediate>
+            <div className="inline-flex items-center gap-3 p-1.5 pr-4 rounded-full bg-burgundy-950/85 border border-gold-400/50 shadow-luxury-gold backdrop-blur-sm">
+              <div className="w-10 h-10 rounded-full border border-gold-400 bg-burgundy-950 p-0.5 shadow-sm overflow-hidden shrink-0">
                 <img
                   src="/logo.jpg"
                   alt="Sri Ramas Jewellery Crest"
-                  className="w-full h-full object-cover object-center rounded-full"
+                  className="w-full h-full object-cover rounded-full"
                 />
               </div>
-
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gold-400/20 text-gold-300 text-xs font-semibold uppercase tracking-widest border border-gold-400/30">
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Established in 1987</span>
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-3.5 h-3.5 text-gold-400" />
+                <span className="text-xs font-bold uppercase tracking-widest text-[#FCE7B2]">
+                  ESTABLISHED IN 1987
+                </span>
               </div>
-
-              <h1 className="font-serif text-3xl sm:text-5xl font-extrabold text-gold-100 leading-tight">
-                A Legacy of Royal Purity & Artistry
-              </h1>
-
-              <p className="text-xs sm:text-base text-gold-200/90 font-light leading-relaxed">
-                For over 39 years, Sri Ramas Jewellery has served as the custodian of auspicious family celebrations, weddings, and milestone heirlooms across Tamil Nadu and beyond.
-              </p>
             </div>
-          </div>
-        </ScrollReveal>
+          </ScrollReveal>
 
+          {/* Main Heading in Luxury Serif */}
+          <ScrollReveal variant="fade-up" delay={80}>
+            <h1
+              className="font-serif text-3xl sm:text-5xl lg:text-6xl font-extrabold text-[#FCE7B2] leading-tight tracking-wide"
+              style={{
+                textShadow:
+                  '0 4px 20px rgba(0, 0, 0, 0.95), 0 2px 6px rgba(0, 0, 0, 0.85)',
+              }}
+            >
+              A LEGACY OF ROYAL PURITY &amp; ARTISTRY
+            </h1>
+          </ScrollReveal>
+
+          {/* Supporting Description */}
+          <ScrollReveal variant="fade-up" delay={120}>
+            <p
+              className="text-sm sm:text-base lg:text-lg text-gold-100/90 font-light leading-relaxed max-w-2xl mx-auto"
+              style={{
+                textShadow: '0 2px 10px rgba(0, 0, 0, 0.85)',
+              }}
+            >
+              For over 39 years, Sri Ramas Jewellery has served as the custodian of auspicious family celebrations, weddings and milestone heirlooms.
+            </p>
+          </ScrollReveal>
+
+          {/* Primary CTA Button */}
+          <ScrollReveal variant="fade-up" delay={160}>
+            <div className="pt-2 flex flex-wrap items-center justify-center gap-4">
+              <Link
+                to="/products"
+                className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full bg-gold-gradient text-burgundy-950 text-xs sm:text-sm font-bold uppercase tracking-widest shadow-luxury-gold hover:opacity-95 hover:scale-[1.02] transition-all duration-300"
+              >
+                <span>EXPLORE OUR COLLECTIONS</span>
+                <ArrowRight className="w-4 h-4 text-burgundy-950" />
+              </Link>
+            </div>
+          </ScrollReveal>
+        </div>
+      </section>
+
+      {/* Main Heritage Page Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-20 space-y-16 lg:space-y-24">
         {/* Story Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <ScrollReveal variant="slide-left" distance={18} className="space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          <ScrollReveal variant="slide-left" distance={18} className="space-y-5">
             <AnimatedHeading
               align="left"
               kicker="Our Heritage Story"
               title="Crafting Sacred Heirlooms Since 1987"
               as="h2"
               showRule
-              titleClassName="sm:text-4xl"
+              titleClassName="sm:text-4xl text-burgundy-950 font-extrabold"
             />
-            <div className="text-xs sm:text-sm text-stone-600 leading-relaxed space-y-3 font-light">
+            <div className="text-sm sm:text-base text-stone-700 leading-relaxed space-y-4 font-normal">
               <p>
                 Founded in 1987 with a steadfast commitment to moral integrity, Sri Ramas Jewellery began as an artisan goldsmith atelier dedicated to honoring ancient South Indian jewellery crafting traditions.
               </p>
@@ -71,11 +130,11 @@ export const AboutPage: React.FC = () => {
               </p>
             </div>
 
-            {/* Subtle SVG Filigree Line Draw */}
+            {/* Filigree Line Divider */}
             <svg
               aria-hidden="true"
               viewBox="0 0 240 12"
-              className="w-48 h-3 text-gold-500/80"
+              className="w-48 h-3 text-gold-600/80"
               fill="none"
             >
               <path
@@ -84,41 +143,40 @@ export const AboutPage: React.FC = () => {
                 strokeWidth="1.25"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="svg-line-draw"
               />
             </svg>
 
+            {/* Heritage Metric Counters */}
             <StaggerReveal
               variant="scale"
               staggerMs={80}
-              className="pt-4 grid grid-cols-2 sm:grid-cols-3 gap-4 border-t border-stone-200"
+              className="pt-4 grid grid-cols-3 gap-4 border-t border-gold-300/60"
             >
               <div>
-                <span className="font-serif font-extrabold text-2xl sm:text-3xl text-burgundy-900 block">39+</span>
-                <span className="text-xs text-stone-500">Years of Heritage</span>
+                <span className="font-serif font-extrabold text-2xl sm:text-3xl lg:text-4xl text-burgundy-900 block">39+</span>
+                <span className="text-xs text-stone-600 font-medium">Years of Heritage</span>
               </div>
               <div>
-                <span className="font-serif font-extrabold text-2xl sm:text-3xl text-burgundy-900 block">100%</span>
-                <span className="text-xs text-stone-500">BIS 916 HUID Hallmarked</span>
+                <span className="font-serif font-extrabold text-2xl sm:text-3xl lg:text-4xl text-burgundy-900 block">100%</span>
+                <span className="text-xs text-stone-600 font-medium">BIS 916 HUID Hallmarked</span>
               </div>
               <div>
-                <span className="font-serif font-extrabold text-2xl sm:text-3xl text-burgundy-900 block">50,000+</span>
-                <span className="text-xs text-stone-500">Happy Families</span>
+                <span className="font-serif font-extrabold text-2xl sm:text-3xl lg:text-4xl text-burgundy-900 block">50,000+</span>
+                <span className="text-xs text-stone-600 font-medium">Happy Families</span>
               </div>
             </StaggerReveal>
           </ScrollReveal>
 
           <ScrollReveal variant="slide-right" distance={18} delay={100} className="relative">
-            <div className="group relative rounded-2xl overflow-hidden aspect-[4/3] border border-gold-400/40 shadow-luxury bg-burgundy-950">
-              <ImageReveal
-                src="/logo.jpg"
-                alt="Sri Ramas Heritage Workshop"
-                wrapperClassName="w-full h-full"
-                className="w-full h-full object-cover object-center transition-transform duration-700 ease-luxury group-hover:scale-105"
+            <div className="group relative rounded-3xl overflow-hidden aspect-[4/3] border-2 border-gold-400/50 shadow-luxury-gold bg-burgundy-950">
+              <img
+                src="/images/generated/heritage-hero-bg.jpg"
+                alt="Sri Ramas Authentic Heritage Craftsmanship"
+                className="w-full h-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
               />
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-burgundy-950/85 via-transparent to-transparent flex items-end p-6">
-                <p className="text-xs font-serif text-gold-200 italic">
-                  "Purity in gold is not just a standard—it is our sacred family promise."
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-burgundy-950/90 via-burgundy-950/30 to-transparent flex items-end p-6 sm:p-8">
+                <p className="text-xs sm:text-sm font-serif text-[#FCE7B2] italic leading-relaxed">
+                  "Purity in gold is not just a standard—it is our sacred family promise passed down through generations."
                 </p>
               </div>
             </div>
@@ -127,63 +185,64 @@ export const AboutPage: React.FC = () => {
 
         {/* Pillars of Trust */}
         <ScrollReveal variant="fade-up">
-          <div className="bg-white rounded-2xl border border-gold-400/50 p-8 sm:p-12 shadow-sm space-y-8">
+          <div className="bg-white rounded-3xl border-2 border-gold-400/40 p-8 sm:p-12 shadow-luxury space-y-8">
             <AnimatedHeading
               align="center"
               kicker="The Sri Ramas Guarantee"
               title="Our Four Pillars of Distinction"
               as="h2"
               showRule
+              titleClassName="text-burgundy-950 font-extrabold"
             />
 
             <StaggerReveal
               staggerMs={70}
               className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
             >
-              <div className="group p-5 rounded-xl bg-ivory-50 border border-gold-200 space-y-2 text-center transition-all duration-300 ease-luxury hover:-translate-y-1 hover:border-gold-400 hover:shadow-luxury">
-                <div className="w-12 h-12 rounded-full bg-gold-200/60 text-burgundy-900 flex items-center justify-center mx-auto transition-transform duration-300 ease-luxury group-hover:scale-105">
-                  <ShieldCheck className="w-6 h-6" />
+              <div className="group p-6 rounded-2xl bg-[#FCFAF6] border border-gold-300/80 space-y-3 text-center transition-all duration-300 ease-out hover:-translate-y-1 hover:border-gold-500 hover:shadow-luxury">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gold-200 to-gold-300 text-burgundy-950 flex items-center justify-center mx-auto transition-transform duration-300 ease-out group-hover:scale-105 shadow-sm">
+                  <ShieldCheck className="w-6 h-6 text-burgundy-900" />
                 </div>
-                <h3 className="font-serif font-bold text-base text-burgundy-900">
+                <h3 className="font-serif font-bold text-base text-burgundy-950">
                   100% BIS HUID
                 </h3>
-                <p className="text-xs text-stone-600 font-light">
+                <p className="text-xs text-stone-600 font-normal leading-relaxed">
                   Complete traceability with government-certified laser engraved 6-character HUID on every gold ornament.
                 </p>
               </div>
 
-              <div className="group p-5 rounded-xl bg-ivory-50 border border-gold-200 space-y-2 text-center transition-all duration-300 ease-luxury hover:-translate-y-1 hover:border-gold-400 hover:shadow-luxury">
-                <div className="w-12 h-12 rounded-full bg-gold-200/60 text-burgundy-900 flex items-center justify-center mx-auto transition-transform duration-300 ease-luxury group-hover:scale-105">
-                  <Gem className="w-6 h-6" />
+              <div className="group p-6 rounded-2xl bg-[#FCFAF6] border border-gold-300/80 space-y-3 text-center transition-all duration-300 ease-out hover:-translate-y-1 hover:border-gold-500 hover:shadow-luxury">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gold-200 to-gold-300 text-burgundy-950 flex items-center justify-center mx-auto transition-transform duration-300 ease-out group-hover:scale-105 shadow-sm">
+                  <Gem className="w-6 h-6 text-burgundy-900" />
                 </div>
-                <h3 className="font-serif font-bold text-base text-burgundy-900">
+                <h3 className="font-serif font-bold text-base text-burgundy-950">
                   Certified Diamonds
                 </h3>
-                <p className="text-xs text-stone-600 font-light">
-                  Independently certified by IGI and SGL laboratories with detailed cut, clarity, and color documentation.
+                <p className="text-xs text-stone-600 font-normal leading-relaxed">
+                  Independently certified by IGI and SGL laboratories with detailed 4Cs cut, clarity, color, and carat grading.
                 </p>
               </div>
 
-              <div className="group p-5 rounded-xl bg-ivory-50 border border-gold-200 space-y-2 text-center transition-all duration-300 ease-luxury hover:-translate-y-1 hover:border-gold-400 hover:shadow-luxury">
-                <div className="w-12 h-12 rounded-full bg-gold-200/60 text-burgundy-900 flex items-center justify-center mx-auto transition-transform duration-300 ease-luxury group-hover:scale-105">
-                  <Award className="w-6 h-6" />
+              <div className="group p-6 rounded-2xl bg-[#FCFAF6] border border-gold-300/80 space-y-3 text-center transition-all duration-300 ease-out hover:-translate-y-1 hover:border-gold-500 hover:shadow-luxury">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gold-200 to-gold-300 text-burgundy-950 flex items-center justify-center mx-auto transition-transform duration-300 ease-out group-hover:scale-105 shadow-sm">
+                  <Award className="w-6 h-6 text-burgundy-900" />
                 </div>
-                <h3 className="font-serif font-bold text-base text-burgundy-900">
+                <h3 className="font-serif font-bold text-base text-burgundy-950">
                   Master Craftsmanship
                 </h3>
-                <p className="text-xs text-stone-600 font-light">
+                <p className="text-xs text-stone-600 font-normal leading-relaxed">
                   Created by generational hereditary karigars renowned for intricate temple, antique, and bridal works.
                 </p>
               </div>
 
-              <div className="group p-5 rounded-xl bg-ivory-50 border border-gold-200 space-y-2 text-center transition-all duration-300 ease-luxury hover:-translate-y-1 hover:border-gold-400 hover:shadow-luxury">
-                <div className="w-12 h-12 rounded-full bg-gold-200/60 text-burgundy-900 flex items-center justify-center mx-auto transition-transform duration-300 ease-luxury group-hover:scale-105">
-                  <Users className="w-6 h-6" />
+              <div className="group p-6 rounded-2xl bg-[#FCFAF6] border border-gold-300/80 space-y-3 text-center transition-all duration-300 ease-out hover:-translate-y-1 hover:border-gold-500 hover:shadow-luxury">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gold-200 to-gold-300 text-burgundy-950 flex items-center justify-center mx-auto transition-transform duration-300 ease-out group-hover:scale-105 shadow-sm">
+                  <Users className="w-6 h-6 text-burgundy-900" />
                 </div>
-                <h3 className="font-serif font-bold text-base text-burgundy-900">
+                <h3 className="font-serif font-bold text-base text-burgundy-950">
                   Showroom Hospitality
                 </h3>
-                <p className="text-xs text-stone-600 font-light">
+                <p className="text-xs text-stone-600 font-normal leading-relaxed">
                   Personalized consultations in private bridal lounges with zero pressure and complete transparent weighing.
                 </p>
               </div>
@@ -191,15 +250,15 @@ export const AboutPage: React.FC = () => {
           </div>
         </ScrollReveal>
 
-        {/* CTA */}
+        {/* Showroom Bridal Appointment CTA */}
         <ScrollReveal variant="scale">
-          <div className="bg-brand-maroon-gradient rounded-2xl p-8 sm:p-12 text-gold-100 flex flex-col sm:flex-row items-center justify-between gap-6 border border-gold-500/40 shadow-luxury">
-            <div className="space-y-2 text-center sm:text-left">
-              <h2 className="font-serif text-2xl font-bold text-gold-100">
+          <div className="bg-brand-maroon-gradient rounded-3xl p-8 sm:p-12 text-gold-100 flex flex-col sm:flex-row items-center justify-between gap-6 border-2 border-gold-500/40 shadow-luxury">
+            <div className="space-y-2 text-center sm:text-left max-w-xl">
+              <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#FCE7B2]">
                 Experience Our Bridal Lounge
               </h2>
-              <p className="text-xs sm:text-sm text-gold-200/80 font-light">
-                Schedule a dedicated bridal appointment with our chief jewellery stylist at your nearest showroom.
+              <p className="text-xs sm:text-sm text-gold-200/90 font-light leading-relaxed">
+                Schedule a dedicated bridal appointment with our chief jewellery stylist at our showroom for personalized bridal consultation.
               </p>
             </div>
             <AnimatedCTA
@@ -207,13 +266,13 @@ export const AboutPage: React.FC = () => {
               href={buildWhatsAppUrl({ type: 'SHOWROOM' })}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-6 py-3 rounded-full text-xs whitespace-nowrap"
+              className="px-8 py-3.5 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap shadow-luxury-gold"
             >
               Book Bridal Appointment on WhatsApp
             </AnimatedCTA>
           </div>
         </ScrollReveal>
       </div>
-    </>
+    </div>
   );
 };

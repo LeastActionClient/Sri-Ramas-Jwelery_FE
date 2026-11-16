@@ -167,11 +167,17 @@ export interface Product {
   stones?: StoneDetail[];
   makingCharges: MakingCharges;
   wastagePercentage?: number;
+  actualWastagePercent?: number | null;
+  offerWastagePercent?: number | null;
+  stockQuantity?: number;
   pricingType: PricingType;
   fixedPricePaise?: number;
   estimatedPrice?: EstimatedPriceBreakdown | null;
   images: ProductImage[];
   imagePublicIds?: string[];
+  videos?: string[];
+  videoPublicIds?: string[];
+  media?: Array<{ type: 'IMAGE' | 'VIDEO'; url: string; publicId?: string; isPrimary?: boolean; order?: number }>;
   gender?: 'WOMEN' | 'MEN' | 'UNISEX' | 'KIDS';
   occasion?: string[];
   collectionType?: 'BRIDAL' | 'HERITAGE' | 'DAILY_WEAR' | 'FESTIVE' | 'TEMPLE' | 'SOLITAIRE';
@@ -220,6 +226,9 @@ export interface Enquiry {
   preferredContactTime?: 'MORNING' | 'AFTERNOON' | 'EVENING' | 'ANYTIME';
   city?: string;
   productId?: string;
+  productName?: string;
+  productSku?: string;
+  productUrl?: string;
   product?: Product;
   schemeId?: string;
   message?: string;
@@ -250,6 +259,40 @@ export interface Offer {
 }
 
 // Savings Schemes
+export interface DiamondSpecifications {
+  cut?: 'EXCELLENT' | 'VERY_GOOD' | 'GOOD' | 'FAIR' | 'POOR' | string;
+  color?: 'D' | 'E' | 'F' | 'G' | 'H' | 'I' | 'J' | 'K-M' | 'N-Z' | string;
+  clarity?: 'FL' | 'IF' | 'VVS1' | 'VVS2' | 'VS1' | 'VS2' | 'SI1' | 'SI2' | 'I1' | 'I2' | 'I3' | string;
+  shape?: 'ROUND' | 'PRINCESS' | 'OVAL' | 'PEAR' | 'EMERALD' | 'CUSHION' | 'MARQUISE' | 'HEART' | string;
+  caratWeight?: number | null;
+  totalCaratWeight?: number | null;
+  stoneCount?: number | null;
+  certification?: 'GIA' | 'IGI' | 'HRD' | 'OTHER' | 'NOT_CERTIFIED' | string;
+  settingType?: 'PRONG' | 'BEZEL' | 'PAVE' | 'CHANNEL' | 'TENSION' | 'BAR' | 'FLUSH' | string;
+}
+
+export interface SchemeLayoutElement {
+  id: string;
+  x: number; // 0 to 100 percentage
+  y: number; // 0 to 100 percentage
+  width?: number; // percentage
+  height?: number;
+  fontSize?: number; // px
+  fontWeight?: 'normal' | 'medium' | 'semibold' | 'bold' | 'extrabold';
+  color?: string;
+  bgColor?: string;
+  borderColor?: string;
+  textAlign?: 'left' | 'center' | 'right';
+  visible?: boolean;
+  zIndex?: number;
+}
+
+export interface SchemeLayoutConfig {
+  version: number;
+  elements: Record<string, SchemeLayoutElement>;
+  customStyles?: Record<string, any>;
+}
+
 export interface SchemePlan {
   _id: string;
   name: string;
@@ -276,8 +319,11 @@ export interface SchemePlan {
   logoImageUrl?: string;
   textAlignment?: 'left' | 'right';
   ctaText?: string;
+  buttonName?: string;
+  navigationDestination?: string;
   whatsappMessage?: string;
   displayOrder?: number;
+  layoutConfig?: SchemeLayoutConfig | null;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -308,6 +354,12 @@ export interface HeroBanner {
   ctaText?: string;
   ctaLink?: string;
   targetLink?: string;
+  buttonName?: string;
+  navigationDestination?: string;
+  destinationType?: 'PAGE' | 'CATEGORY' | 'PRODUCT';
+  destinationId?: string;
+  mediaType?: 'IMAGE' | 'VIDEO';
+  mediaUrl?: string;
   position: BannerPosition;
   contentMode: BannerContentMode;
   textAlignment: BannerTextAlignment;
