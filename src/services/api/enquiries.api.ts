@@ -12,6 +12,9 @@ export interface SubmitEnquiryPayload {
   preferredContactTime?: string;
   city?: string;
   productId?: string;
+  productName?: string;
+  productSku?: string;
+  productUrl?: string;
   schemeId?: string;
   message?: string;
 }

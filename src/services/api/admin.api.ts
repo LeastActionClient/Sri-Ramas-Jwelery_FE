@@ -8,23 +8,39 @@ export const adminApi = {
     const inv = data.inventory || {};
     const enq = data.enquiries || {};
     const rates = data.todayRates || {};
+
+    const gold24 = rates.goldMap?.['24K'] || rates.gold?.find?.((r: any) => r.purity === '24K' || r.purity === '24K_FINE')?.ratePerGramPaise || 0;
+    const gold22 = rates.goldMap?.['22K'] || rates.gold?.find?.((r: any) => r.purity === '22K' || r.purity === '22K_916')?.ratePerGramPaise || 0;
+    const gold18 = rates.goldMap?.['18K'] || rates.gold?.find?.((r: any) => r.purity === '18K')?.ratePerGramPaise || 0;
+
+    const silver999 = rates.silverMap?.['999'] || rates.silver?.find?.((r: any) => r.purity === '999' || r.purity === '999_FINE')?.ratePerGramPaise || 0;
+    const silver925 = rates.silverMap?.['925'] || rates.silver?.find?.((r: any) => r.purity === '925_STERLING' || r.purity === '925')?.ratePerGramPaise || 0;
+
+    const activeLeads = typeof enq.activeLeads === 'number'
+      ? enq.activeLeads
+      : ((enq.byStatus?.NEW || 0) + (enq.byStatus?.PENDING || 0) + (enq.byStatus?.CONTACTED || 0) + (enq.byStatus?.FOLLOW_UP || 0));
+
+    const newToday = typeof enq.newToday === 'number'
+      ? enq.newToday
+      : (data.newEnquiriesToday ?? (enq.byStatus?.NEW || 0));
+
     return {
-      totalProducts: inv.totalProducts ?? data.totalProducts ?? 0,
-      activeEnquiries: (enq.byStatus?.NEW || 0) + (enq.byStatus?.PENDING || 0) || (data.activeEnquiries ?? 0),
-      newEnquiriesToday: enq.byStatus?.NEW ?? data.newEnquiriesToday ?? 0,
-      resolvedEnquiries: (enq.byStatus?.RESOLVED || 0) + (enq.byStatus?.CLOSED || 0) || (data.resolvedEnquiries ?? 0),
+      totalProducts: inv.publishedProducts ?? inv.totalProducts ?? data.totalProducts ?? 0,
+      activeEnquiries: activeLeads,
+      newEnquiriesToday: newToday,
+      resolvedEnquiries: (enq.byStatus?.RESOLVED || 0) + (enq.byStatus?.CLOSED || 0),
       currentRates: {
         gold: {
-          '24K': rates.gold?.find?.((r: any) => r.purity === '24K')?.ratePerGramPaise || 775000,
-          '22K': rates.gold?.find?.((r: any) => r.purity === '22K')?.ratePerGramPaise || 712000,
-          '18K': rates.gold?.find?.((r: any) => r.purity === '18K')?.ratePerGramPaise || 585000,
+          '24K': gold24,
+          '22K': gold22,
+          '18K': gold18,
         },
         silver: {
-          '999': rates.silver?.find?.((r: any) => r.purity === '999')?.ratePerGramPaise || 9800,
-          '925': rates.silver?.find?.((r: any) => r.purity === '925_STERLING' || r.purity === '925')?.ratePerGramPaise || 9500,
+          '999': silver999,
+          '925': silver925,
         },
-        effectiveDate: rates.timestamp || new Date().toISOString(),
-        isOverride: false,
+        effectiveDate: rates.effectiveDate || rates.timestamp || new Date().toISOString(),
+        isOverride: Boolean(rates.isManualOverride || rates.isOverride),
       },
       recentEnquiries: enq.recent || data.recentEnquiries || []
     };

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Award, ShieldCheck, MessageCircle, RefreshCw, Sparkles } from 'lucide-react';
+import { ShieldCheck, MessageCircle, RefreshCw, Sparkles } from 'lucide-react';
 import { schemesApi } from '@/services/api/schemes.api';
 import { SchemeBannerCard } from '@/components/customer/SchemeBannerCard';
 import { useStoreWhatsApp } from '@/hooks/useStoreWhatsApp';
@@ -24,24 +24,62 @@ export const SchemesPage: React.FC = () => {
     .sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0));
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
-      {/* Page Header */}
-      <ScrollReveal variant="fade-up" immediate>
-        <div className="bg-brand-maroon-gradient text-gold-100 rounded-3xl p-8 sm:p-12 border border-gold-500/40 shadow-luxury text-center space-y-4">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-gold-400/20 text-gold-300 text-xs font-semibold uppercase tracking-widest border border-gold-400/30">
-            <Award className="w-3.5 h-3.5" />
-            <span>Jewellery Savings Programmes</span>
-          </div>
-          <h1 className="font-serif text-3xl sm:text-5xl font-extrabold text-gold-100">
-            Sri Ramas Jewellery Savings Schemes
-          </h1>
-          <p className="text-xs sm:text-sm text-gold-200/85 max-w-2xl mx-auto font-light leading-relaxed">
-            Plan gracefully for bridal milestones, family celebrations, and heirloom jewellery through our trusted showroom savings programmes.
-          </p>
+    <div className="w-full min-h-screen">
+      {/* 1. Full-Bleed Hero Section with Jewellery Image Background */}
+      <section className="relative w-full overflow-hidden bg-[#1A0307] text-gold-100 py-16 sm:py-20 lg:py-24 border-b-2 border-gold-500/30">
+        {/* Background South Indian Gold Jewellery Image */}
+        <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
+          <img
+            src="/images/schemes-hero-bg.jpg"
+            alt="Sri Ramas Jewellery Savings Schemes Ambiance"
+            className="w-full h-full object-cover object-center scale-[1.02]"
+          />
+          {/* Deep Burgundy Contrast Vignette Scrim for Royal Contrast and 100% Readability */}
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background:
+                'linear-gradient(180deg, rgba(20, 2, 5, 0.82) 0%, rgba(36, 5, 11, 0.75) 45%, rgba(20, 2, 5, 0.90) 100%)',
+            }}
+          />
+          {/* Subtle Ambient Gold Radiance in Top Center */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 w-[42rem] h-[22rem] rounded-full bg-[#C49A3A]/20 blur-3xl"
+          />
         </div>
-      </ScrollReveal>
 
-      {/* Scheme Banners Stack */}
+        {/* Hero Content (No Card, Full Hero Section, Badge Removed) */}
+        <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-4 sm:space-y-5">
+          <ScrollReveal variant="fade-up" immediate>
+            <h1
+              className="font-serif text-3xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-wide leading-tight"
+              style={{
+                textShadow:
+                  '0 4px 20px rgba(0, 0, 0, 0.95), 0 2px 6px rgba(0, 0, 0, 0.85)',
+              }}
+            >
+              Sri Ramas Jewellery Savings Schemes
+            </h1>
+          </ScrollReveal>
+
+          <ScrollReveal variant="fade-up" delay={80}>
+            <p
+              className="text-xs sm:text-sm md:text-base lg:text-lg text-gold-100/90 max-w-2xl mx-auto font-light leading-relaxed"
+              style={{
+                textShadow: '0 2px 10px rgba(0, 0, 0, 0.85)',
+              }}
+            >
+              Plan gracefully for bridal milestones, family celebrations, and heirloom jewellery through our trusted showroom savings programmes.
+            </p>
+          </ScrollReveal>
+        </div>
+      </section>
+
+      {/* 2. Main Schemes Content Container */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 space-y-12">
+        {/* Scheme Banners Stack */}
       {isLoading ? (
         <div className="space-y-6 animate-pulse">
           {[1, 2, 3, 4].map((idx) => (
@@ -127,6 +165,7 @@ export const SchemesPage: React.FC = () => {
           </AnimatedCTA>
         </div>
       </ScrollReveal>
+      </div>
     </div>
   );
 };

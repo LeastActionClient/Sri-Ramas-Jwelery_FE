@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { MessageCircle, ArrowRight, ShieldCheck, Gem } from 'lucide-react';
 import { Product } from '@/types';
 import { formatWeight } from '@/utils/weight';
-import { useStoreWhatsApp } from '@/hooks/useStoreWhatsApp';
 import { ImageReveal } from '../motion';
 
 interface ProductCardProps {
@@ -13,7 +12,6 @@ interface ProductCardProps {
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product, previewOnly = false }) => {
   const [failedImageUrl, setFailedImageUrl] = useState<string | null>(null);
-  const { buildWhatsAppUrl } = useStoreWhatsApp();
 
   const primaryImage =
     product.images?.find((img) => img.isPrimary)?.url ||
@@ -155,20 +153,28 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, previewOnly =
                   <span>Enquire</span>
                 </span>
               ) : (
-                <a
-                  href={buildWhatsAppUrl({
-                    type: 'PRODUCT',
-                    productTitle: product.title || product.name,
-                    productSku: product.sku,
-                    categoryName,
-                  })}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <Link
+                  to={{
+                    pathname: '/contact',
+                    search: `?enquiryType=PRODUCT&productSku=${encodeURIComponent(product.sku || '')}&productName=${encodeURIComponent(product.title || product.name || '')}&category=${encodeURIComponent(categoryName || '')}`,
+                  }}
+                  state={{
+                    product: {
+                      id: product._id,
+                      name: product.title || product.name,
+                      sku: product.sku,
+                      category: categoryName,
+                      metalType: product.metalType,
+                      purity: product.purity,
+                      slug: product.slug,
+                      url: typeof window !== 'undefined' ? `${window.location.origin}/products/${product.slug}` : `/products/${product.slug}`,
+                    },
+                  }}
                   className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-burgundy-900 hover:bg-burgundy-800 hover:shadow-md text-gold-200 hover:text-gold-100 font-medium text-[11px] sm:text-xs transition-all duration-200 shadow-sm active:scale-[0.97] whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400"
                 >
                   <MessageCircle className="w-3.5 h-3.5 text-gold-400 shrink-0" />
                   <span>Enquire</span>
-                </a>
+                </Link>
               )}
             </div>
           </div>

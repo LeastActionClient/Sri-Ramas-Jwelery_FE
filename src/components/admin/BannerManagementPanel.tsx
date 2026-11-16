@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Plus,
@@ -9,79 +9,70 @@ import {
   CheckCircle2,
   AlertCircle,
   X,
-  ArrowUp,
-  ArrowDown,
-  GripVertical,
+  Upload,
+  Film,
   Image as ImageIcon,
-  Layers,
-  Monitor,
-  Smartphone,
-  ExternalLink,
+  Search,
   Loader2,
-  AlignLeft,
-  AlignCenter,
-  AlignRight
+  ClipboardPaste,
+  Copy,
+  Check,
+  UploadCloud,
+  Link as LinkIcon,
+  ArrowRight
 } from 'lucide-react';
-import { BannerAdminPayload, cmsApi } from '@/services/api/cms.api';
-import { categoriesApi } from '@/services/api/categories.api';
-import { ImageDropzone } from '@/components/admin/ImageDropzone';
+import { cmsApi, BannerAdminPayload } from '@/services/api/cms.api';
+import { mediaApi } from '@/services/api/media.api';
+import { HeroBanner } from '@/types';
 import { PromotionalBannerCarousel } from '@/components/customer/PromotionalBannerCarousel';
-import {
-  BannerButtonStyle,
-  BannerContentMode,
-  BannerHeightOption,
-  BannerTextAlignment,
-  BannerTextColor,
-  BannerTextPosition,
-  HeroBanner
-} from '@/types';
+import { AdminModalPortal } from './AdminModalPortal';
 
 interface BannerManagementPanelProps {
   onStatusMessage?: (msg: string) => void;
   onErrorMessage?: (err: string) => void;
 }
 
-const toDateInputValue = (value?: string | null): string => {
-  if (!value) return '';
-  return value.slice(0, 10);
-};
+// Exactly 5 simplified fields required by Sri Ramas Jewellery Master Prompt:
+// 1. Media upload (Image or Video)
+// 2. Button Name (e.g. "Explore Collection")
+// 3. Searchable Navigation Destination selector (Pages, Categories, Products)
+// 4. Start Date (effective date/time)
+// 5. End Date (expiration date/time)
+interface SimplifiedBannerFormState {
+  mediaUrl: string;
+  mediaType: 'IMAGE' | 'VIDEO';
+  mediaPublicId?: string;
+  buttonName: string;
+  navigationDestination: string;
+  destinationType: 'PAGE' | 'CATEGORY' | 'PRODUCT';
+  destinationId?: string;
+  startDate: string;
+  endDate: string;
+  isActive: boolean;
+}
 
-const createEmptyBannerForm = (nextOrder: number): BannerAdminPayload => ({
-  smallHeading: 'Exclusive Collection',
-  title: '',
-  highlightedText: '',
-  subtitle: '',
-  description: '',
-  desktopImageUrl: '',
-  desktopImagePublicId: '',
-  mobileImageUrl: '',
-  mobileImagePublicId: '',
-  imageAlt: '',
-  ctaText: 'Explore Collection',
-  ctaLink: '/products',
-  position: 'HOME_HERO',
-  contentMode: 'layered',
-  textAlignment: 'right',
-  textPosition: 'center',
-  textColor: 'cream-gold',
-  buttonStyle: 'gold-outline',
-  overlayOpacity: 35,
-  bannerHeight: 'standard',
-  displayOrder: nextOrder,
-  startDate: null,
-  endDate: null,
-  isActive: true
-});
-
-const QUICK_CTA_PRESETS = [
-  { label: 'Silver Collection', url: '/products?metalType=SILVER' },
-  { label: 'Silver Rings', url: '/products?metalType=SILVER&category=rings' },
-  { label: 'Gold Collection', url: '/products?metalType=GOLD' },
-  { label: 'Diamond Collection', url: '/products?metalType=DIAMOND' },
-  { label: 'Platinum Collection', url: '/products?metalType=PLATINUM' },
-  { label: 'All Collections', url: '/products' },
-  { label: 'Savings Schemes', url: '/schemes' }
+const STATIC_PAGE_DESTINATIONS = [
+  { label: 'Home Page', value: '/' },
+  { label: 'Collections Page', value: '/collections' },
+  { label: 'Savings Schemes Page', value: '/schemes' },
+  { label: 'DigiGold Page', value: '/digigold' },
+  { label: 'DigiSilver Page', value: '/digisilver' },
+  { label: 'Heritage Page', value: '/heritage' },
+  { label: 'Contact Us Page', value: '/contact' }
 ];
+
+function createEmptyBannerForm(): SimplifiedBannerFormState {
+  return {
+    mediaUrl: '',
+    mediaType: 'IMAGE',
+    buttonName: 'Explore Collection',
+    navigationDestination: '/collections',
+    destinationType: 'PAGE',
+    startDate: '',
+    endDate: '',
+    isActive: true
+  };
+}
 
 export const BannerManagementPanel: React.FC<BannerManagementPanelProps> = ({
   onStatusMessage,
@@ -93,590 +84,580 @@ export const BannerManagementPanel: React.FC<BannerManagementPanelProps> = ({
 
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingBannerId, setEditingBannerId] = useState<string | null>(null);
-  const [bannerForm, setBannerForm] = useState<BannerAdminPayload>(() => createEmptyBannerForm(1));
+  const [bannerForm, setBannerForm] = useState<SimplifiedBannerFormState>(createEmptyBannerForm);
   const [saving, setSaving] = useState(false);
-  const [togglingId, setTogglingId] = useState<string | null>(null);
-  const [reordering, setReordering] = useState(false);
-  const [draggedId, setDraggedId] = useState<string | null>(null);
-
-  const [editorPreviewViewport, setEditorPreviewViewport] = useState<'desktop' | 'mobile'>('desktop');
-  const [previewModalBanners, setPreviewModalBanners] = useState<HeroBanner[] | null>(null);
-  const [previewModalTitle, setPreviewModalTitle] = useState<string>('Homepage Carousel Preview');
-  const [previewViewport, setPreviewViewport] = useState<'desktop' | 'mobile'>('desktop');
-
-  const [deleteCandidate, setDeleteCandidate] = useState<HeroBanner | null>(null);
-  const [deleting, setDeleting] = useState(false);
+  const [uploadingMedia, setUploadingMedia] = useState(false);
+  const [destinationSearch, setDestinationSearch] = useState('');
+  const [isDestinationOpen, setIsDestinationOpen] = useState(false);
+  const [previewBanner, setPreviewBanner] = useState<HeroBanner | null>(null);
+  const [isDraggingMedia, setIsDraggingMedia] = useState(false);
+  const [copiedMedia, setCopiedMedia] = useState(false);
+  const [showUrlInput, setShowUrlInput] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const destinationDropdownRef = useRef<HTMLDivElement | null>(null);
 
   const { data: banners = [], isLoading } = useQuery({
-    queryKey: ['admin-banners'],
+    queryKey: ['admin', 'cms', 'banners'],
     queryFn: cmsApi.adminGetBanners
   });
 
-  const { data: categories = [] } = useQuery({
-    queryKey: ['admin-categories'],
-    queryFn: categoriesApi.adminGetCategories
+  const { data: destinationsData } = useQuery({
+    queryKey: ['admin', 'cms', 'destinations', destinationSearch],
+    queryFn: () => cmsApi.adminGetBannerDestinations(destinationSearch),
+    staleTime: 60000
   });
 
-  const sortedBanners = useMemo(
-    () =>
-      [...banners].sort(
-        (a, b) => (a.displayOrder ?? a.sortOrder ?? 0) - (b.displayOrder ?? b.sortOrder ?? 0)
-      ),
-    [banners]
-  );
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        destinationDropdownRef.current &&
+        !destinationDropdownRef.current.contains(e.target as Node)
+      ) {
+        setIsDestinationOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
-  const activeBanners = useMemo(
-    () => sortedBanners.filter((b) => b.isActive !== false),
-    [sortedBanners]
-  );
-
-  const notifySuccess = (text: string) => {
-    setLocalErr(null);
-    setLocalMsg(text);
-    onStatusMessage?.(text);
+  const showMsg = (msg: string) => {
+    setLocalMsg(msg);
+    onStatusMessage?.(msg);
+    setTimeout(() => setLocalMsg(null), 4000);
   };
 
-  const notifyError = (text: string) => {
-    setLocalMsg(null);
-    setLocalErr(text);
-    onErrorMessage?.(text);
+  const showErr = (err: string) => {
+    setLocalErr(err);
+    onErrorMessage?.(err);
+    setTimeout(() => setLocalErr(null), 6000);
   };
 
-  const invalidateBannerQueries = () => {
+  const invalidateBanners = () => {
+    queryClient.invalidateQueries({ queryKey: ['admin', 'cms', 'banners'] });
     queryClient.invalidateQueries({ queryKey: ['admin-banners'] });
     queryClient.invalidateQueries({ queryKey: ['banners'] });
+    queryClient.invalidateQueries({ queryKey: ['banners', 'HOME_HERO'] });
     queryClient.invalidateQueries({ queryKey: ['homepage'] });
   };
 
   const openCreateModal = () => {
     setEditingBannerId(null);
     setLocalErr(null);
-    setBannerForm(createEmptyBannerForm(sortedBanners.length + 1));
-    setEditorPreviewViewport('desktop');
+    setBannerForm(createEmptyBannerForm());
     setIsEditorOpen(true);
   };
 
   const openEditModal = (banner: HeroBanner) => {
     setEditingBannerId(banner._id);
     setLocalErr(null);
+    const mediaUrl = banner.mediaUrl || banner.desktopImageUrl || banner.imageUrl || '';
+    const isVideo = banner.mediaType === 'VIDEO' || /\.(mp4|webm|mov)(\?.*)?$/i.test(mediaUrl);
+
     setBannerForm({
-      smallHeading: banner.smallHeading || '',
-      title: banner.title || '',
-      highlightedText: banner.highlightedText || '',
-      subtitle: banner.subtitle || '',
-      description: banner.description || '',
-      desktopImageUrl: banner.desktopImageUrl || banner.imageUrl || '',
-      desktopImagePublicId: banner.desktopImagePublicId || '',
-      mobileImageUrl: banner.mobileImageUrl || '',
-      mobileImagePublicId: banner.mobileImagePublicId || '',
-      imageAlt: banner.imageAlt || '',
-      ctaText: banner.ctaText || '',
-      ctaLink: banner.ctaLink || banner.targetLink || '/products',
-      position: banner.position || 'HOME_HERO',
-      contentMode: banner.contentMode || 'layered',
-      textAlignment: banner.textAlignment || 'right',
-      textPosition: banner.textPosition || 'center',
-      textColor: banner.textColor || 'cream-gold',
-      buttonStyle: banner.buttonStyle || 'gold-outline',
-      overlayOpacity: typeof banner.overlayOpacity === 'number' ? banner.overlayOpacity : 35,
-      bannerHeight: banner.bannerHeight || 'standard',
-      displayOrder: banner.displayOrder ?? banner.sortOrder ?? 1,
-      startDate: banner.startDate || null,
-      endDate: banner.endDate || null,
+      mediaUrl,
+      mediaType: isVideo ? 'VIDEO' : 'IMAGE',
+      mediaPublicId: banner.desktopImagePublicId,
+      buttonName: banner.buttonName || banner.ctaText || 'Explore Collection',
+      navigationDestination: banner.navigationDestination || banner.ctaLink || banner.targetLink || '/collections',
+      destinationType: banner.destinationType || 'PAGE',
+      destinationId: banner.destinationId,
+      startDate: banner.startDate ? banner.startDate.slice(0, 10) : '',
+      endDate: banner.endDate ? banner.endDate.slice(0, 10) : '',
       isActive: banner.isActive ?? true
     });
-    setEditorPreviewViewport('desktop');
     setIsEditorOpen(true);
   };
 
-  const handleSaveBanner = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!bannerForm.desktopImageUrl.trim()) {
-      notifyError('Please upload or enter a desktop promotional banner image.');
-      return;
+  const processMediaFileOrBlob = async (file: File | Blob, originalName?: string) => {
+    setUploadingMedia(true);
+    setLocalErr(null);
+
+    try {
+      const isVideo = file.type.startsWith('video/') || (originalName && /\.(mp4|webm|mov)$/i.test(originalName));
+      const isImage = file.type.startsWith('image/') || (originalName && /\.(png|jpe?g|webp|gif|svg|avif)$/i.test(originalName));
+
+      if (!isVideo && !isImage) {
+        throw new Error('Only image (PNG, JPG, WEBP) and video (MP4, WEBM) files are supported.');
+      }
+
+      const uploaded = await mediaApi.uploadImageToCloudinary(
+        file,
+        'banners',
+        originalName || 'banner-media'
+      );
+
+      setBannerForm((prev) => ({
+        ...prev,
+        mediaUrl: uploaded.secureUrl,
+        mediaPublicId: uploaded.publicId,
+        mediaType: isVideo ? 'VIDEO' : 'IMAGE'
+      }));
+      showMsg('Media asset uploaded to Cloudinary successfully.');
+    } catch (err: any) {
+      showErr(err.message || 'Failed to upload media file.');
+    } finally {
+      setUploadingMedia(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
-    if (
-      bannerForm.startDate &&
-      bannerForm.endDate &&
-      new Date(bannerForm.endDate) < new Date(bannerForm.startDate)
-    ) {
-      notifyError('Schedule end date must be on or after the start date.');
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    await processMediaFileOrBlob(file, file.name);
+  };
+
+  const handlePasteMediaFromClipboard = async () => {
+    if (!navigator.clipboard) {
+      showMsg('Press Ctrl+V to paste your copied image or media link.');
       return;
     }
 
+    try {
+      if (typeof navigator.clipboard.read === 'function') {
+        try {
+          const items = await navigator.clipboard.read();
+          for (const item of items) {
+            const mediaType = item.types.find((t) => t.startsWith('image/') || t.startsWith('video/'));
+            if (mediaType) {
+              const blob = await item.getType(mediaType);
+              if (blob) {
+                await processMediaFileOrBlob(blob, 'pasted-media');
+                return;
+              }
+            }
+          }
+
+          // Check for HTML or plain text image link
+          for (const item of items) {
+            if (item.types.includes('text/plain')) {
+              const textBlob = await item.getType('text/plain');
+              const text = (await textBlob.text()).trim();
+              if (/^https?:\/\//i.test(text) || text.startsWith('data:')) {
+                const isVideo = /\.(mp4|webm|mov)(\?.*)?$/i.test(text);
+                setBannerForm((prev) => ({
+                  ...prev,
+                  mediaUrl: text,
+                  mediaType: isVideo ? 'VIDEO' : 'IMAGE'
+                }));
+                showMsg('Media URL pasted from clipboard.');
+                return;
+              }
+            }
+          }
+        } catch {
+          // Fall through to readText
+        }
+      }
+
+      if (typeof navigator.clipboard.readText === 'function') {
+        const text = (await navigator.clipboard.readText()).trim();
+        if (/^https?:\/\//i.test(text) || text.startsWith('data:')) {
+          const isVideo = /\.(mp4|webm|mov)(\?.*)?$/i.test(text);
+          setBannerForm((prev) => ({
+            ...prev,
+            mediaUrl: text,
+            mediaType: isVideo ? 'VIDEO' : 'IMAGE'
+          }));
+          showMsg('Media URL pasted from clipboard.');
+          return;
+        }
+      }
+
+      showErr('No image or video found in clipboard. Copy an image (Right-click → Copy image or Win+Shift+S), then press Ctrl+V or click Paste Media.');
+    } catch {
+      showErr('Clipboard access was blocked. Click inside the form and press Ctrl+V to paste.');
+    }
+  };
+
+  const handleCopyMediaLink = async (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    if (!bannerForm.mediaUrl) return;
+    try {
+      await navigator.clipboard.writeText(bannerForm.mediaUrl);
+      setCopiedMedia(true);
+      showMsg('Media URL copied to clipboard.');
+      setTimeout(() => setCopiedMedia(false), 2000);
+    } catch {
+      showErr('Unable to copy media URL to clipboard.');
+    }
+  };
+
+  const handleRemoveMedia = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setBannerForm((prev) => ({ ...prev, mediaUrl: '', mediaPublicId: undefined }));
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingMedia(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingMedia(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingMedia(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      await processMediaFileOrBlob(file, file.name);
+    }
+  };
+
+  // Window-level Ctrl+V listener while banner editor modal is open
+  useEffect(() => {
+    if (!isEditorOpen) return;
+
+    const handleWindowPaste = (e: ClipboardEvent) => {
+      const activeEl = document.activeElement as HTMLElement | null;
+      if (
+        activeEl &&
+        (['INPUT', 'TEXTAREA', 'SELECT'].includes(activeEl.tagName) || activeEl.isContentEditable)
+      ) {
+        return;
+      }
+
+      const items = Array.from(e.clipboardData?.items || []);
+      for (const item of items) {
+        if (item.kind === 'file' && (item.type.startsWith('image/') || item.type.startsWith('video/'))) {
+          const file = item.getAsFile();
+          if (file) {
+            e.preventDefault();
+            processMediaFileOrBlob(file, file.name || 'clipboard-media');
+            return;
+          }
+        }
+      }
+
+      const text = e.clipboardData?.getData('text')?.trim();
+      if (text && (/^https?:\/\//i.test(text) || text.startsWith('data:'))) {
+        e.preventDefault();
+        const isVideo = /\.(mp4|webm|mov)(\?.*)?$/i.test(text);
+        setBannerForm((prev) => ({
+          ...prev,
+          mediaUrl: text,
+          mediaType: isVideo ? 'VIDEO' : 'IMAGE'
+        }));
+        showMsg('Media link pasted from clipboard.');
+      }
+    };
+
+    window.addEventListener('paste', handleWindowPaste);
+    return () => window.removeEventListener('paste', handleWindowPaste);
+  }, [isEditorOpen]);
+
+  const handleSelectDestination = (item: { label: string; value: string }, type: 'PAGE' | 'CATEGORY' | 'PRODUCT', id?: string) => {
+    setBannerForm((prev) => ({
+      ...prev,
+      navigationDestination: item.value,
+      destinationType: type,
+      destinationId: id
+    }));
+    setIsDestinationOpen(false);
+  };
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
     setSaving(true);
     setLocalErr(null);
+
     try {
-      const payload: BannerAdminPayload = {
-        ...bannerForm,
-        imageAlt: bannerForm.imageAlt?.trim() || `${bannerForm.title.trim()} promotional banner`
+      if (!bannerForm.mediaUrl.trim()) {
+        throw new Error('Please upload an image or video, or provide a media URL.');
+      }
+      if (!bannerForm.buttonName.trim()) {
+        throw new Error('Button name is required.');
+      }
+      if (!bannerForm.navigationDestination.trim()) {
+        throw new Error('Please select a navigation destination.');
+      }
+
+      if (bannerForm.startDate && bannerForm.endDate) {
+        if (new Date(bannerForm.endDate) < new Date(bannerForm.startDate)) {
+          throw new Error('End date cannot be earlier than start date.');
+        }
+      }
+
+      const payload: Partial<BannerAdminPayload> = {
+        title: bannerForm.buttonName.trim(),
+        desktopImageUrl: bannerForm.mediaUrl.trim(),
+        desktopImagePublicId: bannerForm.mediaPublicId?.trim() || undefined,
+        mediaUrl: bannerForm.mediaUrl.trim(),
+        mediaType: bannerForm.mediaType,
+        buttonName: bannerForm.buttonName.trim(),
+        ctaText: bannerForm.buttonName.trim(),
+        navigationDestination: bannerForm.navigationDestination.trim(),
+        ctaLink: bannerForm.navigationDestination.trim(),
+        destinationType: bannerForm.destinationType,
+        destinationId: bannerForm.destinationId,
+        startDate: bannerForm.startDate ? new Date(bannerForm.startDate).toISOString() : null,
+        endDate: bannerForm.endDate ? new Date(bannerForm.endDate).toISOString() : null,
+        isActive: bannerForm.isActive,
+        position: 'HOME_HERO',
+        contentMode: 'layered'
       };
 
       if (editingBannerId) {
         await cmsApi.adminUpdateBanner(editingBannerId, payload);
-        notifySuccess(`Banner "${payload.title}" updated and synced to the homepage.`);
+        showMsg('Homepage banner updated successfully.');
       } else {
         await cmsApi.adminCreateBanner(payload);
-        notifySuccess(`Banner "${payload.title}" published to Homepage Banner CMS.`);
+        showMsg('New homepage banner published successfully.');
       }
-      invalidateBannerQueries();
+
+      invalidateBanners();
       setIsEditorOpen(false);
     } catch (err: any) {
-      notifyError(
-        err?.response?.data?.error?.message ||
-          err?.message ||
-          'Failed to save promotional banner.'
-      );
+      showErr(err.message || 'Failed to save promotional banner.');
     } finally {
       setSaving(false);
     }
   };
 
-  const handleToggleActive = async (banner: HeroBanner) => {
-    setTogglingId(banner._id);
+  const handleToggleStatus = async (banner: HeroBanner) => {
     try {
-      const nextState = !(banner.isActive ?? true);
-      await cmsApi.adminUpdateBannerStatus(banner._id, nextState);
-      notifySuccess(
-        nextState
-          ? `"${banner.title}" activated and live on homepage carousel.`
-          : `"${banner.title}" disabled and hidden from public carousel.`
-      );
-      invalidateBannerQueries();
+      await cmsApi.adminUpdateBannerStatus(banner._id, !banner.isActive);
+      showMsg(`Banner visibility switched to ${!banner.isActive ? 'Active' : 'Hidden'}.`);
+      invalidateBanners();
     } catch (err: any) {
-      notifyError(err?.response?.data?.error?.message || 'Failed to update banner visibility.');
-    } finally {
-      setTogglingId(null);
+      showErr(err?.message || 'Failed to toggle banner status.');
     }
   };
 
-  const persistOrder = async (reorderedList: HeroBanner[]) => {
-    setReordering(true);
+  const handleDelete = async (banner: HeroBanner) => {
+    if (!window.confirm(`Delete banner "${banner.buttonName || banner.title}"?`)) return;
     try {
-      await cmsApi.adminReorderBanners(
-        reorderedList.map((item, idx) => ({
-          id: item._id,
-          displayOrder: idx + 1
-        }))
-      );
-      invalidateBannerQueries();
-      notifySuccess('Homepage banner display order updated.');
+      await cmsApi.adminDeleteBanner(banner._id);
+      showMsg('Banner deleted successfully.');
+      invalidateBanners();
     } catch (err: any) {
-      notifyError(err?.response?.data?.error?.message || 'Failed to reorder homepage banners.');
-    } finally {
-      setReordering(false);
+      showErr(err?.message || 'Failed to delete banner.');
     }
   };
 
-  const handleStepOrder = async (index: number, delta: -1 | 1) => {
-    const targetIdx = index + delta;
-    if (targetIdx < 0 || targetIdx >= sortedBanners.length) return;
-    const nextList = [...sortedBanners];
-    const [moved] = nextList.splice(index, 1);
-    nextList.splice(targetIdx, 0, moved);
-    await persistOrder(nextList);
-  };
-
-  const handleDropOnBanner = async (targetId: string) => {
-    if (!draggedId || draggedId === targetId) {
-      setDraggedId(null);
-      return;
-    }
-    const sourceIdx = sortedBanners.findIndex((b) => b._id === draggedId);
-    const targetIdx = sortedBanners.findIndex((b) => b._id === targetId);
-    setDraggedId(null);
-    if (sourceIdx < 0 || targetIdx < 0) return;
-
-    const nextList = [...sortedBanners];
-    const [moved] = nextList.splice(sourceIdx, 1);
-    nextList.splice(targetIdx, 0, moved);
-    await persistOrder(nextList);
-  };
-
-  const handleConfirmDelete = async () => {
-    if (!deleteCandidate) return;
-    setDeleting(true);
-    try {
-      await cmsApi.adminDeleteBanner(deleteCandidate._id);
-      notifySuccess(`Deleted banner "${deleteCandidate.title}".`);
-      invalidateBannerQueries();
-      setDeleteCandidate(null);
-    } catch (err: any) {
-      notifyError(err?.response?.data?.error?.message || 'Failed to delete banner.');
-    } finally {
-      setDeleting(false);
-    }
-  };
-
-  const liveModalPreviewBanner: HeroBanner = {
-    _id: editingBannerId || 'preview-draft',
-    smallHeading: bannerForm.smallHeading || '',
-    title: bannerForm.title || 'Silver Necklace',
-    highlightedText: bannerForm.highlightedText || '',
-    subtitle: bannerForm.subtitle || '',
-    description: bannerForm.description || '',
-    desktopImageUrl: bannerForm.desktopImageUrl,
-    imageUrl: bannerForm.desktopImageUrl,
-    mobileImageUrl: bannerForm.mobileImageUrl || undefined,
-    imageAlt: bannerForm.imageAlt || bannerForm.title || 'Banner preview',
-    ctaText: bannerForm.ctaText || '',
-    ctaLink: bannerForm.ctaLink || '/products',
-    targetLink: bannerForm.ctaLink || '/products',
-    position: bannerForm.position,
-    contentMode: bannerForm.contentMode,
-    textAlignment: bannerForm.textAlignment,
-    textPosition: bannerForm.textPosition || 'center',
-    textColor: bannerForm.textColor || 'cream-gold',
-    buttonStyle: bannerForm.buttonStyle || 'gold-outline',
-    overlayOpacity: typeof bannerForm.overlayOpacity === 'number' ? bannerForm.overlayOpacity : 35,
-    bannerHeight: bannerForm.bannerHeight || 'standard',
-    displayOrder: bannerForm.displayOrder,
-    sortOrder: bannerForm.displayOrder,
-    startDate: bannerForm.startDate || null,
-    endDate: bannerForm.endDate || null,
-    isActive: true
-  };
-
-  const availableCategoryLinks = useMemo(
-    () =>
-      categories
-        .filter((cat) => cat.isActive !== false && cat.slug)
-        .slice(0, 6)
-        .map((cat) => ({
-          label: cat.name,
-          url: `/products?category=${encodeURIComponent(cat.slug)}`
-        })),
-    [categories]
-  );
+  const livePreviewBanner: HeroBanner = useMemo(() => {
+    return {
+      _id: editingBannerId || 'preview',
+      title: bannerForm.buttonName || 'Explore Collection',
+      desktopImageUrl: bannerForm.mediaUrl,
+      imageUrl: bannerForm.mediaUrl,
+      mediaUrl: bannerForm.mediaUrl,
+      mediaType: bannerForm.mediaType,
+      buttonName: bannerForm.buttonName,
+      ctaText: bannerForm.buttonName,
+      navigationDestination: bannerForm.navigationDestination,
+      ctaLink: bannerForm.navigationDestination,
+      destinationType: bannerForm.destinationType,
+      position: 'HOME_HERO',
+      contentMode: 'layered',
+      textAlignment: 'right',
+      displayOrder: 0,
+      sortOrder: 0,
+      isActive: bannerForm.isActive,
+      startDate: bannerForm.startDate || null,
+      endDate: bannerForm.endDate || null
+    };
+  }, [bannerForm, editingBannerId]);
 
   return (
-    <div className="space-y-5">
-      {/* Banner Studio Coverage & Action Bar */}
-      <div className="bg-[#FCF7EC] border border-gold-300/80 rounded-2xl p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <h2 className="font-serif text-lg sm:text-xl font-bold text-burgundy-950">
-              Homepage Promotional Carousel
-            </h2>
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800">
-              {activeBanners.length} Active
-            </span>
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-stone-200 text-stone-700">
-              {sortedBanners.length - activeBanners.length} Paused
-            </span>
-          </div>
-          <p className="text-xs text-stone-600 max-w-2xl">
-            Manage promotional banners, separate desktop & mobile visuals, CTA links, layered text overlays, visibility, and drag-and-drop sequence synced directly to the Sri Ramas Jewellery homepage.
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="font-serif text-2xl font-bold text-burgundy-950">
+            Homepage Promotional Banners
+          </h2>
+          <p className="text-xs text-stone-500 mt-0.5">
+            Manage your high-impact promotional carousel, multi-media artwork, and searchable destinations.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-          {activeBanners.length > 0 && (
-            <button
-              type="button"
-              onClick={() => {
-                setPreviewModalTitle(
-                  `Live Homepage Carousel Preview (${activeBanners.length} Active Slide${activeBanners.length === 1 ? '' : 's'})`
-                );
-                setPreviewModalBanners(activeBanners);
-                setPreviewViewport('desktop');
-              }}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-gold-400 bg-white text-burgundy-900 text-xs font-bold hover:bg-gold-50 transition-colors"
-            >
-              <Eye className="w-4 h-4 text-gold-700" />
-              <span>Preview Carousel</span>
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={openCreateModal}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-maroon-gradient text-gold-200 text-xs font-bold uppercase tracking-wider shadow-md hover:opacity-95"
-          >
-            <Plus className="w-4 h-4 text-gold-400" />
-            <span>Add Banner</span>
+        <button
+          type="button"
+          onClick={openCreateModal}
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-maroon-gradient text-gold-200 text-xs font-bold uppercase tracking-wider shadow-md hover:opacity-95"
+        >
+          <Plus className="w-4 h-4 text-gold-400" />
+          <span>Add Promotional Banner</span>
+        </button>
+      </div>
+
+      {localMsg && (
+        <div className="p-3 bg-emerald-50 border border-emerald-300 text-xs text-emerald-800 rounded-xl flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            <span>{localMsg}</span>
+          </div>
+          <button type="button" onClick={() => setLocalMsg(null)}>
+            <X className="w-4 h-4" />
           </button>
+        </div>
+      )}
+
+      {localErr && (
+        <div className="p-3 bg-red-50 border border-red-300 text-xs text-red-800 rounded-xl flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-red-600" />
+            <span>{localErr}</span>
+          </div>
+          <button type="button" onClick={() => setLocalErr(null)}>
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {/* Banners Table */}
+      <div className="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-stone-50 border-b border-stone-200 text-stone-500 uppercase font-semibold">
+              <tr>
+                <th className="p-4">Media</th>
+                <th className="p-4">Button &amp; Destination</th>
+                <th className="p-4">Schedule Period</th>
+                <th className="p-4">Status</th>
+                <th className="p-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-stone-100">
+              {isLoading ? (
+                <tr>
+                  <td colSpan={5} className="p-8 text-center text-stone-400">
+                    Loading promotional banners...
+                  </td>
+                </tr>
+              ) : banners.length > 0 ? (
+                banners.map((b) => {
+                  const mediaUrl = b.mediaUrl || b.desktopImageUrl || b.imageUrl || '';
+                  const isVideo = b.mediaType === 'VIDEO' || /\.(mp4|webm|mov)(\?.*)?$/i.test(mediaUrl);
+                  return (
+                    <tr key={b._id} className="hover:bg-stone-50/70 transition-colors">
+                      <td className="p-4 flex items-center gap-3">
+                        <div className="w-16 h-10 rounded-lg bg-[#3A060E] overflow-hidden shrink-0 border border-gold-400/50 relative">
+                          {isVideo ? (
+                            <div className="w-full h-full flex items-center justify-center bg-black/40 text-gold-300">
+                              <Film className="w-4 h-4" />
+                            </div>
+                          ) : mediaUrl ? (
+                            <img
+                              src={mediaUrl}
+                              alt={b.title}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-stone-400">
+                              <ImageIcon className="w-4 h-4" />
+                            </div>
+                          )}
+                          <span className="absolute bottom-0.5 right-0.5 px-1 py-0.2 bg-black/70 text-white text-[8px] font-bold rounded">
+                            {isVideo ? 'VIDEO' : 'IMAGE'}
+                          </span>
+                        </div>
+                        <div>
+                          <div className="font-serif font-bold text-sm text-burgundy-950">
+                            {b.buttonName || b.ctaText || b.title}
+                          </div>
+                          <div className="text-[10px] text-stone-400 font-mono">
+                            {b.destinationType || 'PAGE'}
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="p-4 text-stone-700">
+                        <div className="font-semibold text-burgundy-900">
+                          {b.buttonName || b.ctaText || 'Explore Collection'}
+                        </div>
+                        <div className="font-mono text-[11px] text-stone-500 truncate max-w-xs">
+                          {b.navigationDestination || b.ctaLink || b.targetLink || '/'}
+                        </div>
+                      </td>
+
+                      <td className="p-4 text-stone-600">
+                        {b.startDate || b.endDate ? (
+                          <div className="space-y-0.5 text-[11px] font-mono">
+                            {b.startDate && <div>From: {b.startDate.slice(0, 10)}</div>}
+                            {b.endDate && <div>To: {b.endDate.slice(0, 10)}</div>}
+                          </div>
+                        ) : (
+                          <span className="text-stone-400 italic">Always Active</span>
+                        )}
+                      </td>
+
+                      <td className="p-4">
+                        <button
+                          type="button"
+                          onClick={() => handleToggleStatus(b)}
+                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase transition-colors ${
+                            b.isActive
+                              ? 'bg-emerald-100 text-emerald-800'
+                              : 'bg-stone-200 text-stone-600'
+                          }`}
+                        >
+                          {b.isActive ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+                          <span>{b.isActive ? 'Active' : 'Hidden'}</span>
+                        </button>
+                      </td>
+
+                      <td className="p-4 text-right space-x-1.5 whitespace-nowrap">
+                        <button
+                          type="button"
+                          onClick={() => setPreviewBanner(b)}
+                          className="p-1.5 rounded-lg border border-gold-300/70 hover:bg-gold-50 text-burgundy-900"
+                          title="Preview banner"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openEditModal(b)}
+                          className="p-1.5 rounded-lg border border-stone-200 hover:bg-stone-100 text-stone-700"
+                          title="Edit banner"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(b)}
+                          className="p-1.5 rounded-lg border border-red-200 hover:bg-red-50 text-red-600"
+                          title="Delete banner"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan={5} className="p-8 text-center text-stone-400">
+                    No promotional banners configured yet. Click "Add Promotional Banner" to create one.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 
-      {!onStatusMessage && localMsg && (
-        <div className="p-3 bg-emerald-50 border border-emerald-300 text-xs text-emerald-800 rounded-xl flex items-center justify-between gap-2 animate-toast-enter">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span>{localMsg}</span>
-          </div>
-          <button type="button" onClick={() => setLocalMsg(null)} className="text-emerald-700 hover:text-emerald-950">
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      )}
-
-      {!onErrorMessage && localErr && (
-        <div className="p-3 bg-red-50 border border-red-300 text-xs text-red-800 rounded-xl flex items-center justify-between gap-2 animate-toast-enter">
-          <div className="flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
-            <span>{localErr}</span>
-          </div>
-          <button type="button" onClick={() => setLocalErr(null)} className="text-red-700 hover:text-red-950">
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      )}
-
-      {/* Banner Listing */}
-      {isLoading ? (
-        <div className="p-10 bg-white rounded-2xl border border-stone-200 text-center text-xs text-stone-500">
-          Loading promotional banners...
-        </div>
-      ) : sortedBanners.length === 0 ? (
-        <div className="p-12 bg-white rounded-2xl border border-stone-200 text-center space-y-3">
-          <ImageIcon className="w-10 h-10 text-gold-600 mx-auto" />
-          <p className="font-serif text-base font-bold text-burgundy-950">
-            No promotional banners configured yet
-          </p>
-          <p className="text-xs text-stone-500 max-w-md mx-auto">
-            Upload a full campaign artwork banner or a clean jewellery backdrop with customizable heading and CTA overlay.
-          </p>
-          <button
-            type="button"
-            onClick={openCreateModal}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-burgundy-900 text-gold-200 text-xs font-semibold"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Create First Banner</span>
-          </button>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {reordering && (
-            <div className="text-[11px] font-semibold text-burgundy-800 flex items-center gap-2">
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              <span>Saving new slide sequence...</span>
-            </div>
-          )}
-
-          {sortedBanners.map((banner, idx) => {
-            const isActive = banner.isActive !== false;
-            const isCompleteArtwork = banner.contentMode === 'image';
-            return (
-              <div
-                key={banner._id}
-                draggable
-                onDragStart={() => setDraggedId(banner._id)}
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={() => handleDropOnBanner(banner._id)}
-                onDragEnd={() => setDraggedId(null)}
-                className={`rounded-2xl border bg-white p-4 sm:p-5 shadow-sm transition-all ${
-                  draggedId === banner._id
-                    ? 'opacity-50 border-burgundy-500 ring-2 ring-gold-400'
-                    : isActive
-                      ? 'border-gold-300/80 hover:border-gold-500'
-                      : 'border-stone-200 opacity-80 bg-stone-50/70'
-                }`}
-              >
-                <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-center">
-                  {/* Reorder Handle + Wide 3:1 Thumbnail */}
-                  <div className="xl:col-span-5 flex items-center gap-3">
-                    <div
-                      className="flex flex-col items-center gap-1 shrink-0 text-stone-400"
-                      title="Drag to reorder slide"
-                    >
-                      <button
-                        type="button"
-                        disabled={idx === 0 || reordering}
-                        onClick={() => handleStepOrder(idx, -1)}
-                        className="p-1 rounded hover:bg-stone-100 text-stone-500 disabled:opacity-30"
-                        aria-label="Move banner up"
-                      >
-                        <ArrowUp className="w-3.5 h-3.5" />
-                      </button>
-                      <GripVertical className="w-4 h-4 cursor-grab active:cursor-grabbing text-gold-700" />
-                      <button
-                        type="button"
-                        disabled={idx === sortedBanners.length - 1 || reordering}
-                        onClick={() => handleStepOrder(idx, 1)}
-                        className="p-1 rounded hover:bg-stone-100 text-stone-500 disabled:opacity-30"
-                        aria-label="Move banner down"
-                      >
-                        <ArrowDown className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-
-                    <div className="flex-1 min-w-0 space-y-1.5">
-                      <div className="relative w-full aspect-[3/1] rounded-xl overflow-hidden bg-burgundy-950 border border-gold-300/60 shadow-inner">
-                        <img
-                          src={banner.desktopImageUrl || banner.imageUrl}
-                          alt={banner.imageAlt || banner.title}
-                          className="w-full h-full object-cover object-center"
-                        />
-                        <span className="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/75 text-gold-200 font-mono text-[10px] font-bold">
-                          Slide #{idx + 1}
-                        </span>
-                        {banner.mobileImageUrl && (
-                          <span className="absolute bottom-2 right-2 px-1.5 py-0.5 rounded bg-black/75 text-[9px] text-white font-semibold flex items-center gap-1">
-                            <Smartphone className="w-2.5 h-2.5 text-gold-300" />
-                            Mobile Variant
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Metadata & Actions */}
-                  <div className="xl:col-span-7 flex flex-col justify-between gap-4 text-xs">
-                    <div className="space-y-2">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span
-                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                            isActive
-                              ? 'bg-emerald-100 text-emerald-800'
-                              : 'bg-stone-200 text-stone-700'
-                          }`}
-                        >
-                          {isActive ? 'Active' : 'Inactive'}
-                        </span>
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-burgundy-50 text-burgundy-900 text-[10px] font-semibold border border-burgundy-200">
-                          {isCompleteArtwork ? (
-                            <>
-                              <ImageIcon className="w-3 h-3" />
-                              <span>Full Artwork Image</span>
-                            </>
-                          ) : (
-                            <>
-                              <Layers className="w-3 h-3" />
-                              <span>
-                                Layered CMS ({banner.textAlignment || 'right'} • {banner.bannerHeight || 'standard'})
-                              </span>
-                            </>
-                          )}
-                        </span>
-                        <span className="font-mono text-[10px] text-stone-500 px-2 py-0.5 rounded bg-stone-100">
-                          Order: {banner.displayOrder ?? idx + 1}
-                        </span>
-                        {(banner.startDate || banner.endDate) && (
-                          <span className="font-mono text-[10px] text-amber-800 px-2 py-0.5 rounded bg-amber-50 border border-amber-200">
-                            {banner.startDate ? toDateInputValue(banner.startDate) : 'Now'} →{' '}
-                            {banner.endDate ? toDateInputValue(banner.endDate) : 'Ongoing'}
-                          </span>
-                        )}
-                      </div>
-
-                      <div>
-                        {banner.smallHeading && (
-                          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-burgundy-700">
-                            {banner.smallHeading}
-                          </p>
-                        )}
-                        <h3 className="font-serif text-base font-bold text-burgundy-950">
-                          {banner.title}
-                          {banner.highlightedText ? (
-                            <span className="ml-1.5 text-xs font-normal text-gold-700">
-                              (Gold accent: “{banner.highlightedText}”)
-                            </span>
-                          ) : null}
-                        </h3>
-                        {banner.subtitle && (
-                          <p className="text-gold-800 font-medium">{banner.subtitle}</p>
-                        )}
-                        {banner.description && (
-                          <p className="text-stone-600 mt-1 line-clamp-2">{banner.description}</p>
-                        )}
-                      </div>
-
-                      <div className="flex flex-wrap items-center gap-3 text-[11px] text-stone-600 pt-1">
-                        <span>
-                          <strong className="text-stone-800">CTA:</strong>{' '}
-                          {banner.ctaText || 'Clickable Banner'}
-                        </span>
-                        <span className="text-stone-300">•</span>
-                        <span className="inline-flex items-center gap-1 font-mono text-burgundy-900">
-                          <ExternalLink className="w-3 h-3 text-gold-700" />
-                          <span>{banner.ctaLink || banner.targetLink || '/products'}</span>
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="pt-3 border-t border-stone-100 flex flex-wrap items-center justify-between gap-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setPreviewModalTitle(`Banner Preview — ${banner.title}`);
-                          setPreviewModalBanners([{ ...banner, isActive: true }]);
-                          setPreviewViewport('desktop');
-                        }}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-stone-200 hover:border-gold-400 hover:bg-gold-50 text-stone-700 font-semibold transition-colors"
-                      >
-                        <Eye className="w-3.5 h-3.5 text-gold-700" />
-                        <span>Preview</span>
-                      </button>
-
-                      <div className="flex flex-wrap items-center gap-2">
-                        <button
-                          type="button"
-                          disabled={togglingId === banner._id}
-                          onClick={() => handleToggleActive(banner)}
-                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border font-semibold transition-colors disabled:opacity-50 ${
-                            isActive
-                              ? 'border-stone-200 text-stone-700 hover:bg-stone-100'
-                              : 'border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100'
-                          }`}
-                        >
-                          {isActive ? (
-                            <>
-                              <EyeOff className="w-3.5 h-3.5" />
-                              <span>Disable</span>
-                            </>
-                          ) : (
-                            <>
-                              <Eye className="w-3.5 h-3.5" />
-                              <span>Activate</span>
-                            </>
-                          )}
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => openEditModal(banner)}
-                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-burgundy-50 text-burgundy-900 hover:bg-burgundy-100 font-semibold"
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                          <span>Edit</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => setDeleteCandidate(banner)}
-                          className="p-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
-                          title="Delete promotional banner"
-                          aria-label={`Delete banner ${banner.title}`}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Create / Edit Banner Modal with Live Preview */}
+      {/* Simplified 5-Field Banner Editor Modal */}
       {isEditorOpen && (
-        <div
-          className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto animate-fade-in"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setIsEditorOpen(false);
-          }}
-        >
-          <div className="bg-white rounded-2xl border border-gold-400 w-full max-w-4xl overflow-hidden shadow-2xl my-6 max-h-[92vh] flex flex-col animate-modal-enter">
-            <div className="bg-brand-maroon-gradient p-5 text-gold-100 flex items-center justify-between shrink-0">
+        <AdminModalPortal>
+          <div className="fixed inset-0 z-[9999] flex items-start justify-center p-3 sm:p-6 overflow-y-auto bg-charcoal-950/70 backdrop-blur-sm animate-fade-in">
+          <div className="relative w-full max-w-3xl bg-white rounded-2xl shadow-2xl border border-gold-500/40 overflow-hidden my-2 sm:my-4 max-h-[94vh] flex flex-col animate-modal-enter">
+            <div className="bg-burgundy-900 text-gold-100 p-4 sm:p-5 border-b border-gold-600/40 flex items-center justify-between shrink-0">
               <div>
-                <h2 className="font-serif font-bold text-lg text-gold-100">
-                  {editingBannerId ? 'Edit Promotional Banner' : 'Add Promotional Banner'}
-                </h2>
-                <p className="text-[11px] text-gold-300 mt-0.5">
-                  Configure artwork, mobile crop variant, CTA link, content overlay mode, and display order.
+                <h3 className="font-serif font-bold text-lg text-gold-100">
+                  {editingBannerId ? 'Edit Promotional Banner' : 'Create Promotional Banner'}
+                </h3>
+                <p className="text-[11px] text-gold-300/80">
+                  Fill in the 5 required fields below. Saved changes update MongoDB and sync with the public homepage carousel.
                 </p>
               </div>
               <button
@@ -688,659 +669,591 @@ export const BannerManagementPanel: React.FC<BannerManagementPanelProps> = ({
               </button>
             </div>
 
-            <form onSubmit={handleSaveBanner} className="p-6 space-y-5 text-xs overflow-y-auto">
-              {/* Live Homepage Preview Panel inside Editor */}
-              {bannerForm.desktopImageUrl.trim() && (
-                <div className="rounded-xl border border-gold-300 bg-[#FAF5EA] p-4 space-y-3">
+            <form onSubmit={handleSave} className="flex flex-col flex-1 overflow-hidden">
+              <div className="p-5 sm:p-6 overflow-y-auto space-y-4 text-xs">
+                {localErr && (
+                  <div className="p-3 rounded-xl bg-red-50 border border-red-300 text-red-800 flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    <span>{localErr}</span>
+                  </div>
+                )}
+
+                {/* 1. Media Upload (Image or Video) with Full Copy & Paste */}
+                <div className="space-y-3 rounded-xl border border-gold-300/80 bg-[#FAF7F0] p-4 shadow-sm">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="font-bold uppercase tracking-wider text-burgundy-950">
-                      Live Homepage Preview ({bannerForm.contentMode === 'image' ? 'Complete Artwork' : 'Layered CMS'})
-                    </span>
-                    <div className="flex items-center gap-1.5">
+                    <label className="font-semibold uppercase text-stone-800 text-xs tracking-wider">
+                      1. Media Upload (Image or Video) *
+                    </label>
+                    <div className="flex items-center gap-3">
+                      {bannerForm.mediaUrl && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={handleRemoveMedia}
+                            className="text-[11px] text-red-600 hover:text-red-700 font-bold flex items-center gap-1 transition-colors"
+                            title="Cancel uploaded media and remove"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                            <span>Cancel Media</span>
+                          </button>
+                          <span className="text-stone-300 text-[10px]">|</span>
+                          <button
+                            type="button"
+                            onClick={handleCopyMediaLink}
+                            className="text-[11px] text-stone-600 hover:text-burgundy-950 font-semibold flex items-center gap-1 transition-colors"
+                            title="Copy media URL to clipboard"
+                          >
+                            {copiedMedia ? (
+                              <>
+                                <Check className="w-3.5 h-3.5 text-emerald-600" />
+                                <span className="text-emerald-700 font-bold">Copied!</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="w-3.5 h-3.5 text-stone-500" />
+                                <span>Copy Link</span>
+                              </>
+                            )}
+                          </button>
+                        </>
+                      )}
                       <button
                         type="button"
-                        onClick={() => setEditorPreviewViewport('desktop')}
-                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-semibold ${
-                          editorPreviewViewport === 'desktop'
-                            ? 'bg-burgundy-900 text-gold-200'
-                            : 'bg-white text-stone-700 border border-stone-300'
-                        }`}
+                        onClick={handlePasteMediaFromClipboard}
+                        className="text-[11px] text-gold-700 hover:text-burgundy-900 font-bold flex items-center gap-1 transition-colors"
+                        title="Paste copied image or video from clipboard (Ctrl+V)"
                       >
-                        <Monitor className="w-3.5 h-3.5" />
-                        <span>Desktop</span>
+                        <ClipboardPaste className="w-3.5 h-3.5 text-gold-600" />
+                        <span>Paste Media</span>
                       </button>
                       <button
                         type="button"
-                        onClick={() => setEditorPreviewViewport('mobile')}
-                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-semibold ${
-                          editorPreviewViewport === 'mobile'
-                            ? 'bg-burgundy-900 text-gold-200'
-                            : 'bg-white text-stone-700 border border-stone-300'
-                        }`}
+                        onClick={() => setShowUrlInput(!showUrlInput)}
+                        className="text-[11px] text-stone-500 hover:text-stone-700 flex items-center gap-1"
                       >
-                        <Smartphone className="w-3.5 h-3.5" />
-                        <span>Mobile</span>
+                        <LinkIcon className="w-3 h-3" />
+                        <span>{showUrlInput ? 'Hide URL Input' : 'Paste URL'}</span>
                       </button>
                     </div>
                   </div>
-                  <div
-                    className={
-                      editorPreviewViewport === 'mobile'
-                        ? 'max-w-[375px] mx-auto border border-stone-300 rounded-2xl p-2 bg-white shadow-inner'
-                        : ''
-                    }
-                  >
-                    <PromotionalBannerCarousel
-                      banners={[liveModalPreviewBanner]}
-                      forceViewport={editorPreviewViewport}
-                    />
-                  </div>
-                </div>
-              )}
 
-              {/* 1. Image Settings */}
-              <div className="space-y-3 rounded-xl border border-stone-200 bg-stone-50/40 p-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-serif text-sm font-bold text-burgundy-950">
-                    1. Image Settings
-                  </h3>
-                  <span className="text-[11px] text-stone-500">
-                    Clean text-free jewellery photography recommended
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  <ImageDropzone
-                    label="Desktop Background Image * (Recommended 3:1 e.g. 1800x600)"
-                    altText={bannerForm.imageAlt || bannerForm.title || 'Desktop Banner'}
-                    value={bannerForm.desktopImageUrl}
-                    publicId={bannerForm.desktopImagePublicId}
-                    onChange={(url) =>
-                      setBannerForm((prev) => ({ ...prev, desktopImageUrl: url }))
-                    }
-                    onPublicIdChange={(pid) =>
-                      setBannerForm((prev) => ({ ...prev, desktopImagePublicId: pid }))
-                    }
-                    uploadFolder="banners"
-                    helperText="Upload text-free luxury background (PNG/JPG/WEBP) or /images/banners/... Replace anytime."
+                  {/* Hidden File Input */}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp,image/avif,video/mp4,video/webm"
+                    className="hidden"
+                    onChange={handleFileUpload}
                   />
 
-                  <ImageDropzone
-                    label="Mobile Background Image (Optional 16:9 e.g. 1024x576)"
-                    altText={`${bannerForm.title || 'Banner'} mobile variant`}
-                    value={bannerForm.mobileImageUrl || ''}
-                    publicId={bannerForm.mobileImagePublicId || ''}
-                    onChange={(url) =>
-                      setBannerForm((prev) => ({ ...prev, mobileImageUrl: url }))
-                    }
-                    onPublicIdChange={(pid) =>
-                      setBannerForm((prev) => ({ ...prev, mobileImagePublicId: pid }))
-                    }
-                    uploadFolder="banners"
-                    helperText="Optional crop tailored for phones (<640px). Falls back cleanly to desktop photo when empty."
-                  />
+                  {/* Dropzone & Paste Area */}
+                  {!bannerForm.mediaUrl ? (
+                    <div
+                      onDragOver={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      onDrop={handleDrop}
+                      onClick={() => fileInputRef.current?.click()}
+                      className={`relative border-2 border-dashed rounded-xl p-5 sm:p-6 text-center cursor-pointer transition-all duration-200 flex flex-col items-center justify-center gap-2 ${
+                        isDraggingMedia
+                          ? 'border-gold-500 bg-gold-50/70 ring-2 ring-gold-400/40'
+                          : 'border-stone-300 hover:border-gold-400 bg-white/70 hover:bg-gold-50/30'
+                      }`}
+                    >
+                      <div className="w-10 h-10 rounded-full bg-gold-100/70 border border-gold-300 flex items-center justify-center text-burgundy-900">
+                        {uploadingMedia ? (
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                          <UploadCloud className="w-5 h-5" />
+                        )}
+                      </div>
+
+                      <div className="text-xs text-stone-700">
+                        <span className="font-bold text-burgundy-950">Drag & drop image or video here</span>,{' '}
+                        <span className="text-gold-700 underline font-semibold">Browse</span>, or press{' '}
+                        <kbd className="px-1.5 py-0.5 bg-stone-100 border border-stone-300 rounded text-[10px] font-mono">
+                          Ctrl+V
+                        </kbd>
+                      </div>
+
+                      <p className="text-[11px] text-stone-500">
+                        Supports PNG, JPG, WEBP, or MP4/WEBM video (up to 50MB) to Cloudinary
+                      </p>
+
+                      <div className="flex flex-wrap items-center justify-center gap-2 mt-1">
+                        {uploadingMedia ? (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setUploadingMedia(false);
+                              if (fileInputRef.current) fileInputRef.current.value = '';
+                            }}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 rounded-lg text-xs font-semibold shadow-xs transition-colors"
+                          >
+                            <X className="w-3.5 h-3.5 text-red-600" />
+                            <span>Cancel Upload</span>
+                          </button>
+                        ) : (
+                          <>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                fileInputRef.current?.click();
+                              }}
+                              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-burgundy-900 text-gold-200 rounded-lg text-xs font-bold hover:bg-burgundy-800 shadow-sm"
+                            >
+                              <Upload className="w-3.5 h-3.5 text-gold-400" />
+                              <span>Browse File</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handlePasteMediaFromClipboard();
+                              }}
+                              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-white border border-gold-300 rounded-lg text-xs font-bold text-burgundy-950 hover:bg-gold-50 shadow-sm transition-colors"
+                            >
+                              <ClipboardPaste className="w-3.5 h-3.5 text-gold-600" />
+                              <span>Paste Copied Media</span>
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    /* Media Preview Card with Overlay Controls & Live Bottom-Right CTA */
+                    <div className="space-y-2">
+                      <div className="relative rounded-xl border border-gold-400/70 overflow-hidden bg-[#140204] aspect-[2/1] min-h-[190px] max-h-72 flex items-center justify-center group shadow-md select-none">
+                        {/* Ambient blurred backdrop */}
+                        {bannerForm.mediaType !== 'VIDEO' && bannerForm.mediaUrl && (
+                          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                            <img
+                              src={bannerForm.mediaUrl}
+                              alt=""
+                              aria-hidden="true"
+                              className="w-full h-full object-cover scale-125 blur-xl opacity-60"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-[#140204]/75 via-transparent to-[#140204]/40" />
+                          </div>
+                        )}
+
+                        {bannerForm.mediaType === 'VIDEO' ? (
+                          <video
+                            src={bannerForm.mediaUrl}
+                            className="relative z-10 w-full h-full object-contain object-center"
+                            controls
+                            muted
+                          />
+                        ) : (
+                          <img
+                            src={bannerForm.mediaUrl}
+                            alt="Banner media preview"
+                            className="relative z-10 w-full h-full object-contain object-center drop-shadow-md"
+                          />
+                        )}
+
+                        {/* Live Bottom-Right CTA Button Preview */}
+                        {bannerForm.buttonName && (
+                          <div className="absolute right-3.5 bottom-3.5 z-20 pointer-events-none">
+                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full font-serif font-extrabold text-xs sm:text-[13px] uppercase tracking-wider bg-brand-maroon-gradient text-gold-100 border border-gold-400 shadow-xl">
+                              <span>{bannerForm.buttonName}</span>
+                              <ArrowRight className="w-3.5 h-3.5 text-gold-300" />
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Badges */}
+                        <div className="absolute top-2 left-2 z-20 flex items-center gap-1.5">
+                          <span className="px-2 py-0.5 rounded bg-black/75 text-white text-[10px] font-bold uppercase tracking-wider backdrop-blur-sm">
+                            {bannerForm.mediaType}
+                          </span>
+                          {bannerForm.mediaPublicId && (
+                            <span className="hidden sm:inline-block px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-200 text-[10px] font-mono backdrop-blur-sm">
+                              Cloudinary: {bannerForm.mediaPublicId.split('/').pop()}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Quick Actions Overlay */}
+                        <div className="absolute top-2 right-2 flex items-center gap-1.5 bg-black/60 p-1 rounded-lg backdrop-blur-sm z-30">
+                          <button
+                            type="button"
+                            onClick={handleCopyMediaLink}
+                            className="p-1.5 rounded text-white/90 hover:text-white hover:bg-white/20 transition-colors"
+                            title="Copy Media URL"
+                          >
+                            {copiedMedia ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handlePasteMediaFromClipboard}
+                            className="p-1.5 rounded text-white/90 hover:text-white hover:bg-white/20 transition-colors"
+                            title="Paste New Media from Clipboard (Ctrl+V)"
+                          >
+                            <ClipboardPaste className="w-3.5 h-3.5 text-gold-300" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => fileInputRef.current?.click()}
+                            className="p-1.5 rounded text-white/90 hover:text-white hover:bg-white/20 transition-colors"
+                            title="Browse to Replace"
+                          >
+                            <Upload className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleRemoveMedia}
+                            className="flex items-center gap-1 px-2 py-1 rounded bg-red-600/90 hover:bg-red-700 text-white text-[11px] font-semibold transition-colors shadow-sm"
+                            title="Cancel / Remove Media"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                            <span>Cancel</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Explicit Media Action Toolbar with Cancel Button */}
+                      <div className="flex flex-wrap items-center justify-between gap-2 p-2 rounded-xl bg-stone-50 border border-stone-200">
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={handleRemoveMedia}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 rounded-lg text-xs font-bold transition-colors shadow-2xs"
+                            title="Cancel uploaded media and remove"
+                          >
+                            <X className="w-3.5 h-3.5 text-red-600" />
+                            <span>Cancel / Remove Media</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => fileInputRef.current?.click()}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white text-stone-700 hover:bg-stone-50 border border-stone-300 rounded-lg text-xs font-semibold transition-colors shadow-2xs"
+                            title="Replace with another file"
+                          >
+                            <Upload className="w-3.5 h-3.5 text-stone-500" />
+                            <span>Replace File</span>
+                          </button>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={handleCopyMediaLink}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-white text-stone-700 hover:bg-stone-50 border border-stone-300 rounded-lg text-xs font-medium transition-colors shadow-2xs"
+                          >
+                            {copiedMedia ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-stone-500" />}
+                            <span>{copiedMedia ? 'Copied' : 'Copy URL'}</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handlePasteMediaFromClipboard}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-white text-burgundy-950 hover:bg-gold-50 border border-gold-300 rounded-lg text-xs font-semibold transition-colors shadow-2xs"
+                          >
+                            <ClipboardPaste className="w-3.5 h-3.5 text-gold-600" />
+                            <span>Paste Media</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Direct URL Input Bar */}
+                  {(showUrlInput || !bannerForm.mediaUrl) && (
+                    <div className="pt-1 flex flex-col sm:flex-row gap-2">
+                      <div className="flex flex-1 gap-1.5">
+                        <select
+                          value={bannerForm.mediaType}
+                          onChange={(e) =>
+                            setBannerForm((prev) => ({
+                              ...prev,
+                              mediaType: e.target.value as 'IMAGE' | 'VIDEO'
+                            }))
+                          }
+                          className="px-2.5 py-1.5 border border-stone-300 rounded-lg bg-white text-xs outline-none focus:border-gold-500 shrink-0 font-medium"
+                        >
+                          <option value="IMAGE">Image URL</option>
+                          <option value="VIDEO">Video URL</option>
+                        </select>
+                        <input
+                          type="text"
+                          placeholder="Or paste media URL (e.g. https://... or /uploads/...)"
+                          value={bannerForm.mediaUrl}
+                          onChange={(e) =>
+                            setBannerForm((prev) => ({ ...prev, mediaUrl: e.target.value }))
+                          }
+                          className="flex-1 p-2 border border-stone-300 rounded-lg text-xs bg-white outline-none focus:border-gold-500 font-mono"
+                        />
+                        <button
+                          type="button"
+                          onClick={handlePasteMediaFromClipboard}
+                          className="px-2.5 py-1.5 border border-gold-300 bg-gold-50 text-burgundy-900 rounded-lg text-xs font-semibold hover:bg-gold-100 flex items-center gap-1 shrink-0"
+                          title="Paste from clipboard"
+                        >
+                          <ClipboardPaste className="w-3.5 h-3.5 text-gold-700" />
+                          <span className="hidden sm:inline">Paste</span>
+                        </button>
+                        {showUrlInput && (
+                          <button
+                            type="button"
+                            onClick={() => setShowUrlInput(false)}
+                            className="px-2.5 py-1.5 border border-stone-300 bg-stone-100 text-stone-700 rounded-lg text-xs font-semibold hover:bg-stone-200 flex items-center gap-1 shrink-0 transition-colors"
+                            title="Cancel URL input"
+                          >
+                            <X className="w-3.5 h-3.5 text-stone-500" />
+                            <span>Cancel</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
+                {/* 2. Button Name */}
                 <div>
                   <label className="block font-semibold uppercase text-stone-700 mb-1">
-                    Image Alt Text (Accessibility)
+                    2. Button Name *
                   </label>
                   <input
                     type="text"
-                    maxLength={240}
-                    value={bannerForm.imageAlt || ''}
-                    onChange={(e) => setBannerForm({ ...bannerForm, imageAlt: e.target.value })}
-                    placeholder="Descriptive text for banner imagery..."
-                    className="w-full p-2.5 border rounded-lg bg-white outline-none focus:border-gold-500"
+                    required
+                    value={bannerForm.buttonName}
+                    onChange={(e) =>
+                      setBannerForm((prev) => ({ ...prev, buttonName: e.target.value }))
+                    }
+                    placeholder="e.g. Explore Collection, View Bridal Jewellery, Join Scheme"
+                    className="w-full p-2.5 border border-stone-300 rounded-lg outline-none focus:border-gold-500 text-xs"
                   />
                 </div>
-              </div>
 
-              {/* 2. Content Settings */}
-              <div className="space-y-3 rounded-xl border border-stone-200 bg-white p-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-serif text-sm font-bold text-burgundy-950">
-                    2. Content Settings
-                  </h3>
-                  <span className="text-[11px] text-stone-500">
-                    Rendered dynamically as crisp HTML layers over the photo
-                  </span>
+                {/* 3. Searchable Navigation Destination */}
+                <div ref={destinationDropdownRef} className="relative">
+                  <label className="block font-semibold uppercase text-stone-700 mb-1">
+                    3. Searchable Navigation Destination *
+                  </label>
+                  <div
+                    onClick={() => setIsDestinationOpen(true)}
+                    className="w-full p-2.5 border border-stone-300 rounded-lg bg-white flex items-center justify-between cursor-pointer hover:border-gold-500"
+                  >
+                    <div className="flex items-center gap-2 truncate">
+                      <span className="px-1.5 py-0.5 rounded bg-burgundy-100 text-burgundy-900 text-[10px] font-bold">
+                        {bannerForm.destinationType}
+                      </span>
+                      <span className="font-mono text-stone-800">
+                        {bannerForm.navigationDestination || 'Select destination...'}
+                      </span>
+                    </div>
+                    <Search className="w-4 h-4 text-stone-400 shrink-0" />
+                  </div>
+
+                  {/* Dropdown with Search & Categorized Groups */}
+                  {isDestinationOpen && (
+                    <div className="absolute z-20 left-0 right-0 mt-1 bg-white border border-gold-400 rounded-xl shadow-2xl max-h-72 overflow-hidden flex flex-col animate-fade-in">
+                      <div className="p-2 border-b border-stone-200 bg-stone-50">
+                        <div className="relative">
+                          <Search className="w-3.5 h-3.5 text-stone-400 absolute left-2.5 top-2.5" />
+                          <input
+                            type="text"
+                            autoFocus
+                            placeholder="Search Pages, Categories, Products..."
+                            value={destinationSearch}
+                            onChange={(e) => setDestinationSearch(e.target.value)}
+                            className="w-full pl-8 pr-3 py-1.5 border border-stone-300 rounded-lg text-xs outline-none focus:border-gold-500 bg-white"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="p-2 overflow-y-auto space-y-3 divide-y divide-stone-100 text-xs">
+                        {/* Group 1: Static Public Pages */}
+                        <div>
+                          <div className="text-[10px] font-bold uppercase tracking-wider text-stone-400 px-2 py-1">
+                            Public Pages
+                          </div>
+                          <div className="space-y-0.5">
+                            {(destinationsData?.pages || STATIC_PAGE_DESTINATIONS).map((p) => (
+                              <button
+                                key={p.value}
+                                type="button"
+                                onClick={() => handleSelectDestination(p, 'PAGE')}
+                                className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-gold-50 flex items-center justify-between transition-colors"
+                              >
+                                <span>{p.label}</span>
+                                <span className="font-mono text-[10px] text-stone-400">{p.value}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Group 2: Categories */}
+                        <div className="pt-2">
+                          <div className="text-[10px] font-bold uppercase tracking-wider text-stone-400 px-2 py-1">
+                            Jewellery Categories
+                          </div>
+                          <div className="space-y-0.5 max-h-36 overflow-y-auto">
+                            {(destinationsData?.categories || []).length > 0 ? (
+                              destinationsData?.categories.map((c) => (
+                                <button
+                                  key={c.id}
+                                  type="button"
+                                  onClick={() => handleSelectDestination(c, 'CATEGORY', c.id)}
+                                  className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-gold-50 flex items-center justify-between transition-colors"
+                                >
+                                  <span className="font-medium text-burgundy-950">{c.label}</span>
+                                  <span className="font-mono text-[10px] text-stone-400 truncate max-w-[140px]">
+                                    {c.value}
+                                  </span>
+                                </button>
+                              ))
+                            ) : (
+                              <div className="px-2 py-1 text-stone-400 italic text-[11px]">
+                                No matching categories
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Group 3: Products */}
+                        <div className="pt-2">
+                          <div className="text-[10px] font-bold uppercase tracking-wider text-stone-400 px-2 py-1">
+                            Jewellery Products
+                          </div>
+                          <div className="space-y-0.5 max-h-36 overflow-y-auto">
+                            {(destinationsData?.products || []).length > 0 ? (
+                              destinationsData?.products.map((p) => (
+                                <button
+                                  key={p.id}
+                                  type="button"
+                                  onClick={() => handleSelectDestination(p, 'PRODUCT', p.id)}
+                                  className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-gold-50 flex items-center justify-between transition-colors"
+                                >
+                                  <span className="font-medium text-burgundy-950 truncate max-w-[200px]">
+                                    {p.label}
+                                  </span>
+                                  <span className="font-mono text-[10px] text-stone-400 truncate max-w-[140px]">
+                                    {p.value}
+                                  </span>
+                                </button>
+                              ))
+                            ) : (
+                              <div className="px-2 py-1 text-stone-400 italic text-[11px]">
+                                No matching products
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block font-semibold uppercase text-stone-700 mb-1">
-                      Small Heading / Eyebrow
-                    </label>
-                    <input
-                      type="text"
-                      maxLength={120}
-                      value={bannerForm.smallHeading || ''}
-                      onChange={(e) =>
-                        setBannerForm({ ...bannerForm, smallHeading: e.target.value })
-                      }
-                      placeholder="e.g. Exclusive Collection"
-                      className="w-full p-2.5 border rounded-lg outline-none focus:border-gold-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block font-semibold uppercase text-stone-700 mb-1">
-                      Main Heading *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      minLength={2}
-                      maxLength={160}
-                      value={bannerForm.title}
-                      onChange={(e) => setBannerForm({ ...bannerForm, title: e.target.value })}
-                      placeholder="e.g. Silver Necklace"
-                      className="w-full p-2.5 border rounded-lg outline-none focus:border-gold-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block font-semibold uppercase text-stone-700 mb-1">
-                      Highlighted Gold Text
-                    </label>
-                    <input
-                      type="text"
-                      maxLength={120}
-                      value={bannerForm.highlightedText || ''}
-                      onChange={(e) =>
-                        setBannerForm({ ...bannerForm, highlightedText: e.target.value })
-                      }
-                      placeholder="Phrase in Main Heading (e.g. Necklace)"
-                      className="w-full p-2.5 border rounded-lg outline-none focus:border-gold-500"
-                    />
-                  </div>
-                </div>
-
+                {/* 4. Start Date & 5. End Date */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block font-semibold uppercase text-stone-700 mb-1">
-                      Subtitle / Tagline
-                    </label>
-                    <input
-                      type="text"
-                      maxLength={240}
-                      value={bannerForm.subtitle || ''}
-                      onChange={(e) => setBannerForm({ ...bannerForm, subtitle: e.target.value })}
-                      placeholder="e.g. Timeless Elegance in Pure Silver"
-                      className="w-full p-2.5 border rounded-lg outline-none focus:border-gold-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block font-semibold uppercase text-stone-700 mb-1">
-                      Description (Optional)
-                    </label>
-                    <input
-                      type="text"
-                      maxLength={500}
-                      value={bannerForm.description || ''}
-                      onChange={(e) =>
-                        setBannerForm({ ...bannerForm, description: e.target.value })
-                      }
-                      placeholder="Short supporting collection note..."
-                      className="w-full p-2.5 border rounded-lg outline-none focus:border-gold-500"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block font-semibold uppercase text-stone-700 mb-1">
-                      CTA Button Text
-                    </label>
-                    <input
-                      type="text"
-                      maxLength={80}
-                      value={bannerForm.ctaText || ''}
-                      onChange={(e) => setBannerForm({ ...bannerForm, ctaText: e.target.value })}
-                      placeholder="e.g. Explore Collection"
-                      className="w-full p-2.5 border rounded-lg outline-none focus:border-gold-500"
-                    />
-                  </div>
-
-                  <div className="sm:col-span-2">
-                    <label className="block font-semibold uppercase text-stone-700 mb-1">
-                      CTA Destination URL
-                    </label>
-                    <input
-                      type="text"
-                      maxLength={300}
-                      value={bannerForm.ctaLink || ''}
-                      onChange={(e) => setBannerForm({ ...bannerForm, ctaLink: e.target.value })}
-                      placeholder="/products?metalType=SILVER or /categories"
-                      className="w-full p-2.5 border rounded-lg font-mono outline-none focus:border-gold-500"
-                    />
-                    <div className="flex flex-wrap gap-1.5 mt-2">
-                      {[...QUICK_CTA_PRESETS, ...availableCategoryLinks]
-                        .slice(0, 8)
-                        .map((preset) => (
-                          <button
-                            key={preset.url}
-                            type="button"
-                            onClick={() => setBannerForm({ ...bannerForm, ctaLink: preset.url })}
-                            className="px-2 py-0.5 rounded-full text-[10px] font-semibold border border-gold-300 bg-gold-50/70 text-burgundy-900 hover:bg-gold-100"
-                          >
-                            {preset.label}
-                          </button>
-                        ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* 3. Design Settings */}
-              <div className="space-y-4 rounded-xl border border-stone-200 bg-stone-50/40 p-4">
-                <h3 className="font-serif text-sm font-bold text-burgundy-950">
-                  3. Design Settings
-                </h3>
-
-                {/* Render Mode Selection */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {(
-                    [
-                      {
-                        mode: 'layered' as BannerContentMode,
-                        title: 'Layered HTML Text & CTA (Recommended)',
-                        desc: 'Renders editable Heading, Eyebrow, Gold Highlight, Subtitle & Button live over a clean text-free photo.',
-                        icon: Layers
-                      },
-                      {
-                        mode: 'image' as BannerContentMode,
-                        title: 'Full Artwork Image Only',
-                        desc: 'Displays artwork edge-to-edge as a pure clickable visual with no overlaid text.',
-                        icon: ImageIcon
-                      }
-                    ] as const
-                  ).map((option) => {
-                    const Icon = option.icon;
-                    const selected = bannerForm.contentMode === option.mode;
-                    return (
-                      <button
-                        key={option.mode}
-                        type="button"
-                        onClick={() => setBannerForm({ ...bannerForm, contentMode: option.mode })}
-                        className={`text-left p-3 rounded-xl border transition-all flex items-start gap-2.5 ${
-                          selected
-                            ? 'border-burgundy-900 bg-burgundy-50/70 ring-1 ring-gold-400'
-                            : 'border-stone-200 bg-white hover:border-gold-400'
-                        }`}
-                      >
-                        <div
-                          className={`p-2 rounded-lg shrink-0 ${
-                            selected ? 'bg-burgundy-900 text-gold-300' : 'bg-stone-100 text-stone-600'
-                          }`}
-                        >
-                          <Icon className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <p className="font-bold text-burgundy-950">{option.title}</p>
-                          <p className="text-[11px] text-stone-600 mt-0.5 leading-snug">
-                            {option.desc}
-                          </p>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block font-semibold uppercase text-stone-700 mb-1">
-                      Horizontal Alignment
-                    </label>
-                    <div className="grid grid-cols-3 gap-1.5">
-                      {(
-                        [
-                          { id: 'left' as BannerTextAlignment, label: 'Left', icon: AlignLeft },
-                          { id: 'center' as BannerTextAlignment, label: 'Center', icon: AlignCenter },
-                          { id: 'right' as BannerTextAlignment, label: 'Right', icon: AlignRight }
-                        ] as const
-                      ).map((align) => {
-                        const AlignIcon = align.icon;
-                        return (
-                          <button
-                            key={align.id}
-                            type="button"
-                            onClick={() =>
-                              setBannerForm({ ...bannerForm, textAlignment: align.id })
-                            }
-                            className={`py-2 px-2 rounded-lg border font-semibold flex items-center justify-center gap-1 ${
-                              bannerForm.textAlignment === align.id
-                                ? 'bg-burgundy-900 text-gold-200 border-burgundy-900'
-                                : 'bg-white text-stone-700 border-stone-300 hover:border-gold-400'
-                            }`}
-                          >
-                            <AlignIcon className="w-3.5 h-3.5" />
-                            <span>{align.label}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block font-semibold uppercase text-stone-700 mb-1">
-                      Text Vertical Position
-                    </label>
-                    <select
-                      value={bannerForm.textPosition || 'center'}
-                      onChange={(e) =>
-                        setBannerForm({
-                          ...bannerForm,
-                          textPosition: e.target.value as BannerTextPosition
-                        })
-                      }
-                      className="w-full p-2 border rounded-lg bg-white outline-none focus:border-gold-500"
-                    >
-                      <option value="top">Top</option>
-                      <option value="center">Middle Centered (Recommended)</option>
-                      <option value="bottom">Bottom</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block font-semibold uppercase text-stone-700 mb-1">
-                      Banner Height
-                    </label>
-                    <select
-                      value={bannerForm.bannerHeight || 'standard'}
-                      onChange={(e) =>
-                        setBannerForm({
-                          ...bannerForm,
-                          bannerHeight: e.target.value as BannerHeightOption
-                        })
-                      }
-                      className="w-full p-2 border rounded-lg bg-white outline-none focus:border-gold-500"
-                    >
-                      <option value="compact">Compact (3.5:1 Wide)</option>
-                      <option value="standard">Standard (3:1 Classic Wide)</option>
-                      <option value="tall">Tall Showcase (2.45:1)</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
-                  <div>
-                    <label className="block font-semibold uppercase text-stone-700 mb-1">
-                      Text Color Theme
-                    </label>
-                    <select
-                      value={bannerForm.textColor || 'cream-gold'}
-                      onChange={(e) =>
-                        setBannerForm({
-                          ...bannerForm,
-                          textColor: e.target.value as BannerTextColor
-                        })
-                      }
-                      className="w-full p-2 border rounded-lg bg-white outline-none focus:border-gold-500"
-                    >
-                      <option value="cream-gold">Cream & Antique Gold</option>
-                      <option value="pure-white">Crisp Pearl White</option>
-                      <option value="burgundy-dark">Royal Burgundy (for Light Photos)</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block font-semibold uppercase text-stone-700 mb-1">
-                      CTA Button Style
-                    </label>
-                    <select
-                      value={bannerForm.buttonStyle || 'gold-outline'}
-                      onChange={(e) =>
-                        setBannerForm({
-                          ...bannerForm,
-                          buttonStyle: e.target.value as BannerButtonStyle
-                        })
-                      }
-                      className="w-full p-2 border rounded-lg bg-white outline-none focus:border-gold-500"
-                    >
-                      <option value="gold-outline">Antique Gold Outline Pill</option>
-                      <option value="gold-solid">Metallic Gold Solid Fill</option>
-                      <option value="burgundy-gold">Burgundy Velvet & Gold Rim</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <label className="font-semibold uppercase text-stone-700">
-                        Overlay Darkness
-                      </label>
-                      <span className="font-mono font-bold text-burgundy-900">
-                        {bannerForm.overlayOpacity ?? 35}%
-                      </span>
-                    </div>
-                    <input
-                      type="range"
-                      min={0}
-                      max={90}
-                      step={5}
-                      value={bannerForm.overlayOpacity ?? 35}
-                      onChange={(e) =>
-                        setBannerForm({
-                          ...bannerForm,
-                          overlayOpacity: Number(e.target.value)
-                        })
-                      }
-                      className="w-full accent-burgundy-900"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* 4. Display & Schedule Settings */}
-              <div className="space-y-3 rounded-xl border border-stone-200 bg-white p-4">
-                <h3 className="font-serif text-sm font-bold text-burgundy-950">
-                  4. Display & Schedule Settings
-                </h3>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block font-semibold uppercase text-stone-700 mb-1">
-                      Display Order
-                    </label>
-                    <input
-                      type="number"
-                      min={0}
-                      value={bannerForm.displayOrder}
-                      onChange={(e) =>
-                        setBannerForm({ ...bannerForm, displayOrder: Number(e.target.value) })
-                      }
-                      className="w-full p-2.5 border rounded-lg outline-none focus:border-gold-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block font-semibold uppercase text-stone-700 mb-1">
-                      Schedule Start Date (Optional)
+                      4. Schedule Start Date (Optional)
                     </label>
                     <input
                       type="date"
-                      value={toDateInputValue(bannerForm.startDate)}
+                      value={bannerForm.startDate}
                       onChange={(e) =>
-                        setBannerForm({
-                          ...bannerForm,
-                          startDate: e.target.value ? e.target.value : null
-                        })
+                        setBannerForm((prev) => ({ ...prev, startDate: e.target.value }))
                       }
-                      className="w-full p-2.5 border rounded-lg outline-none focus:border-gold-500"
+                      className="w-full p-2.5 border border-stone-300 rounded-lg outline-none focus:border-gold-500"
                     />
                   </div>
 
                   <div>
                     <label className="block font-semibold uppercase text-stone-700 mb-1">
-                      Schedule End Date (Optional)
+                      5. Schedule End Date (Optional)
                     </label>
                     <input
                       type="date"
-                      value={toDateInputValue(bannerForm.endDate)}
+                      value={bannerForm.endDate}
                       onChange={(e) =>
-                        setBannerForm({
-                          ...bannerForm,
-                          endDate: e.target.value ? e.target.value : null
-                        })
+                        setBannerForm((prev) => ({ ...prev, endDate: e.target.value }))
                       }
-                      className="w-full p-2.5 border rounded-lg outline-none focus:border-gold-500"
+                      className="w-full p-2.5 border border-stone-300 rounded-lg outline-none focus:border-gold-500"
                     />
                   </div>
                 </div>
 
+                {/* Published / Active Toggle */}
                 <label className="flex items-center gap-2 cursor-pointer pt-1">
                   <input
                     type="checkbox"
                     checked={bannerForm.isActive}
-                    onChange={(e) => setBannerForm({ ...bannerForm, isActive: e.target.checked })}
-                    className="rounded accent-burgundy-900"
+                    onChange={(e) =>
+                      setBannerForm((prev) => ({ ...prev, isActive: e.target.checked }))
+                    }
+                    className="w-4 h-4 rounded text-burgundy-900"
                   />
-                  <span className="font-semibold text-stone-800">
+                  <span className="font-semibold text-stone-700">
                     Active on Public Homepage Carousel
                   </span>
                 </label>
+
+                {/* Live Banner Preview */}
+                <div className="space-y-2 pt-2 border-t border-stone-200">
+                  <span className="block font-bold uppercase tracking-wider text-stone-500 text-[10px]">
+                    Live Storefront Banner Preview
+                  </span>
+                  <PromotionalBannerCarousel banners={[livePreviewBanner]} />
+                </div>
               </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-stone-200">
+              <div className="p-4 sm:p-5 border-t border-stone-200 bg-stone-50 flex justify-end gap-3 shrink-0">
                 <button
                   type="button"
                   onClick={() => setIsEditorOpen(false)}
-                  className="px-4 py-2 rounded-lg border border-stone-300 text-stone-700 font-medium"
+                  className="px-4 py-2 border border-stone-300 rounded-lg text-xs font-semibold text-stone-700 hover:bg-stone-100"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={saving}
-                  className="px-6 py-2 rounded-lg bg-burgundy-900 text-gold-200 font-bold hover:bg-burgundy-800 disabled:opacity-50"
+                  disabled={saving || !bannerForm.mediaUrl || !bannerForm.buttonName}
+                  className="px-6 py-2 bg-burgundy-900 text-gold-200 rounded-lg text-xs font-bold shadow-md hover:bg-burgundy-800 disabled:opacity-50"
                 >
-                  {saving
-                    ? 'Saving...'
-                    : editingBannerId
-                      ? 'Update Promotional Banner'
-                      : 'Publish Promotional Banner'}
+                  {saving ? 'Saving...' : editingBannerId ? 'Save Changes' : 'Publish Banner'}
                 </button>
               </div>
             </form>
           </div>
         </div>
+      </AdminModalPortal>
       )}
 
-      {/* Standalone Responsive Preview Modal */}
-      {previewModalBanners && (
-        <div
-          className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto animate-fade-in"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setPreviewModalBanners(null);
-          }}
-        >
-          <div className="bg-white rounded-2xl border border-gold-400 w-full max-w-6xl overflow-hidden shadow-2xl animate-modal-enter">
-            <div className="bg-brand-maroon-gradient p-4 text-gold-100 flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <Eye className="w-4 h-4 text-gold-300" />
-                <h3 className="font-serif font-bold text-base">{previewModalTitle}</h3>
-              </div>
-              <div className="flex items-center gap-2 text-xs">
+      {/* Standalone Row Preview Modal */}
+      {previewBanner && (
+        <AdminModalPortal>
+          <div
+            className="fixed inset-0 z-[9999] bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setPreviewBanner(null);
+            }}
+          >
+            <div className="bg-white rounded-2xl border border-gold-400 w-full max-w-5xl overflow-hidden shadow-2xl p-4 space-y-3 animate-modal-enter">
+              <div className="flex items-center justify-between">
+                <span className="font-serif font-bold text-burgundy-950 text-base">
+                  Promotional Banner Preview
+                </span>
                 <button
                   type="button"
-                  onClick={() => setPreviewViewport('desktop')}
-                  className={`inline-flex items-center gap-1 px-3 py-1 rounded-lg font-semibold ${
-                    previewViewport === 'desktop'
-                      ? 'bg-gold-400 text-burgundy-950'
-                      : 'bg-burgundy-900/70 text-gold-200 border border-gold-500/40'
-                  }`}
-                >
-                  <Monitor className="w-3.5 h-3.5" />
-                  <span>Desktop</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPreviewViewport('mobile')}
-                  className={`inline-flex items-center gap-1 px-3 py-1 rounded-lg font-semibold ${
-                    previewViewport === 'mobile'
-                      ? 'bg-gold-400 text-burgundy-950'
-                      : 'bg-burgundy-900/70 text-gold-200 border border-gold-500/40'
-                  }`}
-                >
-                  <Smartphone className="w-3.5 h-3.5" />
-                  <span>Mobile (375px)</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPreviewModalBanners(null)}
-                  className="ml-2 text-gold-300 hover:text-white"
-                  aria-label="Close preview"
+                  onClick={() => setPreviewBanner(null)}
+                  className="text-stone-600 hover:text-black"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
-            </div>
-
-            <div className="p-6 bg-[#FDFBF5]">
-              <div
-                className={
-                  previewViewport === 'mobile'
-                    ? 'max-w-[375px] mx-auto border-2 border-stone-300 rounded-2xl p-2 bg-white shadow-xl'
-                    : ''
-                }
-              >
+              <div className="rounded-xl overflow-hidden aspect-[2.1/1] max-h-[50vh] bg-[#140204]">
                 <PromotionalBannerCarousel
-                  banners={previewModalBanners}
-                  forceViewport={previewViewport}
+                  banners={[previewBanner]}
+                  className="w-full h-full relative overflow-hidden bg-[#140204] select-none m-0 p-0 group/carousel"
                 />
               </div>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Confirmation Dialog for Banner Deletion */}
-      {deleteCandidate && (
-        <div
-          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
-          role="dialog"
-          aria-modal="true"
-          onClick={(e) => {
-            if (e.target === e.currentTarget && !deleting) setDeleteCandidate(null);
-          }}
-        >
-          <div className="bg-white rounded-2xl border border-gold-400 max-w-md w-full p-6 space-y-4 shadow-2xl animate-modal-enter">
-            <div className="flex items-start gap-3">
-              <div className="p-2.5 rounded-full bg-red-50 text-red-600 shrink-0">
-                <Trash2 className="w-5 h-5" />
-              </div>
-              <div className="space-y-1">
-                <h3 className="font-serif font-bold text-lg text-burgundy-950">
-                  Delete Promotional Banner?
-                </h3>
-                <p className="text-xs text-stone-600 leading-relaxed">
-                  Are you sure you want to remove <strong>“{deleteCandidate.title}”</strong> from Homepage Banners? It will be removed from the public slider immediately.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-2.5 pt-2 border-t border-stone-100 text-xs">
-              <button
-                type="button"
-                disabled={deleting}
-                onClick={() => setDeleteCandidate(null)}
-                className="px-4 py-2 rounded-lg border border-stone-300 text-stone-700 font-semibold hover:bg-stone-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                disabled={deleting}
-                onClick={handleConfirmDelete}
-                className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold disabled:opacity-50"
-              >
-                {deleting ? 'Deleting...' : 'Delete Banner'}
-              </button>
-            </div>
-          </div>
-        </div>
+        </AdminModalPortal>
       )}
     </div>
   );

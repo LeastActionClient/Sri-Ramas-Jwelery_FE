@@ -14,29 +14,83 @@ const METAL_OPTIONS = [
   { value: 'PLATINUM', label: 'Platinum' }
 ] as const;
 
-const PURITY_OPTIONS = [
-  { value: '24K', label: '24K', description: '24K Pure Gold' },
-  { value: '22K', label: '22K', description: '22K 916 Gold' },
-  { value: '18K', label: '18K', description: '18K Fine Jewellery' },
-  { value: '999', label: '999', description: '999 Fine Silver' },
-  { value: '925', label: '925', description: '925 Sterling Silver' }
+export const GOLD_PURITY_OPTIONS = [
+  { value: '24K', label: '24K', description: '24K (999 Purity) Pure Gold' },
+  { value: '22K', label: '22K', description: '22K (916 Purity) Hallmark Gold' },
+  { value: '20K', label: '20K', description: '20K (833 Purity) Gold' },
+  { value: '18K', label: '18K', description: '18K (750 Purity) Fine Jewellery' },
+  { value: '14K', label: '14K', description: '14K (585 Purity) Gold' },
+  { value: '9K', label: '9K', description: '9K (375 Purity) Gold' },
 ] as const;
 
-const GOLD_PURITY_SET = new Set(['24K', '22K', '18K']);
-const SILVER_PURITY_SET = new Set(['999', '925']);
+export const SILVER_FINENESS_OPTIONS = [
+  { value: '999', label: '999 Fine', description: '999 / 1000 Fine Silver' },
+  { value: '925', label: '925 Sterling', description: '925 / 1000 Sterling Silver' },
+  { value: '900', label: '900 Coin', description: '900 / 1000 Coin Silver' },
+  { value: '835', label: '835 Alloy', description: '835 / 1000 Silver Alloy' },
+  { value: '800', label: '800 Alloy', description: '800 / 1000 Silver Alloy' },
+] as const;
 
-function getCompatiblePurityOptions(selectedMetal: string) {
-  if (selectedMetal === 'GOLD') {
-    return PURITY_OPTIONS.filter((opt) => GOLD_PURITY_SET.has(opt.value));
-  }
-  if (selectedMetal === 'SILVER') {
-    return PURITY_OPTIONS.filter((opt) => SILVER_PURITY_SET.has(opt.value));
-  }
-  if (selectedMetal === 'DIAMOND' || selectedMetal === 'PLATINUM') {
-    return [];
-  }
-  return [...PURITY_OPTIONS];
-}
+export const PLATINUM_HALLMARK_OPTIONS = [
+  { value: 'Pt950', label: 'Pt950', description: 'Pt950 • 95% Pure Platinum' },
+  { value: 'Pt900', label: 'Pt900', description: 'Pt900 • 90% Pure Platinum' },
+  { value: 'Pt850', label: 'Pt850', description: 'Pt850 • 85% Pure Platinum' },
+  { value: 'Pt999', label: 'Pt999', description: 'Pt999 • 99.9% Pure Platinum' },
+] as const;
+
+export const DIAMOND_CUT_OPTIONS = [
+  { value: 'EXCELLENT', label: 'Excellent' },
+  { value: 'VERY_GOOD', label: 'Very Good' },
+  { value: 'GOOD', label: 'Good' },
+  { value: 'FAIR', label: 'Fair' },
+] as const;
+
+export const DIAMOND_CLARITY_OPTIONS = [
+  { value: 'FL', label: 'FL / IF' },
+  { value: 'VVS1', label: 'VVS1 - VVS2' },
+  { value: 'VS1', label: 'VS1 - VS2' },
+  { value: 'SI1', label: 'SI1 - SI2' },
+  { value: 'I1', label: 'I1 - I3' },
+] as const;
+
+export const DIAMOND_COLOR_OPTIONS = [
+  { value: 'D', label: 'D - F (Colourless)' },
+  { value: 'G', label: 'G - J (Near Colourless)' },
+  { value: 'K-M', label: 'K - M (Faint)' },
+] as const;
+
+export const DIAMOND_SHAPE_OPTIONS = [
+  { value: 'ROUND', label: 'Round' },
+  { value: 'PRINCESS', label: 'Princess' },
+  { value: 'OVAL', label: 'Oval' },
+  { value: 'PEAR', label: 'Pear' },
+  { value: 'EMERALD', label: 'Emerald' },
+  { value: 'CUSHION', label: 'Cushion' },
+  { value: 'MARQUISE', label: 'Marquise' },
+  { value: 'HEART', label: 'Heart' },
+] as const;
+
+export const DIAMOND_CARAT_RANGES = [
+  { value: 'under-0.5', label: 'Under 0.5 ct' },
+  { value: '0.5-1.0', label: '0.5 - 1.0 ct' },
+  { value: '1.0-2.0', label: '1.0 - 2.0 ct' },
+  { value: '2.0-plus', label: '2.0+ ct' },
+] as const;
+
+export const DIAMOND_CERT_OPTIONS = [
+  { value: 'GIA', label: 'GIA Certified' },
+  { value: 'IGI', label: 'IGI Certified' },
+  { value: 'HRD', label: 'HRD Certified' },
+] as const;
+
+export const GENERAL_PURITY_OPTIONS = [
+  { value: '24K', label: '24K' },
+  { value: '22K', label: '22K' },
+  { value: '18K', label: '18K' },
+  { value: '925', label: '925' },
+  { value: '999', label: '999' },
+  { value: 'Pt950', label: 'Pt950' },
+] as const;
 
 export const ProductCatalogPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -48,6 +102,12 @@ export const ProductCatalogPage: React.FC = () => {
   const urlCategorySlug = searchParams.get('category') || '';
   const metalType = (searchParams.get('metalType') || '').toUpperCase();
   const purity = (searchParams.get('purity') || '').toUpperCase();
+  const diamondCut = (searchParams.get('diamondCut') || '').toUpperCase();
+  const diamondColor = (searchParams.get('diamondColor') || '').toUpperCase();
+  const diamondClarity = (searchParams.get('diamondClarity') || '').toUpperCase();
+  const diamondShape = (searchParams.get('diamondShape') || '').toUpperCase();
+  const diamondCert = (searchParams.get('diamondCert') || '').toUpperCase();
+  const caratRange = searchParams.get('caratRange') || '';
   const page = Math.max(1, Number(searchParams.get('page')) || 1);
 
   // Local keyword input synchronized with URL search without effect-driven state mutations
@@ -63,6 +123,12 @@ export const ProductCatalogPage: React.FC = () => {
   const [mobileDraftCategoryId, setMobileDraftCategoryId] = useState('');
   const [mobileDraftMetal, setMobileDraftMetal] = useState('');
   const [mobileDraftPurity, setMobileDraftPurity] = useState('');
+  const [mobileDraftCut, setMobileDraftCut] = useState('');
+  const [mobileDraftColor, setMobileDraftColor] = useState('');
+  const [mobileDraftClarity, setMobileDraftClarity] = useState('');
+  const [mobileDraftShape, setMobileDraftShape] = useState('');
+  const [mobileDraftCert, setMobileDraftCert] = useState('');
+  const [mobileDraftCarat, setMobileDraftCarat] = useState('');
 
   useEffect(() => {
     return () => {
@@ -93,19 +159,45 @@ export const ProductCatalogPage: React.FC = () => {
   const effectiveCategoryId = resolvedCategory?._id || urlCategoryId;
   const effectiveCategorySlug = !effectiveCategoryId && urlCategorySlug ? urlCategorySlug : '';
 
-  const filters: ProductFilters = useMemo(
-    () => ({
+  const filters: ProductFilters = useMemo(() => {
+    let minCarat: number | undefined;
+    let maxCarat: number | undefined;
+    if (caratRange === 'under-0.5') maxCarat = 0.5;
+    else if (caratRange === '0.5-1.0') { minCarat = 0.5; maxCarat = 1.0; }
+    else if (caratRange === '1.0-2.0') { minCarat = 1.0; maxCarat = 2.0; }
+    else if (caratRange === '2.0-plus') minCarat = 2.0;
+
+    return {
       search: urlSearch.trim() || undefined,
       categoryId: effectiveCategoryId || undefined,
       category: effectiveCategorySlug || undefined,
       metalType: metalType || undefined,
       purity: purity || undefined,
+      diamondCut: diamondCut || undefined,
+      diamondColor: diamondColor || undefined,
+      diamondClarity: diamondClarity || undefined,
+      diamondShape: diamondShape || undefined,
+      diamondCert: diamondCert || undefined,
+      minCarat,
+      maxCarat,
       sort: 'display_order',
       page,
       limit: 12
-    }),
-    [urlSearch, effectiveCategoryId, effectiveCategorySlug, metalType, purity, page]
-  );
+    };
+  }, [
+    urlSearch,
+    effectiveCategoryId,
+    effectiveCategorySlug,
+    metalType,
+    purity,
+    diamondCut,
+    diamondColor,
+    diamondClarity,
+    diamondShape,
+    diamondCert,
+    caratRange,
+    page
+  ]);
 
   const { data, isLoading, isFetching } = useQuery({
     queryKey: ['products', filters],
@@ -166,12 +258,14 @@ export const ProductCatalogPage: React.FC = () => {
       if (nextVal) next.set('metalType', nextVal);
       else next.delete('metalType');
 
-      if (purity) {
-        const compatible = getCompatiblePurityOptions(nextVal).some((opt) => opt.value === purity);
-        if (!compatible) {
-          next.delete('purity');
-        }
-      }
+      // Clear non-applicable filters on metal switch
+      next.delete('purity');
+      next.delete('diamondCut');
+      next.delete('diamondColor');
+      next.delete('diamondClarity');
+      next.delete('diamondShape');
+      next.delete('diamondCert');
+      next.delete('caratRange');
     });
   };
 
@@ -180,6 +274,17 @@ export const ProductCatalogPage: React.FC = () => {
       const nextVal = purity === selectedPurity ? '' : selectedPurity;
       if (nextVal) next.set('purity', nextVal);
       else next.delete('purity');
+    });
+  };
+
+  const handleToggleDiamondParam = (paramName: string, val: string) => {
+    updateUrlParams((next) => {
+      const current = (searchParams.get(paramName) || '').toUpperCase();
+      if (current === val.toUpperCase()) {
+        next.delete(paramName);
+      } else {
+        next.set(paramName, val);
+      }
     });
   };
 
@@ -202,6 +307,12 @@ export const ProductCatalogPage: React.FC = () => {
     setMobileDraftCategoryId('');
     setMobileDraftMetal('');
     setMobileDraftPurity('');
+    setMobileDraftCut('');
+    setMobileDraftColor('');
+    setMobileDraftClarity('');
+    setMobileDraftShape('');
+    setMobileDraftCert('');
+    setMobileDraftCarat('');
     setSearchParams(new URLSearchParams());
     setMobileFiltersOpen(false);
   };
@@ -211,6 +322,12 @@ export const ProductCatalogPage: React.FC = () => {
     setMobileDraftCategoryId(effectiveCategoryId);
     setMobileDraftMetal(metalType);
     setMobileDraftPurity(purity);
+    setMobileDraftCut(diamondCut);
+    setMobileDraftColor(diamondColor);
+    setMobileDraftClarity(diamondClarity);
+    setMobileDraftShape(diamondShape);
+    setMobileDraftCert(diamondCert);
+    setMobileDraftCarat(caratRange);
     setMobileFiltersOpen(true);
   };
 
@@ -226,6 +343,12 @@ export const ProductCatalogPage: React.FC = () => {
     if (mobileDraftCategoryId) next.set('categoryId', mobileDraftCategoryId);
     if (mobileDraftMetal) next.set('metalType', mobileDraftMetal);
     if (mobileDraftPurity) next.set('purity', mobileDraftPurity);
+    if (mobileDraftCut) next.set('diamondCut', mobileDraftCut);
+    if (mobileDraftColor) next.set('diamondColor', mobileDraftColor);
+    if (mobileDraftClarity) next.set('diamondClarity', mobileDraftClarity);
+    if (mobileDraftShape) next.set('diamondShape', mobileDraftShape);
+    if (mobileDraftCert) next.set('diamondCert', mobileDraftCert);
+    if (mobileDraftCarat) next.set('caratRange', mobileDraftCarat);
     setSearchParams(next);
     setMobileFiltersOpen(false);
   };
@@ -265,6 +388,49 @@ export const ProductCatalogPage: React.FC = () => {
       key: 'purity',
       label: `Purity: ${purity}`,
       onClear: () => handleTogglePurity(purity)
+    });
+  }
+  if (diamondCut) {
+    activeFilterChips.push({
+      key: 'diamondCut',
+      label: `Cut: ${diamondCut}`,
+      onClear: () => handleToggleDiamondParam('diamondCut', diamondCut)
+    });
+  }
+  if (diamondColor) {
+    activeFilterChips.push({
+      key: 'diamondColor',
+      label: `Colour: ${diamondColor}`,
+      onClear: () => handleToggleDiamondParam('diamondColor', diamondColor)
+    });
+  }
+  if (diamondClarity) {
+    activeFilterChips.push({
+      key: 'diamondClarity',
+      label: `Clarity: ${diamondClarity}`,
+      onClear: () => handleToggleDiamondParam('diamondClarity', diamondClarity)
+    });
+  }
+  if (diamondShape) {
+    activeFilterChips.push({
+      key: 'diamondShape',
+      label: `Shape: ${diamondShape}`,
+      onClear: () => handleToggleDiamondParam('diamondShape', diamondShape)
+    });
+  }
+  if (diamondCert) {
+    activeFilterChips.push({
+      key: 'diamondCert',
+      label: `Cert: ${diamondCert}`,
+      onClear: () => handleToggleDiamondParam('diamondCert', diamondCert)
+    });
+  }
+  if (caratRange) {
+    const rangeObj = DIAMOND_CARAT_RANGES.find((r) => r.value === caratRange);
+    activeFilterChips.push({
+      key: 'caratRange',
+      label: `Weight: ${rangeObj?.label || caratRange}`,
+      onClear: () => handleToggleDiamondParam('caratRange', caratRange)
     });
   }
 
@@ -443,18 +609,278 @@ export const ProductCatalogPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Purity (Metal-aware options) */}
-          {getCompatiblePurityOptions(metalType).length > 0 && (
-            <div className="space-y-1.5">
+          {/* Metal-Specific Purity & Grading Filters */}
+          {metalType === 'GOLD' && (
+            <div className="space-y-1.5 pt-1 border-t border-stone-100">
+              <span className="block text-xs font-semibold uppercase tracking-wider text-stone-700">
+                Gold Karat &amp; Fineness
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => handleTogglePurity('')}
+                  aria-pressed={purity === ''}
+                  className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
+                    purity === ''
+                      ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold'
+                      : 'border-stone-200 text-stone-600 hover:bg-stone-50'
+                  }`}
+                >
+                  All Karats
+                </button>
+                {GOLD_PURITY_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    title={opt.description}
+                    onClick={() => handleTogglePurity(opt.value)}
+                    aria-pressed={purity === opt.value}
+                    className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
+                      purity === opt.value
+                        ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold'
+                        : 'border-stone-200 text-stone-600 hover:bg-stone-50'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {metalType === 'SILVER' && (
+            <div className="space-y-1.5 pt-1 border-t border-stone-100">
+              <span className="block text-xs font-semibold uppercase tracking-wider text-stone-700">
+                Silver Fineness (Parts / 1000)
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => handleTogglePurity('')}
+                  aria-pressed={purity === ''}
+                  className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
+                    purity === ''
+                      ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold'
+                      : 'border-stone-200 text-stone-600 hover:bg-stone-50'
+                  }`}
+                >
+                  All Fineness
+                </button>
+                {SILVER_FINENESS_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    title={opt.description}
+                    onClick={() => handleTogglePurity(opt.value)}
+                    aria-pressed={purity === opt.value}
+                    className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
+                      purity === opt.value
+                        ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold'
+                        : 'border-stone-200 text-stone-600 hover:bg-stone-50'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {metalType === 'PLATINUM' && (
+            <div className="space-y-1.5 pt-1 border-t border-stone-100">
+              <span className="block text-xs font-semibold uppercase tracking-wider text-stone-700">
+                Platinum Hallmark Grade
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => handleTogglePurity('')}
+                  aria-pressed={purity === ''}
+                  className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
+                    purity === ''
+                      ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold'
+                      : 'border-stone-200 text-stone-600 hover:bg-stone-50'
+                  }`}
+                >
+                  All Pt Grades
+                </button>
+                {PLATINUM_HALLMARK_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    title={opt.description}
+                    onClick={() => handleTogglePurity(opt.value)}
+                    aria-pressed={purity === opt.value}
+                    className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
+                      purity === opt.value
+                        ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold'
+                        : 'border-stone-200 text-stone-600 hover:bg-stone-50'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {metalType === 'DIAMOND' && (
+            <div className="space-y-4 pt-1 border-t border-stone-100">
+              {/* Diamond Cut */}
+              <div className="space-y-1.5">
+                <span className="block text-xs font-semibold uppercase tracking-wider text-stone-700">
+                  Diamond Cut
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {DIAMOND_CUT_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => handleToggleDiamondParam('diamondCut', opt.value)}
+                      aria-pressed={diamondCut === opt.value}
+                      className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
+                        diamondCut === opt.value
+                          ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold'
+                          : 'border-stone-200 text-stone-600 hover:bg-stone-50'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Diamond Clarity */}
+              <div className="space-y-1.5">
+                <span className="block text-xs font-semibold uppercase tracking-wider text-stone-700">
+                  Clarity (FL - I3)
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {DIAMOND_CLARITY_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => handleToggleDiamondParam('diamondClarity', opt.value)}
+                      aria-pressed={diamondClarity === opt.value}
+                      className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
+                        diamondClarity === opt.value
+                          ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold'
+                          : 'border-stone-200 text-stone-600 hover:bg-stone-50'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Diamond Colour */}
+              <div className="space-y-1.5">
+                <span className="block text-xs font-semibold uppercase tracking-wider text-stone-700">
+                  Colour Scale (D - Z)
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {DIAMOND_COLOR_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => handleToggleDiamondParam('diamondColor', opt.value)}
+                      aria-pressed={diamondColor === opt.value}
+                      className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
+                        diamondColor === opt.value
+                          ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold'
+                          : 'border-stone-200 text-stone-600 hover:bg-stone-50'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Diamond Shape */}
+              <div className="space-y-1.5">
+                <span className="block text-xs font-semibold uppercase tracking-wider text-stone-700">
+                  Diamond Shape
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {DIAMOND_SHAPE_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => handleToggleDiamondParam('diamondShape', opt.value)}
+                      aria-pressed={diamondShape === opt.value}
+                      className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
+                        diamondShape === opt.value
+                          ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold'
+                          : 'border-stone-200 text-stone-600 hover:bg-stone-50'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Carat Range */}
+              <div className="space-y-1.5">
+                <span className="block text-xs font-semibold uppercase tracking-wider text-stone-700">
+                  Carat Weight (ct)
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {DIAMOND_CARAT_RANGES.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => handleToggleDiamondParam('caratRange', opt.value)}
+                      aria-pressed={caratRange === opt.value}
+                      className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
+                        caratRange === opt.value
+                          ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold'
+                          : 'border-stone-200 text-stone-600 hover:bg-stone-50'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Diamond Certification */}
+              <div className="space-y-1.5">
+                <span className="block text-xs font-semibold uppercase tracking-wider text-stone-700">
+                  Certification
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {DIAMOND_CERT_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => handleToggleDiamondParam('diamondCert', opt.value)}
+                      aria-pressed={diamondCert === opt.value}
+                      className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
+                        diamondCert === opt.value
+                          ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold'
+                          : 'border-stone-200 text-stone-600 hover:bg-stone-50'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {metalType === '' && (
+            <div className="space-y-1.5 pt-1 border-t border-stone-100">
               <span className="block text-xs font-semibold uppercase tracking-wider text-stone-700">
                 Purity
               </span>
               <div className="flex flex-wrap gap-1.5">
                 <button
                   type="button"
-                  onClick={() => {
-                    if (purity) handleTogglePurity(purity);
-                  }}
+                  onClick={() => handleTogglePurity('')}
                   aria-pressed={purity === ''}
                   className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
                     purity === ''
@@ -464,11 +890,10 @@ export const ProductCatalogPage: React.FC = () => {
                 >
                   All
                 </button>
-                {getCompatiblePurityOptions(metalType).map((opt) => (
+                {GENERAL_PURITY_OPTIONS.map((opt) => (
                   <button
                     key={opt.value}
                     type="button"
-                    title={opt.description}
                     onClick={() => handleTogglePurity(opt.value)}
                     aria-pressed={purity === opt.value}
                     className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
@@ -700,14 +1125,13 @@ export const ProductCatalogPage: React.FC = () => {
                         onClick={() => {
                           const nextMetal = mobileDraftMetal === metal.value ? '' : metal.value;
                           setMobileDraftMetal(nextMetal);
-                          if (
-                            mobileDraftPurity &&
-                            !getCompatiblePurityOptions(nextMetal).some(
-                              (opt) => opt.value === mobileDraftPurity
-                            )
-                          ) {
-                            setMobileDraftPurity('');
-                          }
+                          setMobileDraftPurity('');
+                          setMobileDraftCut('');
+                          setMobileDraftColor('');
+                          setMobileDraftClarity('');
+                          setMobileDraftShape('');
+                          setMobileDraftCert('');
+                          setMobileDraftCarat('');
                         }}
                         className={`px-2.5 py-1.5 rounded-md border transition-colors ${
                           mobileDraftMetal === metal.value
@@ -721,30 +1145,15 @@ export const ProductCatalogPage: React.FC = () => {
                   </div>
                 </div>
 
-                {getCompatiblePurityOptions(mobileDraftMetal).length > 0 && (
+                {mobileDraftMetal === 'GOLD' && (
                   <div>
-                    <span className="block font-semibold uppercase mb-1.5">Purity</span>
+                    <span className="block font-semibold uppercase mb-1.5">Gold Karat &amp; Fineness</span>
                     <div className="flex flex-wrap gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() => setMobileDraftPurity('')}
-                        className={`px-2.5 py-1.5 rounded-md border transition-colors ${
-                          mobileDraftPurity === ''
-                            ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold'
-                            : 'border-stone-200 text-stone-700'
-                        }`}
-                      >
-                        All
-                      </button>
-                      {getCompatiblePurityOptions(mobileDraftMetal).map((opt) => (
+                      {GOLD_PURITY_OPTIONS.map((opt) => (
                         <button
                           key={opt.value}
                           type="button"
-                          onClick={() =>
-                            setMobileDraftPurity(
-                              mobileDraftPurity === opt.value ? '' : opt.value
-                            )
-                          }
+                          onClick={() => setMobileDraftPurity(mobileDraftPurity === opt.value ? '' : opt.value)}
                           className={`px-2.5 py-1.5 rounded-md border transition-colors ${
                             mobileDraftPurity === opt.value
                               ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold'
@@ -754,6 +1163,134 @@ export const ProductCatalogPage: React.FC = () => {
                           {opt.label}
                         </button>
                       ))}
+                    </div>
+                  </div>
+                )}
+
+                {mobileDraftMetal === 'SILVER' && (
+                  <div>
+                    <span className="block font-semibold uppercase mb-1.5">Silver Fineness</span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {SILVER_FINENESS_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => setMobileDraftPurity(mobileDraftPurity === opt.value ? '' : opt.value)}
+                          className={`px-2.5 py-1.5 rounded-md border transition-colors ${
+                            mobileDraftPurity === opt.value
+                              ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold'
+                              : 'border-stone-200 text-stone-700'
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {mobileDraftMetal === 'PLATINUM' && (
+                  <div>
+                    <span className="block font-semibold uppercase mb-1.5">Platinum Hallmark</span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {PLATINUM_HALLMARK_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => setMobileDraftPurity(mobileDraftPurity === opt.value ? '' : opt.value)}
+                          className={`px-2.5 py-1.5 rounded-md border transition-colors ${
+                            mobileDraftPurity === opt.value
+                              ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold'
+                              : 'border-stone-200 text-stone-700'
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {mobileDraftMetal === 'DIAMOND' && (
+                  <div className="space-y-3">
+                    <div>
+                      <span className="block font-semibold uppercase mb-1">Cut</span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {DIAMOND_CUT_OPTIONS.map((opt) => (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => setMobileDraftCut(mobileDraftCut === opt.value ? '' : opt.value)}
+                            className={`px-2 py-1 rounded-md border text-[11px] ${
+                              mobileDraftCut === opt.value
+                                ? 'bg-gold-500 text-burgundy-950 font-bold'
+                                : 'border-stone-200 text-stone-700'
+                            }`}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <span className="block font-semibold uppercase mb-1">Clarity</span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {DIAMOND_CLARITY_OPTIONS.map((opt) => (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => setMobileDraftClarity(mobileDraftClarity === opt.value ? '' : opt.value)}
+                            className={`px-2 py-1 rounded-md border text-[11px] ${
+                              mobileDraftClarity === opt.value
+                                ? 'bg-gold-500 text-burgundy-950 font-bold'
+                                : 'border-stone-200 text-stone-700'
+                            }`}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <span className="block font-semibold uppercase mb-1">Shape</span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {DIAMOND_SHAPE_OPTIONS.map((opt) => (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => setMobileDraftShape(mobileDraftShape === opt.value ? '' : opt.value)}
+                            className={`px-2 py-1 rounded-md border text-[11px] ${
+                              mobileDraftShape === opt.value
+                                ? 'bg-gold-500 text-burgundy-950 font-bold'
+                                : 'border-stone-200 text-stone-700'
+                            }`}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <span className="block font-semibold uppercase mb-1">Carat Weight</span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {DIAMOND_CARAT_RANGES.map((opt) => (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => setMobileDraftCarat(mobileDraftCarat === opt.value ? '' : opt.value)}
+                            className={`px-2 py-1 rounded-md border text-[11px] ${
+                              mobileDraftCarat === opt.value
+                                ? 'bg-gold-500 text-burgundy-950 font-bold'
+                                : 'border-stone-200 text-stone-700'
+                            }`}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 )}

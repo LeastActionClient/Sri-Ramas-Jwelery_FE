@@ -20,7 +20,7 @@ const VARIANT_CLASSES: Record<CTAVariant, string> = {
   outline:
     'border border-[#C69B3D] text-[#450A13] font-semibold bg-transparent hover:bg-[#FAF0D6] hover:border-[#9E751E] active:scale-[0.98]',
   whatsapp:
-    'bg-[#25D366]/15 border border-[#25D366]/55 text-[#5BF090] font-medium hover:bg-[#25D366]/25 hover:border-[#25D366]/80 active:scale-[0.98]',
+    'bg-[#25D366] text-white font-bold shadow-md hover:bg-[#20BD5A] hover:shadow-lg active:scale-[0.98] focus-visible:ring-[#25D366]',
 };
 
 const BASE_CTA_CLASSES =

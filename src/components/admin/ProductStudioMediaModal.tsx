@@ -23,6 +23,7 @@ import {
   StudioMediaAsset,
   StudioMetalType,
 } from '@/services/api/media.api';
+import { AdminModalPortal } from './AdminModalPortal';
 import { ImageDropzone } from './ImageDropzone';
 import { Product } from '@/types';
 
@@ -316,12 +317,13 @@ export const ProductStudioMediaModal: React.FC<ProductStudioMediaModalProps> = (
   };
 
   return (
-    <div
-      className="fixed inset-0 z-[60] bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto animate-fade-in"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-    >
+    <AdminModalPortal>
+      <div
+        className="fixed inset-0 z-[9999] bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto animate-fade-in"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) onClose();
+        }}
+      >
       <div className="bg-white rounded-2xl border border-gold-400 w-full max-w-4xl overflow-hidden shadow-2xl my-6 max-h-[92vh] flex flex-col animate-modal-enter">
         {/* Header */}
         <div className="bg-brand-maroon-gradient p-5 text-gold-100 flex items-center justify-between gap-4 shrink-0">
@@ -873,5 +875,6 @@ export const ProductStudioMediaModal: React.FC<ProductStudioMediaModalProps> = (
         </div>
       </div>
     </div>
+    </AdminModalPortal>
   );
 };

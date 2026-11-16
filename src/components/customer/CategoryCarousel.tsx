@@ -1,5 +1,5 @@
-import React, { useRef, useState } from 'react';
-import { RefreshCw, Sparkles } from 'lucide-react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
+import { RefreshCw, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Category } from '@/types';
 import { CategoryCard } from './CategoryCard';
 import { ScrollReveal } from '@/components/motion';
@@ -23,11 +23,42 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({
   const scrollLeftRef = useRef(0);
   const hasMovedRef = useRef(false);
   const [isGrabbing, setIsGrabbing] = useState(false);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
 
   // Filter out any explicitly disabled categories
   const validCategories = categories.filter((c) => c.isActive !== false);
   const effectiveList = validCategories.length > 0 ? validCategories : categories;
   const totalItems = effectiveList.length;
+
+  const checkScrollState = useCallback(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 10);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 10);
+  }, []);
+
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    checkScrollState();
+    el.addEventListener('scroll', checkScrollState, { passive: true });
+    window.addEventListener('resize', checkScrollState);
+    return () => {
+      el.removeEventListener('scroll', checkScrollState);
+      window.removeEventListener('resize', checkScrollState);
+    };
+  }, [checkScrollState, effectiveList.length]);
+
+  const scrollByDirection = (direction: 'left' | 'right') => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    const scrollAmount = Math.max(260, el.clientWidth * 0.75);
+    el.scrollBy({
+      left: direction === 'left' ? -scrollAmount : scrollAmount,
+      behavior: 'smooth',
+    });
+  };
 
   // Hand-scrolling mouse drag handlers (desktop grab & scroll)
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -52,13 +83,11 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({
   const handleMouseUpOrLeave = () => {
     isDownRef.current = false;
     setIsGrabbing(false);
-    // Keep hasMovedRef for a tiny tick to prevent accidental navigation after drag
     setTimeout(() => {
       hasMovedRef.current = false;
     }, 60);
   };
 
-  // Prevent link navigation if the user was hand-scrolling / dragging
   const handleClickCapture = (e: React.MouseEvent) => {
     if (hasMovedRef.current) {
       e.preventDefault();
@@ -69,10 +98,10 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({
   return (
     <div
       aria-label="Explore Our Jewellery Categories"
-      className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 space-y-6 sm:space-y-8"
+      className="w-full space-y-6 sm:space-y-8 select-none"
     >
       {/* Clean, Minimal Luxury Heading */}
-      <div className="text-center max-w-2xl mx-auto space-y-1">
+      <div className="text-center max-w-2xl mx-auto space-y-1 px-4">
         <span className="text-[10px] sm:text-[11px] font-serif uppercase tracking-[0.25em] text-[#A4792B] font-semibold block">
           Curated Showroom Collections
         </span>
@@ -83,11 +112,11 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({
 
       {/* Loading State */}
       {isLoading ? (
-        <div className="flex items-center justify-center gap-4 sm:gap-6 lg:gap-8 animate-pulse py-6">
+        <div className="flex items-center justify-start gap-4 sm:gap-6 lg:gap-8 animate-pulse py-6 pl-4 sm:pl-8 lg:pl-12">
           {[...Array(6)].map((_, idx) => (
-            <div key={idx} className="flex flex-col items-center gap-3">
-              <div className="w-28 h-28 sm:w-36 sm:h-36 md:w-44 md:h-44 rounded-full bg-stone-100" />
-              <div className="h-3 w-16 bg-stone-100 rounded" />
+            <div key={idx} className="flex flex-col items-center gap-3 shrink-0">
+              <div className="w-36 h-36 sm:w-44 sm:h-44 md:w-52 md:h-52 rounded-full bg-stone-100" />
+              <div className="h-3 w-20 bg-stone-100 rounded" />
             </div>
           ))}
         </div>
@@ -115,13 +144,38 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({
           </p>
         </div>
       ) : (
-        <ScrollReveal variant="fade-up" distance={16}>
+        <ScrollReveal variant="fade-up" distance={16} className="relative group/carousel w-full">
+          {/* Left Arrow Button */}
+          {canScrollLeft && (
+            <button
+              type="button"
+              onClick={() => scrollByDirection('left')}
+              aria-label="Scroll categories left"
+              className="absolute left-2 sm:left-4 top-[38%] -translate-y-1/2 z-20 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-white/95 hover:bg-[#380711] text-[#380711] hover:text-[#FFE28A] border-2 border-[#C49A3A]/60 hover:border-[#380711] shadow-[0_8px_24px_rgba(56,7,17,0.18)] flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C49A3A] cursor-pointer"
+            >
+              <ChevronLeft className="w-6 h-6 stroke-[2.5]" />
+            </button>
+          )}
+
+          {/* Right Arrow Button */}
+          {canScrollRight && (
+            <button
+              type="button"
+              onClick={() => scrollByDirection('right')}
+              aria-label="Scroll categories right"
+              className="absolute right-2 sm:right-4 top-[38%] -translate-y-1/2 z-20 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-white/95 hover:bg-[#380711] text-[#380711] hover:text-[#FFE28A] border-2 border-[#C49A3A]/60 hover:border-[#380711] shadow-[0_8px_24px_rgba(56,7,17,0.18)] flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C49A3A] cursor-pointer"
+            >
+              <ChevronRight className="w-6 h-6 stroke-[2.5]" />
+            </button>
+          )}
+
           {/* 
-            Hand Scrolling UI (Smooth Drag & Touch):
-            - Arrows removed completely.
-            - Mouse click-and-drag hand scroll on desktop with grab cursor.
-            - Native touch swipe with momentum on mobile/tablet.
-            - Centered when fitting screen width; horizontally scrollable with tight, elegant spacing.
+            Horizontal Scrolling Track with Precise Peek Affordance:
+            - Desktop: Exactly 4 full category cards + the 5th card sliced cleanly in half (~50% peek) at the right viewport edge.
+            - Tablet: 3 full cards + 4th card peeking (~50%).
+            - Mobile: 2 full cards + 3rd card peeking (~40%).
+            - Fluid mouse grab & scroll, native touch swipe, and chevron arrow navigation.
+            - Card itself remains 100% whole and uncropped internally.
           */}
           <div
             ref={scrollContainerRef}
@@ -130,16 +184,19 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({
             onMouseUp={handleMouseUpOrLeave}
             onMouseLeave={handleMouseUpOrLeave}
             onClickCapture={handleClickCapture}
-            className={`w-full overflow-x-auto select-none touch-pan-x py-2 px-1 scroll-smooth ${
+            className={`w-full overflow-x-auto touch-pan-x py-3 scroll-smooth ${
               isGrabbing ? 'cursor-grabbing' : 'cursor-grab'
             } [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]`}
             style={{
               WebkitOverflowScrolling: 'touch',
             }}
           >
-            <div className="flex items-start gap-6 sm:gap-8 md:gap-10 lg:gap-12 xl:gap-14 w-max min-w-full justify-center px-4 sm:px-6 md:px-8">
+            <div className="flex items-start gap-4 sm:gap-4 md:gap-5 lg:gap-6 xl:gap-6 w-max pl-4 sm:pl-6 md:pl-8 lg:pl-12 xl:pl-14 pr-12 sm:pr-16 md:pr-20 lg:pr-24">
               {effectiveList.map((cat) => (
-                <div key={cat._id} className="shrink-0 flex justify-center px-1 sm:px-2">
+                <div
+                  key={cat._id}
+                  className="shrink-0 w-[calc((100vw-48px)/2.35)] sm:w-[calc((100vw-56px)/2.5)] md:w-[calc((100vw-92px)/3.5)] lg:w-[calc((100vw-144px)/4.5)] xl:w-[calc((100vw-152px)/4.5)] flex justify-center"
+                >
                   <CategoryCard category={cat} />
                 </div>
               ))}

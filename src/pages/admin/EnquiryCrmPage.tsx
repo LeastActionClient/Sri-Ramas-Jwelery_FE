@@ -1,24 +1,36 @@
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  MessageSquareText,
   Search,
-  Filter,
   Download,
   Phone,
-  Mail,
-  Clock,
-  MapPin,
-  CheckCircle2,
   X,
-  ExternalLink,
   MessageSquare,
-  Plus,
 } from 'lucide-react';
 import { enquiriesApi, EnquiryFilterParams } from '@/services/api/enquiries.api';
 import { Enquiry, EnquiryStatus, EnquiryType } from '@/types';
 import { formatDateTime, getRelativeTime } from '@/utils/date';
-import { getWhatsAppEnquiryUrl } from '@/utils/whatsapp';
+import { getAdminCustomerWhatsAppUrl } from '@/utils/whatsapp';
+import { AdminModalPortal } from '@/components/admin/AdminModalPortal';
+
+const formatEnquiryTypeLabel = (type?: string): string => {
+  switch (type) {
+    case 'PRODUCT':
+      return 'Product Enquiry';
+    case 'SCHEME':
+      return 'Savings Scheme Enquiry';
+    case 'DIGI_GOLD':
+    case 'DIGIGOLD':
+      return 'DigiGold Enquiry';
+    case 'DIGI_SILVER':
+    case 'DIGISILVER':
+      return 'DigiSilver Enquiry';
+    case 'GENERAL':
+      return 'General Enquiry';
+    default:
+      return type ? type.replace(/_/g, ' ') : 'General Enquiry';
+  }
+};
 
 export const EnquiryCrmPage: React.FC = () => {
   const queryClient = useQueryClient();
@@ -142,11 +154,11 @@ export const EnquiryCrmPage: React.FC = () => {
             className="px-3 py-2 border border-stone-300 rounded-lg text-xs outline-none bg-white text-stone-800"
           >
             <option value="">All Types</option>
-            <option value="PRODUCT">PRODUCT</option>
-            <option value="SCHEME">SAVINGS SCHEME</option>
-            <option value="DIGIGOLD">DIGIGOLD</option>
-            <option value="DIGISILVER">DIGISILVER</option>
-            <option value="GENERAL">GENERAL</option>
+            <option value="PRODUCT">Product</option>
+            <option value="SCHEME">Savings Scheme</option>
+            <option value="DIGI_GOLD">DigiGold</option>
+            <option value="DIGI_SILVER">DigiSilver</option>
+            <option value="GENERAL">General</option>
           </select>
         </div>
       </div>
@@ -186,13 +198,30 @@ export const EnquiryCrmPage: React.FC = () => {
 
                     <td className="p-4">
                       <span className="font-bold text-stone-900 block">{enquiry.customerName}</span>
-                      <span className="text-[11px] text-stone-500 font-mono">{enquiry.customerPhone}</span>
+                      <span className="text-[11px] text-stone-500 font-mono block">
+                        {(enquiry as any).customerMobile || enquiry.customerPhone || '—'}
+                      </span>
+                      {enquiry.city && (
+                        <span className="text-[10px] text-stone-400 block">
+                          📍 {enquiry.city}
+                        </span>
+                      )}
                     </td>
 
                     <td className="p-4">
-                      <span className="px-2.5 py-0.5 rounded-full bg-stone-100 font-semibold text-[10px] uppercase text-stone-700">
-                        {enquiry.enquiryType}
+                      <span className="px-2.5 py-0.5 rounded-full bg-stone-100 font-semibold text-[10px] uppercase text-stone-700 block w-fit mb-1">
+                        {formatEnquiryTypeLabel(enquiry.enquiryType)}
                       </span>
+                      {(enquiry.productName || enquiry.product?.title || enquiry.productSku || enquiry.product?.sku) && (
+                        <div className="text-[11px] text-burgundy-900 font-medium truncate max-w-[180px]">
+                          {enquiry.productName || enquiry.product?.title}
+                          {(enquiry.productSku || enquiry.product?.sku) && (
+                            <span className="text-[10px] text-stone-500 font-mono block">
+                              SKU: {enquiry.productSku || enquiry.product?.sku}
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </td>
 
                     <td className="p-4 font-medium text-stone-600">
@@ -226,19 +255,29 @@ export const EnquiryCrmPage: React.FC = () => {
                     </td>
 
                     <td className="p-4 text-right" onClick={(e) => e.stopPropagation()}>
-                      <a
-                        href={getWhatsAppEnquiryUrl({
-                          type: enquiry.enquiryType,
-                          referenceId: enquiry.enquiryNumber,
+                      {(() => {
+                        const targetPhone = (enquiry as any).customerMobile || enquiry.customerPhone;
+                        const chatUrl = getAdminCustomerWhatsAppUrl({
+                          customerPhone: targetPhone,
                           customerName: enquiry.customerName,
-                        })}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-[11px]"
-                      >
-                        <MessageSquare className="w-3.5 h-3.5" />
-                        <span>Chat</span>
-                      </a>
+                          enquiryNumber: enquiry.enquiryNumber,
+                          enquiryType: enquiry.enquiryType,
+                        });
+
+                        return chatUrl ? (
+                          <a
+                            href={chatUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-[11px]"
+                          >
+                            <MessageSquare className="w-3.5 h-3.5" />
+                            <span>Chat</span>
+                          </a>
+                        ) : (
+                          <span className="text-[11px] text-stone-400 italic">No WhatsApp</span>
+                        );
+                      })()}
                     </td>
                   </tr>
                 ))
@@ -256,103 +295,147 @@ export const EnquiryCrmPage: React.FC = () => {
 
       {/* Enquiry Detail Drawer */}
       {selectedEnquiry && (
-        <div className="fixed inset-0 z-50 flex justify-end bg-charcoal-950/70 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-lg bg-white h-full shadow-2xl flex flex-col justify-between overflow-y-auto">
-            {/* Drawer Header */}
-            <div>
-              <div className="bg-burgundy-900 text-gold-100 p-5 border-b border-gold-600/40 flex items-center justify-between">
-                <div>
-                  <span className="text-[10px] uppercase font-bold text-gold-400 tracking-wider">
-                    {selectedEnquiry.enquiryType} Lead
-                  </span>
-                  <h2 className="font-serif font-bold text-lg text-gold-100">
-                    {selectedEnquiry.enquiryNumber}
-                  </h2>
-                </div>
-                <button
-                  onClick={() => setSelectedEnquiry(null)}
-                  className="text-gold-300 hover:text-white"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Drawer Content */}
-              <div className="p-6 space-y-6 text-xs text-stone-700">
-                {/* Status Switcher */}
-                <div className="flex items-center justify-between bg-stone-50 p-3 rounded-xl border border-stone-200">
-                  <span className="font-semibold text-stone-700">Lead Progression:</span>
-                  <select
-                    value={selectedEnquiry.status}
-                    onChange={(e) =>
-                      handleStatusChange(selectedEnquiry._id, e.target.value as EnquiryStatus)
-                    }
-                    className="font-bold text-xs p-1.5 rounded-md border border-stone-300 bg-white"
-                  >
-                    <option value="NEW">NEW LEAD</option>
-                    <option value="CONTACTED">CONTACTED</option>
-                    <option value="IN_PROGRESS">IN PROGRESS</option>
-                    <option value="RESOLVED">RESOLVED</option>
-                    <option value="CLOSED">CLOSED</option>
-                  </select>
-                </div>
-
-                {/* Customer Details */}
-                <div className="space-y-3 border-b border-stone-200 pb-4">
-                  <span className="font-bold text-stone-900 uppercase block">Customer Information</span>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <span className="text-stone-400 block">Name</span>
-                      <span className="font-bold text-stone-900">{selectedEnquiry.customerName}</span>
-                    </div>
-
-                    <div>
-                      <span className="text-stone-400 block">Phone</span>
-                      <a
-                        href={`tel:${selectedEnquiry.customerPhone}`}
-                        className="font-bold text-burgundy-900 font-mono hover:underline"
-                      >
-                        {selectedEnquiry.customerPhone}
-                      </a>
-                    </div>
-
-                    {selectedEnquiry.customerEmail && (
-                      <div>
-                        <span className="text-stone-400 block">Email</span>
-                        <span>{selectedEnquiry.customerEmail}</span>
-                      </div>
-                    )}
-
-                    {selectedEnquiry.city && (
-                      <div>
-                        <span className="text-stone-400 block">City</span>
-                        <span>{selectedEnquiry.city}</span>
-                      </div>
-                    )}
-
-                    <div>
-                      <span className="text-stone-400 block">Preferred Mode</span>
-                      <span className="font-medium">{selectedEnquiry.preferredContactMethod || 'WHATSAPP'}</span>
-                    </div>
-
-                    <div>
-                      <span className="text-stone-400 block">Preferred Slot</span>
-                      <span>{selectedEnquiry.preferredContactTime || 'ANYTIME'}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Associated Item / Message */}
-                {selectedEnquiry.message && (
-                  <div className="bg-ivory-50 p-3.5 rounded-xl border border-gold-300/50 space-y-1">
-                    <span className="font-bold text-burgundy-900 uppercase text-[11px] block">
-                      Customer Message:
+        <AdminModalPortal>
+          <div className="fixed inset-0 z-[9999] flex justify-end bg-charcoal-950/70 backdrop-blur-sm animate-fade-in">
+            <div className="w-full max-w-lg bg-white h-full shadow-2xl flex flex-col justify-between overflow-y-auto">
+              {/* Drawer Header */}
+              <div>
+                <div className="bg-burgundy-900 text-gold-100 p-5 border-b border-gold-600/40 flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-gold-400 tracking-wider">
+                      {selectedEnquiry.enquiryType} Lead
                     </span>
-                    <p className="italic text-stone-700 leading-relaxed font-light">
-                      "{selectedEnquiry.message}"
-                    </p>
+                    <h2 className="font-serif font-bold text-lg text-gold-100">
+                      {selectedEnquiry.enquiryNumber}
+                    </h2>
                   </div>
-                )}
+                  <button
+                    onClick={() => setSelectedEnquiry(null)}
+                    className="text-gold-300 hover:text-white"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Drawer Content */}
+                <div className="p-6 space-y-6 text-xs text-stone-700">
+                  {/* Status Switcher */}
+                  <div className="flex items-center justify-between bg-stone-50 p-3 rounded-xl border border-stone-200">
+                    <span className="font-semibold text-stone-700">Lead Progression:</span>
+                    <select
+                      value={selectedEnquiry.status}
+                      onChange={(e) =>
+                        handleStatusChange(selectedEnquiry._id, e.target.value as EnquiryStatus)
+                      }
+                      className="font-bold text-xs p-1.5 rounded-md border border-stone-300 bg-white"
+                    >
+                      <option value="NEW">NEW LEAD</option>
+                      <option value="CONTACTED">CONTACTED</option>
+                      <option value="IN_PROGRESS">IN PROGRESS</option>
+                      <option value="RESOLVED">RESOLVED</option>
+                      <option value="CLOSED">CLOSED</option>
+                    </select>
+                  </div>
+
+                  {/* Customer Details */}
+                  <div className="space-y-3 border-b border-stone-200 pb-4">
+                    <span className="font-bold text-stone-900 uppercase block">Customer Information</span>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <span className="text-stone-400 block">Name</span>
+                        <span className="font-bold text-stone-900">{selectedEnquiry.customerName}</span>
+                      </div>
+
+                      <div>
+                        <span className="text-stone-400 block">Phone</span>
+                        <a
+                          href={`tel:${(selectedEnquiry as any).customerMobile || selectedEnquiry.customerPhone}`}
+                          className="font-bold text-burgundy-900 font-mono hover:underline"
+                        >
+                          {(selectedEnquiry as any).customerMobile || selectedEnquiry.customerPhone}
+                        </a>
+                      </div>
+
+                      {selectedEnquiry.customerEmail && (
+                        <div>
+                          <span className="text-stone-400 block">Email</span>
+                          <span>{selectedEnquiry.customerEmail}</span>
+                        </div>
+                      )}
+
+                      {selectedEnquiry.city && (
+                        <div>
+                          <span className="text-stone-400 block">City</span>
+                          <span>{selectedEnquiry.city}</span>
+                        </div>
+                      )}
+
+                      <div>
+                        <span className="text-stone-400 block">Preferred Mode</span>
+                        <span className="font-medium">{selectedEnquiry.preferredContactMethod || 'WHATSAPP'}</span>
+                      </div>
+
+                      <div>
+                        <span className="text-stone-400 block">Preferred Slot</span>
+                        <span>{selectedEnquiry.preferredContactTime || 'ANYTIME'}</span>
+                      </div>
+
+                      <div>
+                        <span className="text-stone-400 block">Received Date</span>
+                        <span>{formatDateTime(selectedEnquiry.createdAt)}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Associated Product Information */}
+                  {(selectedEnquiry.productName || selectedEnquiry.productSku || selectedEnquiry.product || (selectedEnquiry as any).productId) && (
+                    <div className="bg-[#FCF7EC] p-3.5 rounded-xl border border-gold-300/60 space-y-2">
+                      <span className="font-bold text-burgundy-950 uppercase text-[11px] block">
+                        Associated Product Details
+                      </span>
+                      <div className="space-y-1 text-xs">
+                        <p>
+                          <strong className="text-stone-600">Product Name:</strong>{' '}
+                          <span className="font-bold text-burgundy-950">
+                            {selectedEnquiry.productName || selectedEnquiry.product?.title || selectedEnquiry.product?.name || 'Jewellery Piece'}
+                          </span>
+                        </p>
+                        {(selectedEnquiry.productSku || selectedEnquiry.product?.sku) && (
+                          <p>
+                            <strong className="text-stone-600">Product SKU:</strong>{' '}
+                            <span className="font-mono font-bold text-burgundy-900">
+                              {selectedEnquiry.productSku || selectedEnquiry.product?.sku}
+                            </span>
+                          </p>
+                        )}
+                        {selectedEnquiry.productUrl && (
+                          <p>
+                            <strong className="text-stone-600">Product Link:</strong>{' '}
+                            <a
+                              href={selectedEnquiry.productUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-burgundy-800 underline font-mono text-[11px]"
+                            >
+                              View Product Page →
+                            </a>
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Associated Item / Message */}
+                  {selectedEnquiry.message && (
+                    <div className="bg-ivory-50 p-3.5 rounded-xl border border-gold-300/50 space-y-1">
+                      <span className="font-bold text-burgundy-900 uppercase text-[11px] block">
+                        Customer Message:
+                      </span>
+                      <p className="italic text-stone-700 leading-relaxed font-light">
+                        "{selectedEnquiry.message}"
+                      </p>
+                    </div>
+                  )}
 
                 {/* Notes Timeline */}
                 <div className="space-y-3">
@@ -401,22 +484,34 @@ export const EnquiryCrmPage: React.FC = () => {
 
             {/* Drawer Bottom Actions */}
             <div className="p-4 border-t border-stone-200 bg-stone-50 flex gap-2">
-              <a
-                href={getWhatsAppEnquiryUrl({
-                  type: selectedEnquiry.enquiryType,
-                  referenceId: selectedEnquiry.enquiryNumber,
+              {(() => {
+                const targetPhone = (selectedEnquiry as any).customerMobile || selectedEnquiry.customerPhone;
+                const chatUrl = getAdminCustomerWhatsAppUrl({
+                  customerPhone: targetPhone,
                   customerName: selectedEnquiry.customerName,
-                })}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2"
-              >
-                <MessageSquare className="w-4 h-4" />
-                <span>Open in WhatsApp</span>
-              </a>
+                  enquiryNumber: selectedEnquiry.enquiryNumber,
+                  enquiryType: selectedEnquiry.enquiryType,
+                });
+
+                return chatUrl ? (
+                  <a
+                    href={chatUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2"
+                  >
+                    <MessageSquare className="w-4 h-4" />
+                    <span>Open in WhatsApp</span>
+                  </a>
+                ) : (
+                  <div className="flex-1 py-2.5 rounded-xl bg-stone-100 text-stone-400 font-bold text-xs uppercase tracking-wider flex items-center justify-center">
+                    No WhatsApp Provided
+                  </div>
+                );
+              })()}
 
               <a
-                href={`tel:${selectedEnquiry.customerPhone}`}
+                href={`tel:${(selectedEnquiry as any).customerMobile || selectedEnquiry.customerPhone}`}
                 className="px-4 py-2.5 rounded-xl border border-stone-300 bg-white hover:bg-stone-100 text-stone-800 font-semibold text-xs flex items-center justify-center gap-1.5"
               >
                 <Phone className="w-4 h-4 text-stone-600" />
@@ -433,6 +528,7 @@ export const EnquiryCrmPage: React.FC = () => {
             </div>
           </div>
         </div>
+      </AdminModalPortal>
       )}
     </div>
   );

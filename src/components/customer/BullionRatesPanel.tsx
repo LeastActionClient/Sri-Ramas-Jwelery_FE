@@ -135,7 +135,7 @@ export const BullionRatesPanel: React.FC<BullionRatesPanelProps> = ({
 }) => {
   if (isLoading) {
     return (
-      <section aria-label="Today's Bullion Rates" className="max-w-[1440px] mx-auto px-3 sm:px-5 lg:px-8">
+      <section aria-label="Today's Bullion Rates" className="relative z-10 max-w-[1440px] mx-auto px-3 sm:px-5 lg:px-8">
         <div className="bg-[#FCF7EC] rounded-2xl border border-[#DFC68E]/80 shadow-luxury p-6 sm:p-8 animate-pulse space-y-4">
           <div className="h-5 w-52 bg-[#E9DAC0] rounded" />
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
@@ -150,7 +150,7 @@ export const BullionRatesPanel: React.FC<BullionRatesPanelProps> = ({
 
   if (isError || !rates) {
     return (
-      <section aria-label="Today's Bullion Rates" className="max-w-[1440px] mx-auto px-3 sm:px-5 lg:px-8">
+      <section aria-label="Today's Bullion Rates" className="relative z-10 max-w-[1440px] mx-auto px-3 sm:px-5 lg:px-8">
         <div className="bg-[#FCF7EC] rounded-2xl border border-[#DFC68E] shadow-luxury p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#A4792B] block">
@@ -191,7 +191,7 @@ export const BullionRatesPanel: React.FC<BullionRatesPanelProps> = ({
     : "TODAY'S BULLION RATES";
 
   return (
-    <section aria-label="Today's Bullion Rates" className="max-w-[1440px] mx-auto px-3 sm:px-5 lg:px-8">
+    <section aria-label="Today's Bullion Rates" className="relative z-10 max-w-[1440px] mx-auto px-3 sm:px-5 lg:px-8">
       <ScrollReveal
         variant="fade-up"
         distance={20}

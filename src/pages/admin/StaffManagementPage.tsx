@@ -7,6 +7,7 @@ import { Users, Plus, ShieldCheck, X, Eye, EyeOff } from 'lucide-react';
 import { adminApi } from '@/services/api/admin.api';
 import { User } from '@/types';
 import { formatDate } from '@/utils/date';
+import { AdminModalPortal } from '@/components/admin/AdminModalPortal';
 
 const staffSchema = z.object({
   name: z.string().min(2, 'Full name is required'),
@@ -152,8 +153,9 @@ export const StaffManagementPage: React.FC = () => {
 
       {/* Add Staff Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal-950/70 backdrop-blur-sm animate-fade-in">
-          <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl border border-gold-500/40 overflow-hidden">
+        <AdminModalPortal>
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-charcoal-950/70 backdrop-blur-sm animate-fade-in">
+            <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl border border-gold-500/40 overflow-hidden animate-modal-enter">
             <div className="bg-burgundy-900 text-gold-100 p-5 border-b border-gold-600/40 flex items-center justify-between">
               <h2 className="font-serif font-bold text-lg text-gold-100">
                 Create Staff Account
@@ -243,6 +245,7 @@ export const StaffManagementPage: React.FC = () => {
             </form>
           </div>
         </div>
+      </AdminModalPortal>
       )}
     </div>
   );

@@ -10,8 +10,6 @@ import {
   X,
   Eye,
   EyeOff,
-  ArrowUp,
-  ArrowDown,
   AlertTriangle,
   CheckCircle2,
   Cloud,
@@ -21,6 +19,7 @@ import { categoriesApi } from '@/services/api/categories.api';
 import { Category } from '@/types';
 import { ImageDropzone } from '@/components/admin/ImageDropzone';
 import { CategoryCard } from '@/components/customer/CategoryCard';
+import { AdminModalPortal } from '@/components/admin/AdminModalPortal';
 import { generateLocalCategorySkuPreview } from '@/utils/sku';
 import { extractApiErrorMessage } from '@/utils/apiError';
 
@@ -36,7 +35,6 @@ const categorySchema = z.object({
   parentCategoryId: z.string().optional().or(z.literal('')),
   imageUrl: z.string().optional().or(z.literal('')),
   imagePublicId: z.string().optional().or(z.literal('')),
-  sortOrder: z.number().int(),
   isActive: z.boolean(),
 });
 
@@ -84,16 +82,24 @@ export const CategoryManagementPage: React.FC = () => {
   } = useForm<CategoryFormData>({
     resolver: zodResolver(categorySchema),
     defaultValues: {
-      sortOrder: 0,
       isActive: true,
+      imageUrl: '',
+      imagePublicId: '',
     },
   });
+
+  useEffect(() => {
+    register('imageUrl');
+    register('imagePublicId');
+  }, [register]);
 
   const invalidateCategoryCaches = () => {
     queryClient.invalidateQueries({ queryKey: ['admin', 'categories'] });
     queryClient.invalidateQueries({ queryKey: ['admin-categories'] });
     queryClient.invalidateQueries({ queryKey: ['categories'] });
     queryClient.invalidateQueries({ queryKey: ['homepage'] });
+    queryClient.refetchQueries({ queryKey: ['admin', 'categories'] });
+    queryClient.refetchQueries({ queryKey: ['categories'] });
   };
 
   const showStatus = (type: 'success' | 'error', message: string) => {
@@ -131,10 +137,6 @@ export const CategoryManagementPage: React.FC = () => {
     setEditingCategory(null);
     setModalError(null);
     setIsSkuManual(false);
-    const nextOrder =
-      categories.length > 0
-        ? Math.max(...categories.map((c) => c.sortOrder ?? 0)) + 1
-        : 1;
     reset({
       name: '',
       sku: '',
@@ -142,7 +144,6 @@ export const CategoryManagementPage: React.FC = () => {
       parentCategoryId: '',
       imageUrl: '',
       imagePublicId: '',
-      sortOrder: nextOrder,
       isActive: true,
     });
     setIsModalOpen(true);
@@ -165,7 +166,6 @@ export const CategoryManagementPage: React.FC = () => {
       parentCategoryId: cat.parentCategoryId || '',
       imageUrl: cat.imageUrl || '',
       imagePublicId: cat.imagePublicId || '',
-      sortOrder: cat.sortOrder ?? 0,
       isActive: cat.isActive,
     });
     setIsModalOpen(true);
@@ -183,7 +183,6 @@ export const CategoryManagementPage: React.FC = () => {
         parentCategoryId: data.parentCategoryId || null,
         imageUrl: data.imageUrl || null,
         imagePublicId: data.imagePublicId || null,
-        sortOrder: Number(data.sortOrder),
         isActive: data.isActive,
       };
 
@@ -230,20 +229,6 @@ export const CategoryManagementPage: React.FC = () => {
     }
   };
 
-  const handleMoveOrder = async (cat: Category, delta: number) => {
-    const newOrder = Math.max(0, (cat.sortOrder ?? 0) + delta);
-    setBusyCategoryId(cat._id);
-    try {
-      await categoriesApi.adminUpdateCategory(cat._id, { sortOrder: newOrder });
-      invalidateCategoryCaches();
-      showStatus('success', `Display order for "${cat.name}" set to ${newOrder}.`);
-    } catch (err: any) {
-      showStatus('error', err?.response?.data?.error?.message || 'Failed to update display order.');
-    } finally {
-      setBusyCategoryId(null);
-    }
-  };
-
   const handleConfirmDelete = async () => {
     if (!deleteTarget) return;
     setIsDeleting(true);
@@ -264,20 +249,17 @@ export const CategoryManagementPage: React.FC = () => {
 
   const watchedName = watch('name');
   const watchedSku = watch('sku');
-  const watchedDescription = watch('description');
   const watchedImageUrl = watch('imageUrl');
   const watchedPublicId = watch('imagePublicId');
-  const watchedSortOrder = watch('sortOrder');
   const watchedActive = watch('isActive');
 
   const livePreviewCategory: Category = {
     _id: editingCategory?._id || 'preview',
     name: watchedName || 'Category Name',
     slug: editingCategory?.slug || '',
-    description: watchedDescription,
     imageUrl: watchedImageUrl || undefined,
     imagePublicId: watchedPublicId || undefined,
-    sortOrder: Number.isFinite(watchedSortOrder) ? watchedSortOrder : 0,
+    sortOrder: editingCategory?.sortOrder ?? 0,
     isActive: watchedActive ?? true,
     createdAt: '',
     updatedAt: '',
@@ -291,7 +273,7 @@ export const CategoryManagementPage: React.FC = () => {
             Category Management
           </h1>
           <p className="text-xs text-stone-500 mt-0.5">
-            Single source of truth for homepage category cards, display order, visibility, and Cloudinary imagery.
+            Single source of truth for homepage category cards, hierarchy, visibility, and Cloudinary imagery.
           </p>
         </div>
 
@@ -332,7 +314,6 @@ export const CategoryManagementPage: React.FC = () => {
               <tr>
                 <th className="p-4">Category</th>
                 <th className="p-4">Hierarchy / Media</th>
-                <th className="p-4">Display Order</th>
                 <th className="p-4">Status</th>
                 <th className="p-4 text-right">Actions</th>
               </tr>
@@ -340,7 +321,7 @@ export const CategoryManagementPage: React.FC = () => {
             <tbody className="divide-y divide-stone-100">
               {isLoading ? (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center text-stone-400">
+                  <td colSpan={4} className="p-8 text-center text-stone-400">
                     Loading categories...
                   </td>
                 </tr>
@@ -395,32 +376,6 @@ export const CategoryManagementPage: React.FC = () => {
                           <span className="truncate max-w-[140px]">{cat.imagePublicId}</span>
                         </span>
                       )}
-                    </td>
-
-                    <td className="p-4">
-                      <div className="inline-flex items-center gap-1.5">
-                        <span className="font-mono font-bold text-stone-700 w-6 text-center">
-                          {cat.sortOrder ?? 0}
-                        </span>
-                        <button
-                          type="button"
-                          disabled={busyCategoryId === cat._id}
-                          onClick={() => handleMoveOrder(cat, -1)}
-                          className="p-1 rounded border border-stone-200 hover:bg-stone-100 text-stone-600 disabled:opacity-40"
-                          title="Decrease order number (move earlier)"
-                        >
-                          <ArrowUp className="w-3 h-3" />
-                        </button>
-                        <button
-                          type="button"
-                          disabled={busyCategoryId === cat._id}
-                          onClick={() => handleMoveOrder(cat, 1)}
-                          className="p-1 rounded border border-stone-200 hover:bg-stone-100 text-stone-600 disabled:opacity-40"
-                          title="Increase order number (move later)"
-                        >
-                          <ArrowDown className="w-3 h-3" />
-                        </button>
-                      </div>
                     </td>
 
                     <td className="p-4">
@@ -485,9 +440,10 @@ export const CategoryManagementPage: React.FC = () => {
 
       {/* Add / Edit Category Modal with Live Storefront Preview */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal-950/70 backdrop-blur-sm animate-fade-in">
-          <div className="relative w-full max-w-3xl bg-white rounded-3xl shadow-2xl border border-gold-500/40 overflow-hidden max-h-[92vh] flex flex-col animate-modal-enter">
-            <div className="bg-burgundy-900 text-gold-100 p-5 border-b border-gold-600/40 flex items-center justify-between shrink-0">
+        <AdminModalPortal>
+          <div className="fixed inset-0 z-[9999] flex items-start justify-center p-3 sm:p-6 overflow-y-auto bg-charcoal-950/70 backdrop-blur-sm animate-fade-in">
+            <div className="relative w-full max-w-3xl bg-white rounded-2xl shadow-2xl border border-gold-500/40 overflow-hidden my-auto max-h-[94vh] flex flex-col animate-modal-enter">
+            <div className="bg-burgundy-900 text-gold-100 p-4 sm:p-5 border-b border-gold-600/40 flex items-center justify-between shrink-0">
               <h2 className="font-serif font-bold text-lg text-gold-100">
                 {editingCategory ? 'Edit Category' : 'Create New Category'}
               </h2>
@@ -506,7 +462,7 @@ export const CategoryManagementPage: React.FC = () => {
             <form
               ref={modalFormRef}
               onSubmit={handleSubmit(onSubmit)}
-              className="p-6 overflow-y-auto text-xs grid grid-cols-1 md:grid-cols-12 gap-6"
+              className="p-5 sm:p-6 overflow-y-auto text-xs grid grid-cols-1 md:grid-cols-12 gap-6"
             >
               <div className="md:col-span-7 space-y-4">
                 {modalError && (
@@ -614,81 +570,51 @@ export const CategoryManagementPage: React.FC = () => {
                   label="Category Cover Image (Cloudinary Upload)"
                   value={watchedImageUrl}
                   publicId={watchedPublicId}
-                  onChange={(url) => setValue('imageUrl', url)}
-                  onPublicIdChange={(pid) => setValue('imagePublicId', pid)}
+                  onChange={(url) =>
+                    setValue('imageUrl', url, { shouldValidate: true, shouldDirty: true, shouldTouch: true })
+                  }
+                  onPublicIdChange={(pid) =>
+                    setValue('imagePublicId', pid, { shouldValidate: true, shouldDirty: true, shouldTouch: true })
+                  }
                   uploadFolder="categories"
                   helperText="Upload PNG/JPG/WEBP (max 10MB) to Cloudinary or paste a hosted image URL"
                 />
 
-                <div>
-                  <label className="block font-semibold uppercase text-stone-700 mb-1">
-                    Description
-                  </label>
-                  <textarea
-                    rows={2}
-                    {...register('description')}
-                    placeholder="Brief description for showcase banners..."
-                    className="w-full p-2.5 border rounded-lg outline-none resize-none"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 items-center">
-                  <div>
-                    <label className="block font-semibold uppercase text-stone-700 mb-1">
-                      Display Order
-                    </label>
-                    <input
-                      type="number"
-                      {...register('sortOrder', { valueAsNumber: true })}
-                      className="w-full p-2 border rounded-lg"
-                    />
-                  </div>
-
-                  <label className="flex items-center gap-2 cursor-pointer pt-4">
-                    <input type="checkbox" {...register('isActive')} className="w-4 h-4 rounded" />
+                <div className="pt-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" {...register('isActive')} className="w-4 h-4 rounded text-burgundy-900 focus:ring-gold-500" />
                     <span className="font-semibold text-stone-700">Published / Active</span>
                   </label>
                 </div>
               </div>
 
               {/* Right Column: Live Storefront Card Preview */}
-              <div className="md:col-span-5 bg-[#FAF4EA] rounded-2xl border border-[#DEC48C] p-5 flex flex-col justify-between space-y-4">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#A4792B]">
-                      Storefront Card Preview
-                    </span>
-                    <span
-                      className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                        livePreviewCategory.isActive
-                          ? 'bg-emerald-100 text-emerald-800'
-                          : 'bg-stone-200 text-stone-600'
-                      }`}
-                    >
-                      {livePreviewCategory.isActive ? 'Visible on Home' : 'Draft / Hidden'}
-                    </span>
-                  </div>
-
-                  <div className="max-w-[220px] mx-auto">
-                    <CategoryCard category={livePreviewCategory} previewOnly />
-                  </div>
-
-                  {livePreviewCategory.description && (
-                    <p className="text-[11px] text-[#5C3D35] text-center italic">
-                      {livePreviewCategory.description}
-                    </p>
-                  )}
+              <div className="md:col-span-5 bg-[#FAF4EA] rounded-2xl border border-[#DEC48C] p-4 flex flex-col justify-start space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-[#A4792B]">
+                    Storefront Card Preview
+                  </span>
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                      livePreviewCategory.isActive
+                        ? 'bg-emerald-100 text-emerald-800'
+                        : 'bg-stone-200 text-stone-600'
+                    }`}
+                  >
+                    {livePreviewCategory.isActive ? 'Visible on Home' : 'Draft / Hidden'}
+                  </span>
                 </div>
 
-                <div className="text-[10px] text-stone-500 border-t border-[#E6D6B5] pt-3 space-y-1">
+                <div className="max-w-[200px] mx-auto py-1">
+                  <CategoryCard category={livePreviewCategory} previewOnly />
+                </div>
+
+                <div className="text-[10px] text-stone-500 border-t border-[#E6D6B5] pt-2.5 space-y-1">
                   <p>
                     <strong>Category SKU:</strong>{' '}
                     <span className="font-mono text-burgundy-900">
                       {watchedSku || 'Auto-generated on save'}
                     </span>
-                  </p>
-                  <p>
-                    <strong>Carousel Position:</strong> Order #{livePreviewCategory.sortOrder}
                   </p>
                   <p>
                     Public storefront links are managed automatically by the system.
@@ -725,89 +651,93 @@ export const CategoryManagementPage: React.FC = () => {
             </form>
           </div>
         </div>
+      </AdminModalPortal>
       )}
 
       {/* Standalone Row Preview Modal */}
       {previewCategory && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal-950/70 backdrop-blur-sm animate-fade-in"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setPreviewCategory(null);
-          }}
-        >
-          <div className="w-full max-w-sm bg-[#FAF4EA] rounded-2xl border border-[#C99B3B] shadow-2xl overflow-hidden animate-modal-enter">
-            <div className="bg-burgundy-900 text-gold-100 px-5 py-3.5 flex items-center justify-between">
-              <span className="font-serif font-bold text-sm">Category Homepage Preview</span>
-              <button type="button" onClick={() => setPreviewCategory(null)} className="text-gold-300 hover:text-white">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="p-6 space-y-4">
-              <div className="max-w-[220px] mx-auto">
-                <CategoryCard category={previewCategory} previewOnly />
+        <AdminModalPortal>
+          <div
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-charcoal-950/70 backdrop-blur-sm animate-fade-in"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setPreviewCategory(null);
+            }}
+          >
+            <div className="w-full max-w-sm bg-[#FAF4EA] rounded-2xl border border-[#C99B3B] shadow-2xl overflow-hidden animate-modal-enter">
+              <div className="bg-burgundy-900 text-gold-100 px-5 py-3.5 flex items-center justify-between">
+                <span className="font-serif font-bold text-sm">Category Homepage Preview</span>
+                <button type="button" onClick={() => setPreviewCategory(null)} className="text-gold-300 hover:text-white">
+                  <X className="w-4 h-4" />
+                </button>
               </div>
-              {previewCategory.description && (
-                <p className="text-xs text-[#5C3D35] text-center">{previewCategory.description}</p>
-              )}
-              <div className="text-[11px] text-stone-600 bg-white/75 rounded-lg p-3 border border-[#E6D6B5] space-y-1">
-                <p><strong>Status:</strong> {previewCategory.isActive ? 'Published on Public Site' : 'Hidden from Public Site'}</p>
-                <p><strong>Display Order:</strong> {previewCategory.sortOrder}</p>
-                {previewCategory.imagePublicId && (
-                  <p className="truncate"><strong>Cloudinary ID:</strong> {previewCategory.imagePublicId}</p>
+              <div className="p-6 space-y-4">
+                <div className="max-w-[220px] mx-auto">
+                  <CategoryCard category={previewCategory} previewOnly />
+                </div>
+                {previewCategory.description && (
+                  <p className="text-xs text-[#5C3D35] text-center">{previewCategory.description}</p>
                 )}
+                <div className="text-[11px] text-stone-600 bg-white/75 rounded-lg p-3 border border-[#E6D6B5] space-y-1">
+                  <p><strong>Status:</strong> {previewCategory.isActive ? 'Published on Public Site' : 'Hidden from Public Site'}</p>
+                  {previewCategory.imagePublicId && (
+                    <p className="truncate"><strong>Cloudinary ID:</strong> {previewCategory.imagePublicId}</p>
+                  )}
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </AdminModalPortal>
       )}
 
       {/* Delete Confirmation Modal */}
       {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal-950/70 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-md bg-white rounded-2xl border border-red-200 shadow-2xl p-6 space-y-4 animate-modal-enter">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600 shrink-0">
-                <AlertTriangle className="w-5 h-5" />
+        <AdminModalPortal>
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-charcoal-950/70 backdrop-blur-sm animate-fade-in">
+            <div className="w-full max-w-md bg-white rounded-2xl border border-red-200 shadow-2xl p-6 space-y-4 animate-modal-enter">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600 shrink-0">
+                  <AlertTriangle className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-serif font-bold text-base text-burgundy-950">
+                    Delete Category "{deleteTarget.name}"?
+                  </h3>
+                  <p className="text-xs text-stone-600 mt-1">
+                    This removes the category from the public website carousel and catalogue. Deletion is blocked if active jewellery products or subcategories still belong to it.
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-serif font-bold text-base text-burgundy-950">
-                  Delete Category "{deleteTarget.name}"?
-                </h3>
-                <p className="text-xs text-stone-600 mt-1">
-                  This removes the category from the public website carousel and catalogue. Deletion is blocked if active jewellery products or subcategories still belong to it.
-                </p>
-              </div>
-            </div>
 
-            {deleteError && (
-              <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-xs text-red-800 font-medium">
-                {deleteError}
-              </div>
-            )}
+              {deleteError && (
+                <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-xs text-red-800 font-medium">
+                  {deleteError}
+                </div>
+              )}
 
-            <div className="flex justify-end gap-2.5 pt-2">
-              <button
-                type="button"
-                disabled={isDeleting}
-                onClick={() => {
-                  setDeleteError(null);
-                  setDeleteTarget(null);
-                }}
-                className="px-4 py-2 text-xs font-semibold border border-stone-300 rounded-lg text-stone-700 hover:bg-stone-100"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                disabled={isDeleting}
-                onClick={handleConfirmDelete}
-                className="px-4 py-2 text-xs font-bold rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
-              >
-                {isDeleting ? 'Deleting...' : 'Confirm Delete'}
-              </button>
+              <div className="flex justify-end gap-2.5 pt-2">
+                <button
+                  type="button"
+                  disabled={isDeleting}
+                  onClick={() => {
+                    setDeleteError(null);
+                    setDeleteTarget(null);
+                  }}
+                  className="px-4 py-2 text-xs font-semibold border border-stone-300 rounded-lg text-stone-700 hover:bg-stone-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={isDeleting}
+                  onClick={handleConfirmDelete}
+                  className="px-4 py-2 text-xs font-bold rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+                >
+                  {isDeleting ? 'Deleting...' : 'Confirm Delete'}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        </AdminModalPortal>
       )}
     </div>
   );
