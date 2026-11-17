@@ -10,7 +10,6 @@ import { HomePage } from '@/pages/customer/HomePage';
 import { ProductCatalogPage } from '@/pages/customer/ProductCatalogPage';
 import { ProductDetailPage } from '@/pages/customer/ProductDetailPage';
 import { SchemesPage } from '@/pages/customer/SchemesPage';
-import { SchemeDetailPage } from '@/pages/customer/SchemeDetailPage';
 import { DigiGoldPage } from '@/pages/customer/DigiGoldPage';
 import { DigiSilverPage } from '@/pages/customer/DigiSilverPage';
 import { AboutPage } from '@/pages/customer/AboutPage';
@@ -45,7 +44,7 @@ export const AppRoutes: React.FC = () => {
         <Route path="/products/:slug" element={<ProductDetailPage />} />
         <Route path="/rates" element={<Navigate to="/" replace />} />
         <Route path="/schemes" element={<SchemesPage />} />
-        <Route path="/schemes/:slug" element={<SchemeDetailPage />} />
+        <Route path="/schemes/:slug" element={<Navigate to="/schemes" replace />} />
         <Route path="/digigold" element={<DigiGoldPage />} />
         <Route path="/digisilver" element={<DigiSilverPage />} />
         <Route path="/about" element={<AboutPage />} />

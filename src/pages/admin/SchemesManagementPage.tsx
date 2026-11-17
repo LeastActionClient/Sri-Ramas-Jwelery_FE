@@ -9,23 +9,17 @@ import {
   CheckCircle2,
   AlertCircle,
   Award,
+  ArrowUp,
+  ArrowDown,
 } from 'lucide-react';
 import { schemesApi } from '@/services/api/schemes.api';
 import { SchemePlan, SchemeLayoutConfig } from '@/types';
 import { paiseToRupees, rupeesToPaise } from '@/utils/currency';
 import { ImageDropzone } from '@/components/admin/ImageDropzone';
-import { SchemeBannerCard } from '@/components/customer/SchemeBannerCard';
+import { SchemeCard } from '@/components/customer/SchemeCard';
 import { AdminModalPortal } from '@/components/admin/AdminModalPortal';
 import { stripHtmlAndControlChars } from '@/utils/inputSanitize';
 
-// Exactly 7 simplified fields required by Sri Ramas Jewellery Master Prompt:
-// 1. Image upload (Scheme promotional banner image)
-// 2. Scheme Name
-// 3. Scheme Description
-// 4. Button Name (e.g. "Enquire Now")
-// 5. Navigation Page / Destination (e.g. "/contact")
-// 6. Duration (Months)
-// 7. Price / Monthly Instalment Amount (₹)
 interface SimplifiedSchemeFormState {
   bannerImageUrl: string;
   bannerImagePublicId: string;
@@ -35,6 +29,10 @@ interface SimplifiedSchemeFormState {
   navigationDestination: string;
   tenureMonths: string;
   price: string;
+  displayOrder: string;
+  benefit1: string;
+  benefit2: string;
+  benefit3: string;
   isActive: boolean;
   layoutConfig?: SchemeLayoutConfig | null;
 }
@@ -49,6 +47,10 @@ function createEmptySchemeForm(): SimplifiedSchemeFormState {
     navigationDestination: '/contact',
     tenureMonths: '',
     price: '',
+    displayOrder: '0',
+    benefit1: '',
+    benefit2: '',
+    benefit3: '',
     isActive: true,
     layoutConfig: null,
   };
@@ -89,13 +91,14 @@ export const SchemesManagementPage: React.FC = () => {
     setEditingScheme(scheme);
     setErrorMsg(null);
     const minPaise = scheme.minMonthlyAmountPaise ?? scheme.minimumMonthlyAmountPaise;
+    const b = Array.isArray(scheme.benefits) ? scheme.benefits : [];
     setForm({
       bannerImageUrl: scheme.bannerImageUrl || '',
       bannerImagePublicId: scheme.bannerImagePublicId || '',
       name: scheme.name || '',
       description: scheme.description || scheme.fullDescription || scheme.shortDescription || '',
       buttonName: scheme.buttonName || scheme.ctaText || 'Enquire Now',
-      navigationDestination: scheme.navigationDestination || (scheme.slug ? `/schemes/${scheme.slug}` : '/contact'),
+      navigationDestination: scheme.navigationDestination || '/contact',
       tenureMonths:
         typeof scheme.tenureMonths === 'number' && scheme.tenureMonths > 0
           ? String(scheme.tenureMonths)
@@ -104,6 +107,10 @@ export const SchemesManagementPage: React.FC = () => {
         typeof minPaise === 'number' && minPaise > 0
           ? String(paiseToRupees(minPaise))
           : '',
+      displayOrder: String(scheme.displayOrder ?? 0),
+      benefit1: b[0] || '',
+      benefit2: b[1] || '',
+      benefit3: b[2] || '',
       isActive: scheme.isActive ?? true,
       layoutConfig: scheme.layoutConfig || null,
     });
@@ -113,6 +120,7 @@ export const SchemesManagementPage: React.FC = () => {
   const previewScheme: SchemePlan = useMemo(() => {
     const priceNum = Number(form.price);
     const tenureNum = Number(form.tenureMonths);
+    const benefits = [form.benefit1.trim(), form.benefit2.trim(), form.benefit3.trim()].filter(Boolean);
     return {
       _id: editingScheme?._id || 'preview',
       name: form.name.trim() || 'Savings Scheme Preview',
@@ -120,7 +128,7 @@ export const SchemesManagementPage: React.FC = () => {
       description: form.description.trim(),
       shortDescription: form.description.trim(),
       fullDescription: form.description.trim(),
-      buttonName: form.buttonName.trim() || 'Enquire Now',
+      buttonName: form.buttonName.trim(),
       ctaText: form.buttonName.trim() || 'Enquire Now',
       navigationDestination: form.navigationDestination.trim() || '/contact',
       tenureMonths: Number.isFinite(tenureNum) && tenureNum > 0 ? tenureNum : undefined,
@@ -130,8 +138,8 @@ export const SchemesManagementPage: React.FC = () => {
       bannerImagePublicId: form.bannerImagePublicId,
       layoutConfig: form.layoutConfig || undefined,
       terms: [],
-      benefits: [],
-      displayOrder: editingScheme?.displayOrder ?? 0,
+      benefits,
+      displayOrder: Number(form.displayOrder) || 0,
       isActive: form.isActive,
       createdAt: '',
       updatedAt: '',
@@ -163,6 +171,8 @@ export const SchemesManagementPage: React.FC = () => {
       return;
     }
 
+    const benefits = [form.benefit1.trim(), form.benefit2.trim(), form.benefit3.trim()].filter(Boolean);
+
     setSaving(true);
     try {
       const payload: Partial<SchemePlan> = {
@@ -170,13 +180,16 @@ export const SchemesManagementPage: React.FC = () => {
         description: form.description.trim(),
         shortDescription: form.description.trim(),
         fullDescription: form.description.trim(),
-        buttonName: form.buttonName.trim() || 'Enquire Now',
+        buttonName: form.buttonName.trim(),
         ctaText: form.buttonName.trim() || 'Enquire Now',
         navigationDestination: form.navigationDestination.trim() || '/contact',
         tenureMonths: parsedTenure,
         minMonthlyAmountPaise: parsedPrice ? rupeesToPaise(parsedPrice) : undefined,
         bannerImageUrl: form.bannerImageUrl.trim() || undefined,
         bannerImagePublicId: form.bannerImagePublicId.trim() || undefined,
+        benefits,
+        benefitDescription: benefits.join(' • '),
+        displayOrder: Number(form.displayOrder) || 0,
         layoutConfig: form.layoutConfig || undefined,
         isActive: form.isActive,
       };
@@ -199,6 +212,31 @@ export const SchemesManagementPage: React.FC = () => {
       );
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleMoveOrder = async (scheme: SchemePlan, direction: 'up' | 'down') => {
+    const currentIdx = sortedSchemes.findIndex((s) => s._id === scheme._id);
+    if (currentIdx === -1) return;
+    const targetIdx = direction === 'up' ? currentIdx - 1 : currentIdx + 1;
+    if (targetIdx < 0 || targetIdx >= sortedSchemes.length) return;
+
+    const targetScheme = sortedSchemes[targetIdx];
+    const currentOrder = scheme.displayOrder ?? currentIdx;
+    const targetOrder = targetScheme.displayOrder ?? targetIdx;
+
+    try {
+      const newCurrentOrder = targetOrder;
+      const newTargetOrder = currentOrder === targetOrder
+        ? (direction === 'up' ? targetOrder + 1 : targetOrder - 1)
+        : currentOrder;
+
+      await schemesApi.adminUpdateScheme(scheme._id, { displayOrder: newCurrentOrder });
+      await schemesApi.adminUpdateScheme(targetScheme._id, { displayOrder: newTargetOrder });
+      setToastMsg(`Updated order for "${scheme.name}".`);
+      invalidateAll();
+    } catch (err: any) {
+      setErrorMsg('Failed to reorder scheme.');
     }
   };
 
@@ -281,9 +319,10 @@ export const SchemesManagementPage: React.FC = () => {
           <table className="w-full text-left text-xs">
             <thead className="bg-stone-50 border-b border-stone-200 text-stone-500 uppercase font-semibold">
               <tr>
+                <th className="p-4 w-20">Order</th>
                 <th className="p-4">Banner &amp; Scheme</th>
+                <th className="p-4">Benefits</th>
                 <th className="p-4">Duration &amp; Installment</th>
-                <th className="p-4">Button &amp; Destination</th>
                 <th className="p-4">Status</th>
                 <th className="p-4 text-right">Actions</th>
               </tr>
@@ -291,15 +330,45 @@ export const SchemesManagementPage: React.FC = () => {
             <tbody className="divide-y divide-stone-100">
               {isLoading ? (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center text-stone-400">
+                  <td colSpan={6} className="p-8 text-center text-stone-400">
                     Loading savings schemes...
                   </td>
                 </tr>
               ) : sortedSchemes.length > 0 ? (
-                sortedSchemes.map((scheme) => {
+                sortedSchemes.map((scheme, index) => {
                   const minPaise = scheme.minMonthlyAmountPaise ?? scheme.minimumMonthlyAmountPaise;
+                  const schemeBenefits = Array.isArray(scheme.benefits) ? scheme.benefits.filter(Boolean) : [];
                   return (
                     <tr key={scheme._id} className="hover:bg-stone-50/70 transition-colors">
+                      {/* Order Controls */}
+                      <td className="p-4">
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-bold text-xs bg-stone-100 px-2 py-0.5 rounded text-burgundy-950">
+                            #{scheme.displayOrder ?? index + 1}
+                          </span>
+                          <div className="flex flex-col">
+                            <button
+                              type="button"
+                              disabled={index === 0}
+                              onClick={() => handleMoveOrder(scheme, 'up')}
+                              className="p-0.5 text-stone-400 hover:text-stone-700 disabled:opacity-30"
+                              title="Move Up"
+                            >
+                              <ArrowUp className="w-3 h-3" />
+                            </button>
+                            <button
+                              type="button"
+                              disabled={index === sortedSchemes.length - 1}
+                              onClick={() => handleMoveOrder(scheme, 'down')}
+                              className="p-0.5 text-stone-400 hover:text-stone-700 disabled:opacity-30"
+                              title="Move Down"
+                            >
+                              <ArrowDown className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </div>
+                      </td>
+
                       <td className="p-4 flex items-center gap-3">
                         <div className="w-14 h-9 rounded-lg bg-[#3A060E] overflow-hidden shrink-0 border border-gold-400/50">
                           {scheme.bannerImageUrl ? (
@@ -326,6 +395,23 @@ export const SchemesManagementPage: React.FC = () => {
                         </div>
                       </td>
 
+                      <td className="p-4 text-stone-700 max-w-xs">
+                        <div className="flex flex-wrap gap-1">
+                          {schemeBenefits.length > 0 ? (
+                            schemeBenefits.slice(0, 3).map((b, i) => (
+                              <span
+                                key={i}
+                                className="px-1.5 py-0.5 rounded bg-gold-50 border border-gold-200 text-[10px] text-stone-700 whitespace-nowrap"
+                              >
+                                {b}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="text-[10px] text-stone-400 italic">No benefits set</span>
+                          )}
+                        </div>
+                      </td>
+
                       <td className="p-4 text-stone-700">
                         <div>
                           {scheme.tenureMonths ? `${scheme.tenureMonths} Months` : 'Flexible duration'}
@@ -334,15 +420,6 @@ export const SchemesManagementPage: React.FC = () => {
                           {minPaise && minPaise > 0
                             ? `₹${paiseToRupees(minPaise).toLocaleString('en-IN')}/mo`
                             : 'Showroom confirmed'}
-                        </div>
-                      </td>
-
-                      <td className="p-4 text-stone-700">
-                        <div className="font-semibold text-burgundy-900">
-                          {scheme.buttonName || scheme.ctaText || 'Enquire Now'}
-                        </div>
-                        <div className="text-[11px] font-mono text-stone-500 truncate max-w-[180px]">
-                          {scheme.navigationDestination || `/schemes/${scheme.slug}`}
                         </div>
                       </td>
 
@@ -383,7 +460,7 @@ export const SchemesManagementPage: React.FC = () => {
                 })
               ) : (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center text-stone-400">
+                  <td colSpan={6} className="p-8 text-center text-stone-400">
                     No savings schemes configured yet. Click "Add New Scheme" to create one.
                   </td>
                 </tr>
@@ -454,14 +531,13 @@ export const SchemesManagementPage: React.FC = () => {
                 {/* 3. Scheme Description */}
                 <div>
                   <label className="block font-semibold uppercase text-stone-700 mb-1">
-                    3. Scheme Description *
+                    3. Scheme Description <span className="text-stone-400 font-normal lowercase">(optional)</span>
                   </label>
                   <textarea
                     rows={3}
-                    required
                     value={form.description}
                     onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
-                    placeholder="Describe the scheme terms, monthly contributions, and maturity benefits..."
+                    placeholder="Describe the scheme terms, monthly contributions, and maturity benefits (optional)..."
                     className="w-full p-2.5 border border-stone-300 rounded-lg outline-none focus:border-gold-500"
                   />
                 </div>
@@ -469,36 +545,59 @@ export const SchemesManagementPage: React.FC = () => {
                 {/* 4. Button Name & 5. Navigation Destination */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block font-semibold uppercase text-stone-700 mb-1">
-                      4. Button Name *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={form.buttonName}
-                      onChange={(e) => setForm((prev) => ({ ...prev, buttonName: e.target.value }))}
-                      placeholder="e.g. Enquire Now, Join Scheme"
-                      className="w-full p-2.5 border border-stone-300 rounded-lg outline-none focus:border-gold-500"
-                    />
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block font-semibold uppercase text-stone-700">
+                        4. Button Name <span className="text-stone-400 font-normal lowercase">(optional)</span>
+                      </label>
+                      {form.buttonName && (
+                        <button
+                          type="button"
+                          onClick={() => setForm((prev) => ({ ...prev, buttonName: '', navigationDestination: '' }))}
+                          className="inline-flex items-center gap-1 text-[11px] text-red-600 hover:text-red-700 font-semibold cursor-pointer"
+                          title="Remove button from scheme card"
+                        >
+                          <X className="w-3.5 h-3.5 stroke-[2.5]" />
+                          <span>Remove Button</span>
+                        </button>
+                      )}
+                    </div>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={form.buttonName}
+                        onChange={(e) => setForm((prev) => ({ ...prev, buttonName: e.target.value }))}
+                        placeholder="e.g. Enquire Now (leave blank to remove button)"
+                        className="w-full p-2.5 pr-8 border border-stone-300 rounded-lg outline-none focus:border-gold-500"
+                      />
+                      {form.buttonName && (
+                        <button
+                          type="button"
+                          onClick={() => setForm((prev) => ({ ...prev, buttonName: '', navigationDestination: '' }))}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-red-600 p-0.5 rounded-full hover:bg-stone-100"
+                          title="Clear button name"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   <div>
                     <label className="block font-semibold uppercase text-stone-700 mb-1">
-                      5. Navigation Page / Destination *
+                      5. Navigation Page / Destination <span className="text-stone-400 font-normal lowercase">(optional)</span>
                     </label>
                     <input
                       type="text"
-                      required
                       value={form.navigationDestination}
                       onChange={(e) => setForm((prev) => ({ ...prev, navigationDestination: e.target.value }))}
-                      placeholder="e.g. /contact or /schemes/swarna-varshini"
+                      placeholder="e.g. /schemes or /contact (optional)"
                       className="w-full p-2.5 border border-stone-300 rounded-lg outline-none focus:border-gold-500"
                     />
                   </div>
                 </div>
 
-                {/* 6. Duration (Months) & 7. Price / Monthly Amount */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* 6. Duration (Months), Price & Display Order */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
                     <label className="block font-semibold uppercase text-stone-700 mb-1">
                       6. Duration (Months)
@@ -516,7 +615,7 @@ export const SchemesManagementPage: React.FC = () => {
 
                   <div>
                     <label className="block font-semibold uppercase text-stone-700 mb-1">
-                      7. Price / Monthly Instalment Amount (₹)
+                      7. Price / Monthly Amount (₹)
                     </label>
                     <input
                       type="number"
@@ -526,6 +625,64 @@ export const SchemesManagementPage: React.FC = () => {
                       placeholder="e.g. 2500"
                       className="w-full p-2.5 border border-stone-300 rounded-lg outline-none focus:border-gold-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold uppercase text-stone-700 mb-1">
+                      8. Display Order (Rank)
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={form.displayOrder}
+                      onChange={(e) => setForm((prev) => ({ ...prev, displayOrder: e.target.value }))}
+                      placeholder="e.g. 1, 2, 3..."
+                      className="w-full p-2.5 border border-stone-300 rounded-lg outline-none focus:border-gold-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                  </div>
+                </div>
+
+                {/* 9. Scheme Key Benefits (Shown in Card Benefits Row) */}
+                <div className="p-3.5 rounded-xl bg-gold-50/50 border border-gold-200/80 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="block font-bold uppercase text-burgundy-950 text-[11px]">
+                      9. Scheme Key Benefits (Card 3-Column Strip)
+                    </label>
+                    <span className="text-[10px] text-stone-500">
+                      Icons automatically map to terms like "Tenure", "Secure", "Bonus", "Wedding"
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-[11px] text-stone-600 mb-1">Benefit 1</label>
+                      <input
+                        type="text"
+                        value={form.benefit1}
+                        onChange={(e) => setForm((prev) => ({ ...prev, benefit1: e.target.value }))}
+                        placeholder="e.g. Flexible Tenure"
+                        className="w-full p-2 border border-stone-300 rounded-lg outline-none focus:border-gold-500 bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-stone-600 mb-1">Benefit 2</label>
+                      <input
+                        type="text"
+                        value={form.benefit2}
+                        onChange={(e) => setForm((prev) => ({ ...prev, benefit2: e.target.value }))}
+                        placeholder="e.g. Attractive Benefits"
+                        className="w-full p-2 border border-stone-300 rounded-lg outline-none focus:border-gold-500 bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-stone-600 mb-1">Benefit 3</label>
+                      <input
+                        type="text"
+                        value={form.benefit3}
+                        onChange={(e) => setForm((prev) => ({ ...prev, benefit3: e.target.value }))}
+                        placeholder="e.g. Bonus on Maturity"
+                        className="w-full p-2 border border-stone-300 rounded-lg outline-none focus:border-gold-500 bg-white"
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -538,28 +695,27 @@ export const SchemesManagementPage: React.FC = () => {
                     className="w-4 h-4 rounded text-burgundy-900"
                   />
                   <span className="font-semibold text-stone-700">
-                    Published on Public Schemes Showcase
+                    Published on Public Schemes Showcase (Live Website)
                   </span>
                 </label>
 
-                {/* Live Card Preview & Visual Layout Editor */}
-                <div className="space-y-2 pt-2 border-t border-stone-200">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-                    <span className="block font-bold uppercase tracking-wider text-burgundy-950 text-[11px]">
-                      Live Storefront Banner Card Preview & Drag-and-Drop Layout Editor
-                    </span>
-                    <span className="text-[10px] text-stone-500">
-                      Toggle "Edit Layout" to drag, resize, and position elements directly
-                    </span>
+                {/* Live Scheme Card Preview matching exact public UI */}
+                <div className="space-y-2 pt-3 border-t border-stone-200">
+                  <span className="block font-bold uppercase tracking-wider text-burgundy-950 text-[11px]">
+                    Live Public Scheme Card Preview
+                  </span>
+                  <div className="max-w-md mx-auto">
+                    <SchemeCard
+                      scheme={previewScheme}
+                      isFirst={form.displayOrder === '1'}
+                      previewMode={true}
+                      onRemoveButton={
+                        form.buttonName?.trim()
+                          ? () => setForm((prev) => ({ ...prev, buttonName: '', navigationDestination: '' }))
+                          : undefined
+                      }
+                    />
                   </div>
-                  <SchemeBannerCard
-                    scheme={previewScheme}
-                    previewOnly
-                    editable
-                    onLayoutChange={(newLayout) => {
-                      setForm((prev) => ({ ...prev, layoutConfig: newLayout }));
-                    }}
-                  />
                 </div>
               </div>
 

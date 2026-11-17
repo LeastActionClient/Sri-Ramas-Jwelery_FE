@@ -137,13 +137,13 @@ export const CategoryCard: React.FC<CategoryCardProps> = ({
 
   const itemContent = (
     <div
-      className={`group flex flex-col items-center justify-start text-center cursor-pointer select-none py-1 transition-transform duration-300 ${className}`}
+      className={`group flex flex-col items-center justify-start text-center cursor-pointer select-none py-1 transition-transform duration-300 w-full ${className}`}
     >
       {/* 
-        1. Isolated Jewellery Product Image (Expanded visual presence)
+        1. Isolated Jewellery Product Image (Expanded visual presence, uncropped and proportional)
         Naturally floating on the clean white background with generous breathing space
       */}
-      <div className="relative w-36 h-36 sm:w-44 sm:h-44 md:w-52 md:h-52 lg:w-60 lg:h-60 xl:w-68 xl:h-68 2xl:w-72 2xl:h-72 flex items-center justify-center pointer-events-none p-1 sm:p-2">
+      <div className="relative w-full aspect-square max-w-[210px] sm:max-w-[230px] md:max-w-[250px] lg:max-w-[270px] xl:max-w-[290px] flex items-center justify-center pointer-events-none p-2 sm:p-3">
         <img
           key={primarySrc}
           src={imgFailed ? fallbackSrc : primarySrc}
@@ -158,7 +158,7 @@ export const CategoryCard: React.FC<CategoryCardProps> = ({
       </div>
 
       {/* 2. Category Name Directly Below (Dark Burgundy #380711, hover antique gold #C49A3A) */}
-      <span className="mt-3 sm:mt-4 font-serif text-xs sm:text-sm md:text-base lg:text-[17px] font-bold tracking-wider uppercase text-[#380711] group-hover:text-[#C49A3A] transition-colors duration-200 text-center leading-snug line-clamp-2 max-w-[240px]">
+      <span className="mt-3 sm:mt-4 font-serif text-xs sm:text-sm md:text-base font-bold tracking-wider uppercase text-[#380711] group-hover:text-[#C49A3A] transition-colors duration-200 text-center leading-snug line-clamp-2 max-w-[220px]">
         {category.name}
       </span>
     </div>

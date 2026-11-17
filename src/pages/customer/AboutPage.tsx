@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Award, ShieldCheck, Gem, Users, Sparkles, ArrowRight } from 'lucide-react';
+import { Award, ShieldCheck, Gem, Users, ArrowRight } from 'lucide-react';
 import { useStoreWhatsApp } from '@/hooks/useStoreWhatsApp';
 import {
   ScrollReveal,
@@ -9,13 +9,81 @@ import {
   AnimatedCTA,
 } from '@/components/motion';
 
+interface AnimatedCounterProps {
+  end: number;
+  suffix?: string;
+  prefix?: string;
+  durationMs?: number;
+  formatThousands?: boolean;
+}
+
+const AnimatedCounter: React.FC<AnimatedCounterProps> = ({
+  end,
+  suffix = '',
+  prefix = '',
+  durationMs = 1000,
+  formatThousands = false,
+}) => {
+  const [count, setCount] = React.useState(0);
+  const ref = React.useRef<HTMLSpanElement>(null);
+  const [hasAnimated, setHasAnimated] = React.useState(false);
+
+  React.useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry.isIntersecting && !hasAnimated) {
+          setHasAnimated(true);
+          let startTime: number | null = null;
+
+          const animate = (timestamp: number) => {
+            if (!startTime) startTime = timestamp;
+            const elapsed = timestamp - startTime;
+            const progress = Math.min(elapsed / durationMs, 1);
+            // Fast easeOutCubic curve for punchy running numbers
+            const ease = 1 - Math.pow(1 - progress, 3);
+            const current = Math.floor(ease * end);
+            setCount(current);
+
+            if (progress < 1) {
+              requestAnimationFrame(animate);
+            } else {
+              setCount(end);
+            }
+          };
+
+          requestAnimationFrame(animate);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.15 }
+    );
+
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [end, durationMs, hasAnimated]);
+
+  const formattedValue = formatThousands
+    ? count.toLocaleString('en-IN')
+    : count.toString();
+
+  return (
+    <span ref={ref} className="font-serif font-extrabold text-2xl sm:text-3xl lg:text-4xl text-burgundy-900 block tabular-nums">
+      {prefix}{formattedValue}{suffix}
+    </span>
+  );
+};
+
 export const AboutPage: React.FC = () => {
   const { buildWhatsAppUrl } = useStoreWhatsApp();
 
   return (
     <div className="w-full min-h-screen">
       {/* 1. Full-Viewport Luxury Heritage Hero Section (No Outer Card Container) */}
-      <section className="relative w-full min-h-[85vh] lg:min-h-[88vh] flex items-center justify-center overflow-hidden bg-[#1A0307] text-gold-100 py-16 sm:py-20 lg:py-24 border-b-2 border-gold-500/30">
+      <section className="relative w-full min-h-[calc(100vh-76px)] sm:min-h-[calc(100vh-80px)] flex items-center justify-center overflow-hidden bg-[#1A0307] text-gold-100 py-16 sm:py-20 lg:py-24 border-b-2 border-gold-500/30">
         {/* Full-bleed Background Luxury Temple Jewellery Artwork */}
         <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
           <img
@@ -23,19 +91,19 @@ export const AboutPage: React.FC = () => {
             alt="Sri Ramas Jewellery Royal Heritage & Artistry"
             className="w-full h-full object-cover object-center scale-[1.02]"
           />
-          {/* Deep Burgundy & Royal Wine Contrast Vignette Scrim for 100% Readability */}
+          {/* Deep Burgundy & Royal Wine Contrast Vignette Scrim with softened opacity so background image is clearly visible */}
           <div
             aria-hidden="true"
             className="absolute inset-0 pointer-events-none"
             style={{
               background:
-                'linear-gradient(180deg, rgba(20, 2, 5, 0.88) 0%, rgba(36, 5, 11, 0.80) 50%, rgba(20, 2, 5, 0.94) 100%)',
+                'linear-gradient(180deg, rgba(20, 2, 5, 0.45) 0%, rgba(36, 5, 11, 0.35) 50%, rgba(20, 2, 5, 0.65) 100%)',
             }}
           />
-          {/* Radial Backing Scrim Centered on Hero Content */}
+          {/* Subtle Radial Backing Scrim Centered on Hero Content */}
           <div
             aria-hidden="true"
-            className="absolute inset-0 bg-gradient-to-t from-[#140205] via-[#140205]/60 to-[#140205]/40 pointer-events-none"
+            className="absolute inset-0 bg-gradient-to-t from-[#140205]/75 via-transparent to-[#140205]/40 pointer-events-none"
           />
           {/* Ambient Champagne Gold Glow in Top Center */}
           <div
@@ -46,22 +114,12 @@ export const AboutPage: React.FC = () => {
 
         {/* Hero Content (No Enclosing Card Container) */}
         <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-          {/* Elegant Brand Crest & Eyebrow Badge */}
+          {/* Eyebrow Badge: 3rd Generation Legacy without logo or sparkle */}
           <ScrollReveal variant="fade-up" immediate>
-            <div className="inline-flex items-center gap-3 p-1.5 pr-4 rounded-full bg-burgundy-950/85 border border-gold-400/50 shadow-luxury-gold backdrop-blur-sm">
-              <div className="w-10 h-10 rounded-full border border-gold-400 bg-burgundy-950 p-0.5 shadow-sm overflow-hidden shrink-0">
-                <img
-                  src="/logo.jpg"
-                  alt="Sri Ramas Jewellery Crest"
-                  className="w-full h-full object-cover rounded-full"
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-3.5 h-3.5 text-gold-400" />
-                <span className="text-xs font-bold uppercase tracking-widest text-[#FCE7B2]">
-                  ESTABLISHED IN 1987
-                </span>
-              </div>
+            <div className="inline-flex items-center px-4 sm:px-6 py-1.5 sm:py-2 rounded-full bg-burgundy-950/80 border border-gold-400/50 shadow-luxury-gold backdrop-blur-md">
+              <span className="text-[11px] sm:text-xs font-bold uppercase tracking-[0.2em] text-[#FCE7B2]">
+                NOW LED BY 3RD GENERATION &bull; ESTABLISHED IN 1987
+              </span>
             </div>
           </ScrollReveal>
 
@@ -95,7 +153,7 @@ export const AboutPage: React.FC = () => {
             <div className="pt-2 flex flex-wrap items-center justify-center gap-4">
               <Link
                 to="/products"
-                className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full bg-gold-gradient text-burgundy-950 text-xs sm:text-sm font-bold uppercase tracking-widest shadow-luxury-gold hover:opacity-95 hover:scale-[1.02] transition-all duration-300"
+                className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full bg-brand-gold-gradient text-burgundy-950 text-xs sm:text-sm font-extrabold uppercase tracking-widest shadow-luxury-gold hover:opacity-95 hover:scale-[1.02] transition-all duration-300 border border-gold-300"
               >
                 <span>EXPLORE OUR COLLECTIONS</span>
                 <ArrowRight className="w-4 h-4 text-burgundy-950" />
@@ -146,22 +204,22 @@ export const AboutPage: React.FC = () => {
               />
             </svg>
 
-            {/* Heritage Metric Counters */}
+            {/* Heritage Metric Counters with fast running animation on scroll */}
             <StaggerReveal
               variant="scale"
               staggerMs={80}
               className="pt-4 grid grid-cols-3 gap-4 border-t border-gold-300/60"
             >
               <div>
-                <span className="font-serif font-extrabold text-2xl sm:text-3xl lg:text-4xl text-burgundy-900 block">39+</span>
+                <AnimatedCounter end={39} suffix="+" durationMs={900} />
                 <span className="text-xs text-stone-600 font-medium">Years of Heritage</span>
               </div>
               <div>
-                <span className="font-serif font-extrabold text-2xl sm:text-3xl lg:text-4xl text-burgundy-900 block">100%</span>
+                <AnimatedCounter end={100} suffix="%" durationMs={1000} />
                 <span className="text-xs text-stone-600 font-medium">BIS 916 HUID Hallmarked</span>
               </div>
               <div>
-                <span className="font-serif font-extrabold text-2xl sm:text-3xl lg:text-4xl text-burgundy-900 block">50,000+</span>
+                <AnimatedCounter end={50000} suffix="+" formatThousands durationMs={1100} />
                 <span className="text-xs text-stone-600 font-medium">Happy Families</span>
               </div>
             </StaggerReveal>

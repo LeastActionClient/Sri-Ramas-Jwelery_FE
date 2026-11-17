@@ -136,13 +136,23 @@ function serializeSchemePayload(data: Partial<SchemePlan>) {
 
 export const schemesApi = {
   getSchemes: async (): Promise<SchemePlan[]> => {
-    const res = await apiClient.get<ApiResponse<any[]>>('/public/schemes');
-    return (res.data.data || []).map(adaptScheme);
+    try {
+      const res = await apiClient.get<ApiResponse<any[]>>('/schemes/public');
+      return (res.data.data || []).map(adaptScheme);
+    } catch {
+      const res = await apiClient.get<ApiResponse<any[]>>('/public/schemes');
+      return (res.data.data || []).map(adaptScheme);
+    }
   },
 
   getSchemeBySlug: async (slug: string): Promise<SchemePlan> => {
-    const res = await apiClient.get<ApiResponse<any>>(`/public/schemes/${slug}`);
-    return adaptScheme(res.data.data);
+    try {
+      const res = await apiClient.get<ApiResponse<any>>(`/schemes/${slug}`);
+      return adaptScheme(res.data.data);
+    } catch {
+      const res = await apiClient.get<ApiResponse<any>>(`/public/schemes/${slug}`);
+      return adaptScheme(res.data.data);
+    }
   },
 
   adminGetSchemes: async (): Promise<SchemePlan[]> => {

@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   ShieldCheck,
-  Sparkles,
   Scale,
   Wallet,
   CheckCircle2,
@@ -76,8 +75,9 @@ export const DigiEducationalSection: React.FC<DigiEducationalSectionProps> = ({ 
       ];
 
   return (
-    <ScrollReveal variant="fade-up">
+    <ScrollReveal variant="fade-up" immediate>
       <section
+        id={isGold ? 'what-is-digigold' : 'what-is-digisilver'}
         aria-label={sectionTitle}
         className="relative overflow-hidden rounded-3xl border-2 border-gold-400/50 bg-gradient-to-br from-[#FCFBF7] via-[#FAF6EE] to-[#F1EAD9] p-6 sm:p-10 lg:p-12 shadow-luxury"
       >
@@ -96,11 +96,6 @@ export const DigiEducationalSection: React.FC<DigiEducationalSectionProps> = ({ 
           {/* Side 1: Concise Editorial Content & 3 Highlight Badges (7 cols) */}
           <div className="lg:col-span-7 space-y-6">
             <div className="space-y-3">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-gold-500/15 border border-gold-400/40 text-burgundy-950 text-xs font-bold uppercase tracking-widest">
-                <Sparkles className="w-3.5 h-3.5 text-gold-700" />
-                <span>Transparent &amp; Secure Precious Metal Savings</span>
-              </div>
-
               <h2 className="font-serif text-2xl sm:text-4xl lg:text-5xl font-extrabold text-burgundy-950 tracking-tight leading-tight">
                 {sectionTitle}
               </h2>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
-import { Menu, X, MessageCircle } from 'lucide-react';
+import { Menu, X, MessageCircle, Phone } from 'lucide-react';
 import { useStoreWhatsApp } from '@/hooks/useStoreWhatsApp';
 
 const HERO_NAVBAR_THRESHOLD = 96;
@@ -98,9 +98,9 @@ export const Navbar: React.FC = () => {
                 SRI RAMAS JEWELLERY
               </span>
               <div className="hidden sm:flex items-center gap-1.5 text-[9px] xl:text-[10px] text-gold-300/80 font-medium">
-                <span className="font-serif">ஸ்ரீ ராமாஸ் ஜுவல்லரி</span>
+                <span className="font-serif">ஸ்ரீ ராமாஸ் ஜூவல்லரி</span>
                 <span className="text-gold-600">•</span>
-                <span className="tracking-widest uppercase text-gold-400">Since 1987</span>
+                <span className="tracking-widest uppercase text-gold-400">SINCE 1947</span>
               </div>
             </div>
           </Link>
@@ -108,21 +108,17 @@ export const Navbar: React.FC = () => {
           {/* Center: Desktop Navigation Bar with Smooth Underline Indicator */}
           <nav
             aria-label="Primary navigation"
-            className="hidden lg:flex items-center justify-center flex-1 min-w-0 mx-1 xl:mx-2 gap-0.5 xl:gap-1.5 2xl:gap-2.5"
+            className="hidden lg:flex items-center justify-center flex-1 min-w-0 mx-1 xl:mx-2 gap-1 xl:gap-2.5 2xl:gap-3"
           >
             {navLinks.map((link) => (
               <NavLink
                 key={link.path}
                 to={link.path}
                 className={({ isActive }) =>
-                  `luxury-underline px-2 py-1.5 xl:px-2.5 xl:py-1.5 rounded-lg text-xs xl:text-[13px] font-medium tracking-wide whitespace-nowrap transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 ${
+                  `px-3.5 py-1 rounded-full text-xs xl:text-[13px] font-medium tracking-wide whitespace-nowrap transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 ${
                     isActive
-                      ? isHeroOverlay
-                        ? 'luxury-underline-active bg-gold-500/20 backdrop-blur-sm text-gold-200 font-semibold shadow-inner'
-                        : 'luxury-underline-active bg-gold-500/20 text-gold-300 font-semibold shadow-inner'
-                      : isHeroOverlay
-                        ? 'text-gold-100 hover:text-gold-300 hover:bg-burgundy-950/45 drop-shadow-[0_1px_2px_rgba(0,0,0,0.65)]'
-                        : 'text-gold-100/90 hover:text-gold-300 hover:bg-burgundy-800/60'
+                      ? 'border border-gold-400/90 text-gold-200 font-semibold bg-gold-500/10 shadow-sm'
+                      : 'text-gold-100/90 hover:text-gold-300 hover:bg-burgundy-950/40'
                   }`
                 }
               >
@@ -137,10 +133,10 @@ export const Navbar: React.FC = () => {
               href={generalWhatsAppUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden sm:inline-flex items-center justify-center gap-1.5 px-4 py-2 sm:px-5 sm:py-2.5 rounded-full bg-brand-gold-gradient text-burgundy-950 font-bold text-xs uppercase tracking-wider shadow-luxury-gold hover:brightness-[1.04] hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 active:scale-95 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300"
+              className="hidden sm:inline-flex items-center justify-center gap-1.5 px-4 py-2 sm:px-5 sm:py-2 rounded-full bg-gradient-to-r from-[#F4D98C] via-[#E5BC58] to-[#CAA034] text-burgundy-950 font-bold text-xs uppercase tracking-wider shadow-luxury-gold hover:brightness-[1.05] hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 active:scale-95 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300"
             >
-              <MessageCircle className="w-3.5 h-3.5 shrink-0" />
-              <span>Enquire Now</span>
+              <Phone className="w-3.5 h-3.5 shrink-0 fill-current" />
+              <span>ENQUIRE NOW</span>
             </a>
 
             {/* Mobile Menu Toggle */}
