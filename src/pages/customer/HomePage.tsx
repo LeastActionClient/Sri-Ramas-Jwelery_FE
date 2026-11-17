@@ -12,7 +12,8 @@ import {
   MapPin,
   Phone,
   RefreshCw,
-  ExternalLink
+  ExternalLink,
+  Sparkles
 } from 'lucide-react';
 import heroVideo from '@/assets/gemini_generated_video_069d4352.mp4';
 import { cmsApi } from '@/services/api/cms.api';
@@ -483,25 +484,51 @@ export const HomePage: React.FC = () => {
         />
       </div>
 
-      {/* 4. FEATURED BRIDAL & HEIRLOOM PIECES */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-          <AnimatedHeading
-            kicker="Masterpiece Showcase"
-            title="Curated Featured Pieces"
-            showRule
-            kickerClassName="text-gold-700 tracking-[0.22em]"
-            titleClassName="text-3xl font-bold text-burgundy-950 mt-1"
-          />
-          <AnimatedCTA
-            to="/products"
-            variant="outline"
-            icon={<ArrowRight className="w-4 h-4 text-gold-600" />}
-            className="text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-full border-gold-500/70 shrink-0"
-          >
-            <span>Browse All Pieces</span>
-          </AnimatedCTA>
-        </div>
+      {/* 4. FEATURED BRIDAL & HEIRLOOM PIECES (Product Listing with Dynamic Side Decorations) */}
+      <section className="relative w-full overflow-hidden py-4 sm:py-6">
+        {/* Extreme Left Champagne-Gold Floral Ornamental Strip: Repeats seamlessly down entire section height */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute left-0 top-0 bottom-0 z-0 w-12 sm:w-16 md:w-20 lg:w-[84px] opacity-90 select-none hidden min-[480px]:block"
+          style={{
+            backgroundImage: "url('/images/floral-ornament-left-tile.png')",
+            backgroundRepeat: 'repeat-y',
+            backgroundPosition: 'left top',
+            backgroundSize: '100% auto',
+          }}
+        />
+
+        {/* Extreme Right Champagne-Gold Floral Ornamental Strip: Repeats seamlessly down entire section height */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute right-0 top-0 bottom-0 z-0 w-12 sm:w-16 md:w-20 lg:w-[84px] opacity-90 select-none hidden min-[480px]:block"
+          style={{
+            backgroundImage: "url('/images/floral-ornament-right-tile.png')",
+            backgroundRepeat: 'repeat-y',
+            backgroundPosition: 'right top',
+            backgroundSize: '100% auto',
+          }}
+        />
+
+        {/* Inner Content Container: Centered, maintaining distance from side ornaments */}
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-12 md:px-16 lg:px-20 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+            <AnimatedHeading
+              kicker="Masterpiece Showcase"
+              title="Curated Featured Pieces"
+              showRule
+              kickerClassName="text-gold-700 tracking-[0.22em]"
+              titleClassName="text-3xl font-bold text-burgundy-950 mt-1"
+            />
+            <AnimatedCTA
+              to="/products"
+              variant="outline"
+              icon={<ArrowRight className="w-4 h-4 text-gold-600" />}
+              className="text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-full border-gold-500/70 shrink-0"
+            >
+              <span>Browse All Pieces</span>
+            </AnimatedCTA>
+          </div>
 
         {/* Dynamic Category Filter Tabs */}
         {activeCategories.length > 0 && (
@@ -611,9 +638,135 @@ export const HomePage: React.FC = () => {
             </div>
           </div>
         )}
+        </div>
       </section>
 
-      {/* 5. SAVINGS SCHEME & DIGIGOLD VALUE SECTION */}
+      {/* 5. ROYAL TEMPLE JEWELLERY & BRIDAL HERITAGE EDITORIAL SHOWCASE */}
+      <section className="relative w-full bg-[#FAF5EE] py-14 sm:py-20 border-y border-[#D4AF37]/30 overflow-hidden">
+        {/* Subtle Ambient Decorative Gold Glows */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -top-24 -left-24 w-96 h-96 rounded-full bg-gold-400/15 blur-3xl"
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -bottom-24 -right-24 w-96 h-96 rounded-full bg-burgundy-900/5 blur-3xl"
+        />
+
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
+            {/* Left: High-Resolution Temple Bridal Masterpiece Photograph (5 cols on lg) */}
+            <ScrollReveal variant="slide-left" distance={20} className="lg:col-span-5">
+              <div className="relative group rounded-3xl overflow-hidden border-2 border-[#D4AF37]/60 shadow-[0_16px_40px_rgba(58,6,15,0.22)] bg-[#1A0307]">
+                <img
+                  src="/images/temple-bridal-heritage.jpg"
+                  alt="Sri Ramas Sacred Temple Bridal Gold Jewellery Collection"
+                  className="w-full h-auto max-h-[580px] object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
+                  loading="lazy"
+                />
+                {/* Subtle Luxury Caption Overlay */}
+                <div className="pointer-events-none absolute bottom-0 inset-x-0 bg-gradient-to-t from-[#140205]/95 via-[#140205]/60 to-transparent p-5 sm:p-6 text-white">
+                  <p className="font-serif text-sm sm:text-base font-bold text-[#FCECD7]">
+                    Goddess Lakshmi Kasu Haram &amp; Nakshi Bangles
+                  </p>
+                </div>
+              </div>
+            </ScrollReveal>
+
+            {/* Right: Static Description & Craftsmanship Details (7 cols on lg) */}
+            <ScrollReveal variant="slide-right" distance={20} delay={80} className="lg:col-span-7 space-y-6">
+              <div className="space-y-3">
+                <h2 className="font-serif text-3xl sm:text-4xl lg:text-[44px] font-extrabold text-burgundy-950 tracking-tight leading-tight">
+                  Sacred Temple Jewellery &amp; Bridal Grandeur
+                </h2>
+
+                <div className="space-y-3.5 text-stone-700 text-xs sm:text-sm md:text-base leading-relaxed font-light pt-1">
+                  <p>
+                    Hand-chiseled by generational goldsmiths, Sri Ramas Jewellery's temple bridal collection reinterprets the sacred grandeur of South Indian temple architecture. Every Kasu necklace, divine Lakshmi pendant, and nakshi bangle carries the resonance of timeless tradition and spiritual prosperity.
+                  </p>
+                  <p>
+                    Each piece is meticulously crafted in 100% BIS 916 Hallmarked gold, adorned with hand-selected kemp stones, cabochon rubies, certified natural emeralds, and dangling freshwater pearls—creating a bridal heirloom to be cherished for generations.
+                  </p>
+                </div>
+              </div>
+
+              {/* 3 Luxury Craft Feature Blocks */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-2">
+                <div className="bg-white/90 backdrop-blur-xs rounded-xl border border-gold-300/60 p-4 shadow-2xs hover:border-gold-500 transition-colors">
+                  <div className="w-9 h-9 rounded-lg bg-burgundy-950 text-gold-300 flex items-center justify-center mb-2.5 shadow-xs">
+                    <Award className="w-4 h-4 text-gold-400" />
+                  </div>
+                  <h4 className="font-serif font-bold text-xs sm:text-sm text-burgundy-950">
+                    Hand-Carved Nakshi Work
+                  </h4>
+                  <p className="text-[11px] text-stone-600 mt-1 leading-snug">
+                    Ancient repoussé gold crafting depicting Goddess Lakshmi &amp; peacock motifs.
+                  </p>
+                </div>
+
+                <div className="bg-white/90 backdrop-blur-xs rounded-xl border border-gold-300/60 p-4 shadow-2xs hover:border-gold-500 transition-colors">
+                  <div className="w-9 h-9 rounded-lg bg-burgundy-950 text-gold-300 flex items-center justify-center mb-2.5 shadow-xs">
+                    <Gem className="w-4 h-4 text-gold-400" />
+                  </div>
+                  <h4 className="font-serif font-bold text-xs sm:text-sm text-burgundy-950">
+                    Sacred Kemp &amp; Pearls
+                  </h4>
+                  <p className="text-[11px] text-stone-600 mt-1 leading-snug">
+                    Antique closed-back setting with unheated natural kemp rubies and pearls.
+                  </p>
+                </div>
+
+                <div className="bg-white/90 backdrop-blur-xs rounded-xl border border-gold-300/60 p-4 shadow-2xs hover:border-gold-500 transition-colors">
+                  <div className="w-9 h-9 rounded-lg bg-burgundy-950 text-gold-300 flex items-center justify-center mb-2.5 shadow-xs">
+                    <ShieldCheck className="w-4 h-4 text-gold-400" />
+                  </div>
+                  <h4 className="font-serif font-bold text-xs sm:text-sm text-burgundy-950">
+                    100% BIS 916 Hallmark
+                  </h4>
+                  <p className="text-[11px] text-stone-600 mt-1 leading-snug">
+                    Complete purity certification and lifetime authenticity assurance.
+                  </p>
+                </div>
+              </div>
+
+              {/* Action Links */}
+              <div className="flex flex-wrap items-center gap-3.5 pt-2">
+                <Link
+                  to="/contact?type=PRODUCT&productName=Temple+Bridal+Masterpiece"
+                  state={{
+                    product: {
+                      name: 'Temple Bridal Masterpiece Collection',
+                      sku: 'SRJ-TEMPLE-BRIDAL',
+                      category: 'Bridal & Temple Jewellery',
+                      metalType: 'Gold',
+                      purity: '22K 916 BIS Hallmark',
+                    },
+                  }}
+                  className="inline-flex items-center gap-2 px-7 py-3 rounded-full bg-burgundy-900 hover:bg-burgundy-800 text-gold-100 text-xs sm:text-sm font-semibold shadow-md transition-all group"
+                >
+                  <span>Enquire Now</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </Link>
+
+                <a
+                  href={buildWhatsAppUrl({
+                    type: 'GENERAL',
+                    customMessage: 'Hello Sri Ramas Jewellery, I would like to know more about your Temple Bridal Jewellery Collection.',
+                  })}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-5 py-3 rounded-full border border-gold-600/60 hover:border-gold-600 text-burgundy-950 hover:bg-gold-500/10 text-xs sm:text-sm font-semibold transition-all"
+                >
+                  <Phone className="w-3.5 h-3.5 text-gold-700" />
+                  <span>Enquire on WhatsApp</span>
+                </a>
+              </div>
+            </ScrollReveal>
+          </div>
+        </div>
+      </section>
+
+      {/* 6. SAVINGS SCHEME & DIGIGOLD VALUE SECTION */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Left Card — Savings Scheme (Deep Burgundy & Antique Gold) */}
@@ -649,7 +802,7 @@ export const HomePage: React.FC = () => {
                       {activeSchemes.slice(0, 4).map((scheme) => (
                         <Link
                           key={scheme._id}
-                          to={`/schemes/${scheme.slug}`}
+                          to={`/contact?type=SCHEME&scheme=${encodeURIComponent(scheme.name)}`}
                           className="group/item flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl bg-burgundy-950/60 border border-gold-500/35 hover:border-gold-400 hover:bg-burgundy-950/85 transition-all"
                         >
                           <div className="min-w-0">

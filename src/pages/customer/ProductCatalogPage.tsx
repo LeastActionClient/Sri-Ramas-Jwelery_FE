@@ -437,66 +437,50 @@ export const ProductCatalogPage: React.FC = () => {
   const activeFilterCount = activeFilterChips.length;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-      {/* Top Banner / Heading */}
-      <ScrollReveal variant="fade-up" immediate>
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-stone-200 pb-5">
-          <div>
-            <span className="text-[11px] font-bold uppercase tracking-widest text-gold-700">
-              Sri Ramas Jewellery Catalogue
+    <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-12 space-y-6">
+      {/* Mobile Filter Trigger Button (Visible only on smaller viewports) */}
+      <div className="lg:hidden flex items-center justify-end w-full">
+        <button
+          type="button"
+          onClick={openMobileDrawer}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-gold-600 bg-white text-burgundy-900 text-sm font-semibold transition-all duration-200 hover:bg-gold-50 active:scale-[0.98] shadow-sm"
+        >
+          <Filter className="w-4 h-4 text-gold-600" />
+          <span>Filter Catalogue</span>
+          {activeFilterCount > 0 && (
+            <span className="inline-flex items-center justify-center min-w-[20px] h-[20px] px-1 rounded-full bg-burgundy-900 text-gold-200 text-xs font-bold">
+              {activeFilterCount}
             </span>
-            <h1 className="font-serif text-2xl sm:text-3xl font-bold text-burgundy-950">
-              Jewellery Showcase
-            </h1>
-            <p className="text-xs text-stone-500 mt-0.5">
-              Browse curated heirloom gold, silver, diamond, and platinum creations.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
-            <button
-              type="button"
-              onClick={openMobileDrawer}
-              className="lg:hidden flex items-center gap-2 px-3 py-2 rounded-lg border border-gold-600 bg-white text-burgundy-900 text-xs font-semibold transition-all duration-200 hover:bg-gold-50 active:scale-[0.98]"
-            >
-              <Filter className="w-4 h-4 text-gold-600" />
-              <span>Filter Catalogue</span>
-              {activeFilterCount > 0 && (
-                <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-burgundy-900 text-gold-200 text-[10px] font-bold">
-                  {activeFilterCount}
-                </span>
-              )}
-            </button>
-          </div>
-        </div>
-      </ScrollReveal>
+          )}
+        </button>
+      </div>
 
       {/* Main Layout: Filters Sidebar + Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {/* Desktop Filter Sidebar */}
-        <aside className="hidden lg:block space-y-6 bg-white p-5 rounded-xl border border-stone-200 shadow-sm self-start sticky top-28">
-          <div className="flex items-center justify-between pb-3 border-b border-stone-200">
-            <h2 className="font-serif font-bold text-sm text-burgundy-950 flex items-center gap-2">
-              <Filter className="w-4 h-4 text-gold-600" />
+      <div className="flex flex-col lg:flex-row gap-8 items-start">
+        {/* Desktop Filter Sidebar - Widened with slightly increased typography */}
+        <aside className="hidden lg:block w-full lg:w-[320px] xl:w-[360px] 2xl:w-[380px] shrink-0 space-y-6 bg-white p-6 rounded-2xl border border-stone-200 shadow-sm self-start sticky top-28">
+          <div className="flex items-center justify-between pb-3.5 border-b border-stone-200">
+            <h2 className="font-serif font-bold text-base text-burgundy-950 flex items-center gap-2.5">
+              <Filter className="w-4.5 h-4.5 text-gold-600" />
               <span>Filters</span>
             </h2>
             {activeFilterCount > 0 && (
               <button
                 type="button"
                 onClick={handleClearAllFilters}
-                className="text-[11px] text-burgundy-700 hover:text-burgundy-900 font-semibold flex items-center gap-1"
+                className="text-xs text-burgundy-700 hover:text-burgundy-900 font-semibold flex items-center gap-1.5 transition-colors"
               >
-                <RotateCcw className="w-3 h-3" />
+                <RotateCcw className="w-3.5 h-3.5" />
                 Clear All
               </button>
             )}
           </div>
 
           {/* Keyword Search */}
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             <label
               htmlFor="catalog-keyword-search"
-              className="text-xs font-semibold uppercase tracking-wider text-stone-700"
+              className="text-[13px] font-bold uppercase tracking-wider text-stone-800"
             >
               Keyword Search
             </label>
@@ -513,7 +497,7 @@ export const ProductCatalogPage: React.FC = () => {
                   }
                 }}
                 placeholder="Name, SKU, description..."
-                className="w-full text-xs pl-3 pr-14 py-2 border border-stone-300 rounded-lg outline-none focus:border-gold-500"
+                className="w-full text-sm pl-3.5 pr-14 py-2.5 border border-stone-300 rounded-xl outline-none focus:border-gold-500 text-stone-900 placeholder:text-stone-400"
               />
               {searchInput && (
                 <button
@@ -526,27 +510,27 @@ export const ProductCatalogPage: React.FC = () => {
                     setSearchDraftState({ urlValue: '', text: '' });
                     commitKeywordSearch('');
                   }}
-                  className="absolute right-8 top-2 text-stone-400 hover:text-stone-700"
+                  className="absolute right-9 top-3 text-stone-400 hover:text-stone-700"
                 >
-                  <X className="w-3.5 h-3.5" />
+                  <X className="w-4 h-4" />
                 </button>
               )}
               <button
                 type="button"
                 aria-label="Search products"
                 onClick={handleImmediateSearchSubmit}
-                className="absolute right-2.5 top-2 text-stone-400 hover:text-gold-600"
+                className="absolute right-3 top-3 text-stone-400 hover:text-gold-600"
               >
-                <Search className="w-3.5 h-3.5" />
+                <Search className="w-4 h-4" />
               </button>
             </div>
           </div>
 
           {/* Categories (Dynamic from Admin CMS) */}
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             <label
               htmlFor="catalog-category-select"
-              className="text-xs font-semibold uppercase tracking-wider text-stone-700"
+              className="text-[13px] font-bold uppercase tracking-wider text-stone-800"
             >
               Category
             </label>
@@ -555,7 +539,7 @@ export const ProductCatalogPage: React.FC = () => {
               value={effectiveCategoryId}
               onChange={(e) => handleCategoryChange(e.target.value)}
               aria-label="Filter by category"
-              className="w-full text-xs p-2 border border-stone-300 rounded-lg outline-none focus:border-gold-500 bg-white"
+              className="w-full text-sm p-2.5 border border-stone-300 rounded-xl outline-none focus:border-gold-500 bg-white text-stone-800 font-medium"
             >
               <option value="">All Categories</option>
               {categories.map((c) => (
@@ -565,28 +549,28 @@ export const ProductCatalogPage: React.FC = () => {
               ))}
             </select>
             {!categoriesLoading && categories.length === 0 && (
-              <p className="text-[11px] text-stone-400">
+              <p className="text-xs text-stone-400">
                 No active categories published yet.
               </p>
             )}
           </div>
 
           {/* Precious Metal Type */}
-          <div className="space-y-1.5">
-            <span className="block text-xs font-semibold uppercase tracking-wider text-stone-700">
+          <div className="space-y-2">
+            <span className="block text-[13px] font-bold uppercase tracking-wider text-stone-800">
               Precious Metal
             </span>
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-2">
               <button
                 type="button"
                 onClick={() => {
                   if (metalType) handleToggleMetal(metalType);
                 }}
                 aria-pressed={metalType === ''}
-                className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
+                className={`text-[13px] px-3.5 py-1.5 rounded-lg border transition-all ${
                   metalType === ''
-                    ? 'bg-burgundy-900 text-gold-200 border-burgundy-900 font-semibold'
-                    : 'border-stone-200 text-stone-600 hover:bg-stone-50'
+                    ? 'bg-burgundy-900 text-gold-200 border-burgundy-900 font-semibold shadow-sm'
+                    : 'border-stone-200 text-stone-700 hover:bg-stone-50 font-medium'
                 }`}
               >
                 All Metals
@@ -597,10 +581,10 @@ export const ProductCatalogPage: React.FC = () => {
                   type="button"
                   onClick={() => handleToggleMetal(metal.value)}
                   aria-pressed={metalType === metal.value}
-                  className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
+                  className={`text-[13px] px-3.5 py-1.5 rounded-lg border transition-all ${
                     metalType === metal.value
-                      ? 'bg-burgundy-900 text-gold-200 border-burgundy-900 font-semibold'
-                      : 'border-stone-200 text-stone-600 hover:bg-stone-50'
+                      ? 'bg-burgundy-900 text-gold-200 border-burgundy-900 font-semibold shadow-sm'
+                      : 'border-stone-200 text-stone-700 hover:bg-stone-50 font-medium'
                   }`}
                 >
                   {metal.label}
@@ -611,19 +595,19 @@ export const ProductCatalogPage: React.FC = () => {
 
           {/* Metal-Specific Purity & Grading Filters */}
           {metalType === 'GOLD' && (
-            <div className="space-y-1.5 pt-1 border-t border-stone-100">
-              <span className="block text-xs font-semibold uppercase tracking-wider text-stone-700">
+            <div className="space-y-2 pt-2 border-t border-stone-100">
+              <span className="block text-[13px] font-bold uppercase tracking-wider text-stone-800">
                 Gold Karat &amp; Fineness
               </span>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
                   onClick={() => handleTogglePurity('')}
                   aria-pressed={purity === ''}
-                  className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
+                  className={`text-[13px] px-3.5 py-1.5 rounded-lg border transition-all ${
                     purity === ''
-                      ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold'
-                      : 'border-stone-200 text-stone-600 hover:bg-stone-50'
+                      ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold shadow-sm'
+                      : 'border-stone-200 text-stone-700 hover:bg-stone-50 font-medium'
                   }`}
                 >
                   All Karats
@@ -635,10 +619,10 @@ export const ProductCatalogPage: React.FC = () => {
                     title={opt.description}
                     onClick={() => handleTogglePurity(opt.value)}
                     aria-pressed={purity === opt.value}
-                    className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
+                    className={`text-[13px] px-3.5 py-1.5 rounded-lg border transition-all ${
                       purity === opt.value
-                        ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold'
-                        : 'border-stone-200 text-stone-600 hover:bg-stone-50'
+                        ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold shadow-sm'
+                        : 'border-stone-200 text-stone-700 hover:bg-stone-50 font-medium'
                     }`}
                   >
                     {opt.label}
@@ -649,19 +633,19 @@ export const ProductCatalogPage: React.FC = () => {
           )}
 
           {metalType === 'SILVER' && (
-            <div className="space-y-1.5 pt-1 border-t border-stone-100">
-              <span className="block text-xs font-semibold uppercase tracking-wider text-stone-700">
+            <div className="space-y-2 pt-2 border-t border-stone-100">
+              <span className="block text-[13px] font-bold uppercase tracking-wider text-stone-800">
                 Silver Fineness (Parts / 1000)
               </span>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
                   onClick={() => handleTogglePurity('')}
                   aria-pressed={purity === ''}
-                  className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
+                  className={`text-[13px] px-3.5 py-1.5 rounded-lg border transition-all ${
                     purity === ''
-                      ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold'
-                      : 'border-stone-200 text-stone-600 hover:bg-stone-50'
+                      ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold shadow-sm'
+                      : 'border-stone-200 text-stone-700 hover:bg-stone-50 font-medium'
                   }`}
                 >
                   All Fineness
@@ -673,10 +657,10 @@ export const ProductCatalogPage: React.FC = () => {
                     title={opt.description}
                     onClick={() => handleTogglePurity(opt.value)}
                     aria-pressed={purity === opt.value}
-                    className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
+                    className={`text-[13px] px-3.5 py-1.5 rounded-lg border transition-all ${
                       purity === opt.value
-                        ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold'
-                        : 'border-stone-200 text-stone-600 hover:bg-stone-50'
+                        ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold shadow-sm'
+                        : 'border-stone-200 text-stone-700 hover:bg-stone-50 font-medium'
                     }`}
                   >
                     {opt.label}
@@ -687,19 +671,19 @@ export const ProductCatalogPage: React.FC = () => {
           )}
 
           {metalType === 'PLATINUM' && (
-            <div className="space-y-1.5 pt-1 border-t border-stone-100">
-              <span className="block text-xs font-semibold uppercase tracking-wider text-stone-700">
+            <div className="space-y-2 pt-2 border-t border-stone-100">
+              <span className="block text-[13px] font-bold uppercase tracking-wider text-stone-800">
                 Platinum Hallmark Grade
               </span>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
                   onClick={() => handleTogglePurity('')}
                   aria-pressed={purity === ''}
-                  className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
+                  className={`text-[13px] px-3.5 py-1.5 rounded-lg border transition-all ${
                     purity === ''
-                      ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold'
-                      : 'border-stone-200 text-stone-600 hover:bg-stone-50'
+                      ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold shadow-sm'
+                      : 'border-stone-200 text-stone-700 hover:bg-stone-50 font-medium'
                   }`}
                 >
                   All Pt Grades
@@ -711,10 +695,10 @@ export const ProductCatalogPage: React.FC = () => {
                     title={opt.description}
                     onClick={() => handleTogglePurity(opt.value)}
                     aria-pressed={purity === opt.value}
-                    className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
+                    className={`text-[13px] px-3.5 py-1.5 rounded-lg border transition-all ${
                       purity === opt.value
-                        ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold'
-                        : 'border-stone-200 text-stone-600 hover:bg-stone-50'
+                        ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold shadow-sm'
+                        : 'border-stone-200 text-stone-700 hover:bg-stone-50 font-medium'
                     }`}
                   >
                     {opt.label}
@@ -725,23 +709,23 @@ export const ProductCatalogPage: React.FC = () => {
           )}
 
           {metalType === 'DIAMOND' && (
-            <div className="space-y-4 pt-1 border-t border-stone-100">
+            <div className="space-y-4 pt-2 border-t border-stone-100">
               {/* Diamond Cut */}
-              <div className="space-y-1.5">
-                <span className="block text-xs font-semibold uppercase tracking-wider text-stone-700">
+              <div className="space-y-2">
+                <span className="block text-[13px] font-bold uppercase tracking-wider text-stone-800">
                   Diamond Cut
                 </span>
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex flex-wrap gap-2">
                   {DIAMOND_CUT_OPTIONS.map((opt) => (
                     <button
                       key={opt.value}
                       type="button"
                       onClick={() => handleToggleDiamondParam('diamondCut', opt.value)}
                       aria-pressed={diamondCut === opt.value}
-                      className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
+                      className={`text-[13px] px-3 py-1.5 rounded-lg border transition-all ${
                         diamondCut === opt.value
-                          ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold'
-                          : 'border-stone-200 text-stone-600 hover:bg-stone-50'
+                          ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold shadow-sm'
+                          : 'border-stone-200 text-stone-700 hover:bg-stone-50 font-medium'
                       }`}
                     >
                       {opt.label}
@@ -751,21 +735,21 @@ export const ProductCatalogPage: React.FC = () => {
               </div>
 
               {/* Diamond Clarity */}
-              <div className="space-y-1.5">
-                <span className="block text-xs font-semibold uppercase tracking-wider text-stone-700">
+              <div className="space-y-2">
+                <span className="block text-[13px] font-bold uppercase tracking-wider text-stone-800">
                   Clarity (FL - I3)
                 </span>
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex flex-wrap gap-2">
                   {DIAMOND_CLARITY_OPTIONS.map((opt) => (
                     <button
                       key={opt.value}
                       type="button"
                       onClick={() => handleToggleDiamondParam('diamondClarity', opt.value)}
                       aria-pressed={diamondClarity === opt.value}
-                      className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
+                      className={`text-[13px] px-3 py-1.5 rounded-lg border transition-all ${
                         diamondClarity === opt.value
-                          ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold'
-                          : 'border-stone-200 text-stone-600 hover:bg-stone-50'
+                          ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold shadow-sm'
+                          : 'border-stone-200 text-stone-700 hover:bg-stone-50 font-medium'
                       }`}
                     >
                       {opt.label}
@@ -775,21 +759,21 @@ export const ProductCatalogPage: React.FC = () => {
               </div>
 
               {/* Diamond Colour */}
-              <div className="space-y-1.5">
-                <span className="block text-xs font-semibold uppercase tracking-wider text-stone-700">
+              <div className="space-y-2">
+                <span className="block text-[13px] font-bold uppercase tracking-wider text-stone-800">
                   Colour Scale (D - Z)
                 </span>
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex flex-wrap gap-2">
                   {DIAMOND_COLOR_OPTIONS.map((opt) => (
                     <button
                       key={opt.value}
                       type="button"
                       onClick={() => handleToggleDiamondParam('diamondColor', opt.value)}
                       aria-pressed={diamondColor === opt.value}
-                      className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
+                      className={`text-[13px] px-3 py-1.5 rounded-lg border transition-all ${
                         diamondColor === opt.value
-                          ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold'
-                          : 'border-stone-200 text-stone-600 hover:bg-stone-50'
+                          ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold shadow-sm'
+                          : 'border-stone-200 text-stone-700 hover:bg-stone-50 font-medium'
                       }`}
                     >
                       {opt.label}
@@ -799,21 +783,21 @@ export const ProductCatalogPage: React.FC = () => {
               </div>
 
               {/* Diamond Shape */}
-              <div className="space-y-1.5">
-                <span className="block text-xs font-semibold uppercase tracking-wider text-stone-700">
+              <div className="space-y-2">
+                <span className="block text-[13px] font-bold uppercase tracking-wider text-stone-800">
                   Diamond Shape
                 </span>
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex flex-wrap gap-2">
                   {DIAMOND_SHAPE_OPTIONS.map((opt) => (
                     <button
                       key={opt.value}
                       type="button"
                       onClick={() => handleToggleDiamondParam('diamondShape', opt.value)}
                       aria-pressed={diamondShape === opt.value}
-                      className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
+                      className={`text-[13px] px-3 py-1.5 rounded-lg border transition-all ${
                         diamondShape === opt.value
-                          ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold'
-                          : 'border-stone-200 text-stone-600 hover:bg-stone-50'
+                          ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold shadow-sm'
+                          : 'border-stone-200 text-stone-700 hover:bg-stone-50 font-medium'
                       }`}
                     >
                       {opt.label}
@@ -823,21 +807,21 @@ export const ProductCatalogPage: React.FC = () => {
               </div>
 
               {/* Carat Range */}
-              <div className="space-y-1.5">
-                <span className="block text-xs font-semibold uppercase tracking-wider text-stone-700">
+              <div className="space-y-2">
+                <span className="block text-[13px] font-bold uppercase tracking-wider text-stone-800">
                   Carat Weight (ct)
                 </span>
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex flex-wrap gap-2">
                   {DIAMOND_CARAT_RANGES.map((opt) => (
                     <button
                       key={opt.value}
                       type="button"
                       onClick={() => handleToggleDiamondParam('caratRange', opt.value)}
                       aria-pressed={caratRange === opt.value}
-                      className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
+                      className={`text-[13px] px-3 py-1.5 rounded-lg border transition-all ${
                         caratRange === opt.value
-                          ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold'
-                          : 'border-stone-200 text-stone-600 hover:bg-stone-50'
+                          ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold shadow-sm'
+                          : 'border-stone-200 text-stone-700 hover:bg-stone-50 font-medium'
                       }`}
                     >
                       {opt.label}
@@ -847,21 +831,21 @@ export const ProductCatalogPage: React.FC = () => {
               </div>
 
               {/* Diamond Certification */}
-              <div className="space-y-1.5">
-                <span className="block text-xs font-semibold uppercase tracking-wider text-stone-700">
+              <div className="space-y-2">
+                <span className="block text-[13px] font-bold uppercase tracking-wider text-stone-800">
                   Certification
                 </span>
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex flex-wrap gap-2">
                   {DIAMOND_CERT_OPTIONS.map((opt) => (
                     <button
                       key={opt.value}
                       type="button"
                       onClick={() => handleToggleDiamondParam('diamondCert', opt.value)}
                       aria-pressed={diamondCert === opt.value}
-                      className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
+                      className={`text-[13px] px-3 py-1.5 rounded-lg border transition-all ${
                         diamondCert === opt.value
-                          ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold'
-                          : 'border-stone-200 text-stone-600 hover:bg-stone-50'
+                          ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold shadow-sm'
+                          : 'border-stone-200 text-stone-700 hover:bg-stone-50 font-medium'
                       }`}
                     >
                       {opt.label}
@@ -873,19 +857,19 @@ export const ProductCatalogPage: React.FC = () => {
           )}
 
           {metalType === '' && (
-            <div className="space-y-1.5 pt-1 border-t border-stone-100">
-              <span className="block text-xs font-semibold uppercase tracking-wider text-stone-700">
+            <div className="space-y-2 pt-2 border-t border-stone-100">
+              <span className="block text-[13px] font-bold uppercase tracking-wider text-stone-800">
                 Purity
               </span>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
                   onClick={() => handleTogglePurity('')}
                   aria-pressed={purity === ''}
-                  className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
+                  className={`text-[13px] px-3.5 py-1.5 rounded-lg border transition-all ${
                     purity === ''
-                      ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold'
-                      : 'border-stone-200 text-stone-600 hover:bg-stone-50'
+                      ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold shadow-sm'
+                      : 'border-stone-200 text-stone-700 hover:bg-stone-50 font-medium'
                   }`}
                 >
                   All
@@ -896,10 +880,10 @@ export const ProductCatalogPage: React.FC = () => {
                     type="button"
                     onClick={() => handleTogglePurity(opt.value)}
                     aria-pressed={purity === opt.value}
-                    className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
+                    className={`text-[13px] px-3.5 py-1.5 rounded-lg border transition-all ${
                       purity === opt.value
-                        ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold'
-                        : 'border-stone-200 text-stone-600 hover:bg-stone-50'
+                        ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold shadow-sm'
+                        : 'border-stone-200 text-stone-700 hover:bg-stone-50 font-medium'
                     }`}
                   >
                     {opt.label}
@@ -911,7 +895,7 @@ export const ProductCatalogPage: React.FC = () => {
         </aside>
 
         {/* Products Grid Area */}
-        <div className="lg:col-span-3 space-y-5">
+        <div className="flex-1 min-w-0 space-y-5">
           {/* Active Count & Active Filter Chips Bar */}
           <div className="bg-white rounded-xl border border-stone-200 px-4 py-3 flex flex-col gap-3">
             <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
@@ -1070,9 +1054,9 @@ export const ProductCatalogPage: React.FC = () => {
               </div>
 
               {/* Mobile Inputs */}
-              <div className="space-y-4 text-xs">
+              <div className="space-y-4 text-sm">
                 <div>
-                  <label htmlFor="mobile-filter-search" className="block font-semibold uppercase mb-1">
+                  <label htmlFor="mobile-filter-search" className="block text-xs font-bold uppercase tracking-wider mb-1.5 text-stone-800">
                     Keyword Search
                   </label>
                   <input
@@ -1081,19 +1065,19 @@ export const ProductCatalogPage: React.FC = () => {
                     value={mobileDraftSearch}
                     onChange={(e) => setMobileDraftSearch(e.target.value)}
                     placeholder="Name, SKU, description..."
-                    className="w-full p-2 border border-stone-300 rounded-lg outline-none focus:border-gold-500"
+                    className="w-full p-2.5 text-sm border border-stone-300 rounded-lg outline-none focus:border-gold-500"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="mobile-filter-category" className="block font-semibold uppercase mb-1">
+                  <label htmlFor="mobile-filter-category" className="block text-xs font-bold uppercase tracking-wider mb-1.5 text-stone-800">
                     Category
                   </label>
                   <select
                     id="mobile-filter-category"
                     value={mobileDraftCategoryId}
                     onChange={(e) => setMobileDraftCategoryId(e.target.value)}
-                    className="w-full p-2 border border-stone-300 rounded-lg bg-white outline-none focus:border-gold-500"
+                    className="w-full p-2.5 text-sm border border-stone-300 rounded-lg bg-white outline-none focus:border-gold-500 font-medium"
                   >
                     <option value="">All Categories</option>
                     {categories.map((c) => (
@@ -1105,12 +1089,12 @@ export const ProductCatalogPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <span className="block font-semibold uppercase mb-1.5">Precious Metal</span>
+                  <span className="block text-xs font-bold uppercase tracking-wider mb-1.5 text-stone-800">Precious Metal</span>
                   <div className="flex flex-wrap gap-1.5">
                     <button
                       type="button"
                       onClick={() => setMobileDraftMetal('')}
-                      className={`px-2.5 py-1.5 rounded-md border transition-colors ${
+                      className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
                         mobileDraftMetal === ''
                           ? 'bg-burgundy-900 text-gold-200 border-burgundy-900 font-semibold'
                           : 'border-stone-200 text-stone-700'
@@ -1133,7 +1117,7 @@ export const ProductCatalogPage: React.FC = () => {
                           setMobileDraftCert('');
                           setMobileDraftCarat('');
                         }}
-                        className={`px-2.5 py-1.5 rounded-md border transition-colors ${
+                        className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
                           mobileDraftMetal === metal.value
                             ? 'bg-burgundy-900 text-gold-200 border-burgundy-900 font-semibold'
                             : 'border-stone-200 text-stone-700'
@@ -1243,6 +1227,26 @@ export const ProductCatalogPage: React.FC = () => {
                             onClick={() => setMobileDraftClarity(mobileDraftClarity === opt.value ? '' : opt.value)}
                             className={`px-2 py-1 rounded-md border text-[11px] ${
                               mobileDraftClarity === opt.value
+                                ? 'bg-gold-500 text-burgundy-950 font-bold'
+                                : 'border-stone-200 text-stone-700'
+                            }`}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <span className="block font-semibold uppercase mb-1">Colour Scale (D - Z)</span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {DIAMOND_COLOR_OPTIONS.map((opt) => (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => setMobileDraftColor(mobileDraftColor === opt.value ? '' : opt.value)}
+                            className={`px-2 py-1 rounded-md border text-[11px] ${
+                              mobileDraftColor === opt.value
                                 ? 'bg-gold-500 text-burgundy-950 font-bold'
                                 : 'border-stone-200 text-stone-700'
                             }`}

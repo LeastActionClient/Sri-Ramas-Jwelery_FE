@@ -8,9 +8,14 @@ import {
   Phone,
   Mail,
   Clock,
-  MessageSquare,
+  User,
+  LayoutGrid,
+  Calendar,
+  PenLine,
+  Send,
   CheckCircle2,
   Gem,
+  Sparkles,
   X,
 } from 'lucide-react';
 import { enquiriesApi } from '@/services/api/enquiries.api';
@@ -49,6 +54,7 @@ const contactFormSchema = z.object({
     .or(z.literal('')),
   preferredContactMethod: z.enum(['WHATSAPP', 'CALL', 'EMAIL']),
   preferredContactTime: z.enum(['MORNING', 'AFTERNOON', 'EVENING', 'ANYTIME']),
+  preferredPurchasePeriod: z.string().optional(),
   city: z
     .string()
     .trim()
@@ -77,25 +83,6 @@ interface SelectedProductContext {
   purity?: string;
   url?: string;
 }
-
-const formatEnquiryTypeLabel = (type?: string): string => {
-  switch (type) {
-    case 'PRODUCT':
-      return 'Product Enquiry';
-    case 'SCHEME':
-      return 'Savings Scheme Enquiry';
-    case 'DIGI_GOLD':
-    case 'DIGIGOLD':
-      return 'DigiGold Enquiry';
-    case 'DIGI_SILVER':
-    case 'DIGISILVER':
-      return 'DigiSilver Enquiry';
-    case 'GENERAL':
-      return 'General Enquiry';
-    default:
-      return type ? type.replace(/_/g, ' ') : 'General Enquiry';
-  }
-};
 
 export const ContactPage: React.FC = () => {
   const location = useLocation();
@@ -143,8 +130,42 @@ export const ContactPage: React.FC = () => {
     return null;
   }, [location.state, searchParams]);
 
+  // 1b. Identify incoming savings scheme context from router state or query parameters
+  const incomingScheme = useMemo(() => {
+    const stateScheme = (location.state as any)?.scheme;
+    if (stateScheme?.name) {
+      return {
+        id: stateScheme.id || '',
+        name: stateScheme.name as string,
+        description: stateScheme.description || '',
+      };
+    }
+
+    const paramScheme = searchParams.get('scheme') || searchParams.get('schemeName');
+    const paramType = searchParams.get('type');
+    if (paramScheme) {
+      return {
+        id: searchParams.get('schemeId') || '',
+        name: paramScheme,
+        description: '',
+      };
+    }
+    if (paramType === 'SCHEME') {
+      return {
+        id: searchParams.get('schemeId') || '',
+        name: 'Jewellery Savings Scheme',
+        description: '',
+      };
+    }
+
+    return null;
+  }, [location.state, searchParams]);
+
   const [selectedProduct, setSelectedProduct] = useState<SelectedProductContext | null>(
     incomingProduct
+  );
+  const [selectedScheme, setSelectedScheme] = useState<{ id?: string; name: string; description?: string } | null>(
+    incomingScheme
   );
 
   const storeAddress = primaryStore
@@ -175,11 +196,18 @@ export const ContactPage: React.FC = () => {
     resolver: zodResolver(contactFormSchema),
     mode: 'onBlur',
     defaultValues: {
-      enquiryType: selectedProduct ? 'PRODUCT' : 'GENERAL',
+      enquiryType: selectedProduct ? 'PRODUCT' : incomingScheme ? 'SCHEME' : 'GENERAL',
       preferredContactMethod: 'WHATSAPP',
       preferredContactTime: 'ANYTIME',
+      preferredPurchasePeriod: 'Within One Month',
+      customerName: '',
+      customerMobile: '',
+      customerEmail: '',
+      city: '',
       message: selectedProduct
         ? `I would like to enquire about the following jewellery product:\n\nProduct Name: ${selectedProduct.name}\nProduct SKU: ${selectedProduct.sku}\n\nPlease provide more information about this product.`
+        : incomingScheme
+        ? `I would like to enrol / enquire about the following savings scheme:\n\nScheme Name: ${incomingScheme.name}\n\nPlease share official scheme brochures, monthly installment details, and guidance on showroom enrollment.`
         : '',
     },
   });
@@ -194,6 +222,18 @@ export const ContactPage: React.FC = () => {
       );
     }
   }, [selectedProduct, setValue]);
+
+  // When savings scheme context is detected, prefill the form accordingly
+  useEffect(() => {
+    if (incomingScheme && !selectedProduct) {
+      setSelectedScheme(incomingScheme);
+      setValue('enquiryType', 'SCHEME');
+      setValue(
+        'message',
+        `I would like to enrol / enquire about the following savings scheme:\n\nScheme Name: ${incomingScheme.name}\n\nPlease share official scheme brochures, monthly installment details, and guidance on showroom enrollment.`
+      );
+    }
+  }, [incomingScheme, selectedProduct, setValue]);
 
   // Left card direct company WhatsApp instant chat URL
   const instantChatUrl = useMemo(() => {
@@ -219,74 +259,75 @@ export const ContactPage: React.FC = () => {
     try {
       const cleanName = stripHtmlAndControlChars(data.customerName).trim();
       const cleanCity = data.city ? stripHtmlAndControlChars(data.city).trim() : '';
-      const cleanMessage = sanitizeMultilineText(data.message).trim();
+      let cleanMessage = sanitizeMultilineText(data.message).trim();
+      if (data.preferredPurchasePeriod) {
+        cleanMessage += `\n\nPreferred Purchase Period: ${data.preferredPurchasePeriod}`;
+      }
 
       // Action 1: Save enquiry to backend & MongoDB
+      const isValidObjectId = (id?: string) => !!id && /^[a-f\d]{24}$/i.test(id);
+
       const res = await enquiriesApi.submitPublicEnquiry({
         enquiryType: data.enquiryType as any,
         customerName: cleanName,
         customerMobile: data.customerMobile.trim(),
         customerEmail: data.customerEmail?.trim() || undefined,
-        preferredContactMethod: data.preferredContactMethod,
-        preferredTimeSlot: data.preferredContactTime,
+        preferredContactMethod: 'WHATSAPP',
         preferredContactTime: data.preferredContactTime,
         city: cleanCity || undefined,
-        message: cleanMessage,
-        productId: selectedProduct?.id || undefined,
+        productId: selectedProduct?.id && isValidObjectId(selectedProduct.id) ? selectedProduct.id : undefined,
         productName: selectedProduct?.name || undefined,
         productSku: selectedProduct?.sku || undefined,
         productUrl: selectedProduct?.url || undefined,
+        schemeId: selectedScheme?.id && isValidObjectId(selectedScheme.id) ? selectedScheme.id : undefined,
+        message: cleanMessage,
       });
 
       const refNo = res.enquiryNumber;
 
-      // Action 2: Construct comprehensive company WhatsApp message
-      const enquiryTypeLabel = formatEnquiryTypeLabel(data.enquiryType);
-      const preferredMethodLabel =
-        data.preferredContactMethod === 'WHATSAPP'
-          ? 'WhatsApp Message'
-          : data.preferredContactMethod === 'CALL'
-          ? 'Phone Call'
-          : 'Email';
+      // Action 2: Construct Official Store WhatsApp Dispatch URL
+      let formattedWhatsAppText = `*NEW WEBSITE SHOWCASE ENQUIRY*\n` +
+        `• Ref Number: ${refNo}\n` +
+        `• Customer Name: ${cleanName}\n` +
+        `• Mobile: +91 ${data.customerMobile.trim()}\n`;
 
-      let productDetailsBlock = '';
-      if (selectedProduct?.name || selectedProduct?.sku) {
-        productDetailsBlock = `\nProduct Details:\n\nProduct Name: ${selectedProduct.name}\n\nProduct SKU: ${selectedProduct.sku}`;
-        if (selectedProduct.url) {
-          productDetailsBlock += `\n\nProduct Link: ${selectedProduct.url}`;
-        }
-        productDetailsBlock += '\n';
+      if (data.customerEmail?.trim()) {
+        formattedWhatsAppText += `• Email: ${data.customerEmail.trim()}\n`;
+      }
+      if (cleanCity) {
+        formattedWhatsAppText += `• City: ${cleanCity}\n`;
+      }
+      if (data.preferredPurchasePeriod) {
+        formattedWhatsAppText += `• Purchase Period: ${data.preferredPurchasePeriod}\n`;
       }
 
-      const formattedWhatsAppMsg =
-        `NEW CUSTOMER ENQUIRY — SRI RAMAS JEWELLERY\n\n` +
-        `Enquiry Reference: ${refNo}\n\n` +
-        `Customer Details:\n\n` +
-        `Name: ${cleanName}\n\n` +
-        `Customer WhatsApp Number: +91 ${data.customerMobile.trim()}\n\n` +
-        `Email: ${data.customerEmail?.trim() || 'Not Provided'}\n\n` +
-        `City / Town: ${cleanCity || 'Not Provided'}\n\n` +
-        `Enquiry Type: ${enquiryTypeLabel}\n\n` +
-        `Preferred Response Method: ${preferredMethodLabel}\n\n` +
-        `Enquiry Requirements:\n${cleanMessage}\n` +
-        productDetailsBlock +
-        `\nPlease contact the customer and assist with this enquiry.\n\n` +
-        `Thank you.\nSri Ramas Jewellery Website Enquiry`;
+      formattedWhatsAppText += `• Preferred Time: ${data.preferredContactTime}\n`;
 
-      const targetWhatsAppUrl = buildWhatsAppUrl({
-        customMessage: formattedWhatsAppMsg,
+      if (selectedProduct) {
+        formattedWhatsAppText += `\n*SELECTED JEWELLERY PIECE*\n` +
+          `• Item: ${selectedProduct.name}\n` +
+          `• SKU: ${selectedProduct.sku}\n`;
+      } else if (selectedScheme) {
+        formattedWhatsAppText += `\n*SELECTED SAVINGS SCHEME*\n` +
+          `• Scheme: ${selectedScheme.name}\n`;
+      }
+
+      formattedWhatsAppText += `\n*REQUIREMENTS / MESSAGE*\n${cleanMessage}`;
+
+      const companyWhatsAppUrl = buildWhatsAppUrl({
+        customMessage: formattedWhatsAppText,
       });
 
-      // Safely navigate popup or redirect
+      // Dispatch to WhatsApp popup
       if (popupWindow && !popupWindow.closed) {
-        popupWindow.location.href = targetWhatsAppUrl;
+        popupWindow.location.href = companyWhatsAppUrl;
       } else {
-        window.open(targetWhatsAppUrl, '_blank');
+        window.open(companyWhatsAppUrl, '_blank', 'noopener,noreferrer');
       }
 
       setSubmissionSuccess({
         refNumber: refNo,
-        whatsappUrl: targetWhatsAppUrl,
+        whatsappUrl: companyWhatsAppUrl,
         customerName: cleanName,
       });
 
@@ -307,404 +348,556 @@ export const ContactPage: React.FC = () => {
   const handleResetForm = () => {
     setSubmissionSuccess(null);
     setSelectedProduct(null);
+    setSelectedScheme(null);
     reset({
       enquiryType: 'GENERAL',
       preferredContactMethod: 'WHATSAPP',
       preferredContactTime: 'ANYTIME',
+      preferredPurchasePeriod: 'Within One Month',
+      customerName: '',
+      customerMobile: '',
+      customerEmail: '',
+      city: '',
       message: '',
     });
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
-      {/* Banner */}
-      <ScrollReveal variant="fade-up" immediate>
-        <div className="bg-brand-maroon-gradient text-gold-100 rounded-3xl p-8 sm:p-12 border border-gold-500/40 shadow-luxury text-center space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold-400/20 text-gold-300 text-xs font-semibold uppercase tracking-widest border border-gold-400/30">
-            <MessageSquare className="w-3.5 h-3.5" />
-            <span>Concierge &amp; Enquiries</span>
-          </div>
-          <h1 className="font-serif text-3xl sm:text-5xl font-extrabold text-gold-100">
-            Connect With Sri Ramas Jewellery
-          </h1>
-          <p className="text-xs sm:text-sm text-gold-200/80 max-w-xl mx-auto font-light leading-relaxed">
-            Whether you have questions regarding bespoke bridal customization, savings schemes, or wish to schedule a private viewing, our specialists are at your service.
-          </p>
+    <div className="w-full min-h-screen bg-[#FAF4EC] text-stone-900 selection:bg-gold-200 selection:text-burgundy-950 relative overflow-hidden">
+      {/* 1. Full-Bleed Luxury Hero Section (100% Matching 2nd Image Font, Words & Design) */}
+      <section className="relative w-full bg-[#1A0307] text-gold-100 min-h-[290px] sm:min-h-[330px] md:min-h-[350px] py-12 sm:py-16 md:py-18 flex flex-col justify-center border-b border-[#D4AF37]/35 overflow-hidden">
+        {/* Background Image: Exactly matching the 1st image provided */}
+        <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
+          <img
+            src="/images/contact-hero-bg.jpg"
+            alt="Sri Ramas Jewellery Contact & Enquiry Hero Background"
+            className="w-full h-full object-cover object-center scale-[1.01]"
+          />
+          {/* Subtle center radial vignette to guarantee 100% typography contrast while keeping side jewels luminous */}
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background:
+                'radial-gradient(ellipse 70% 65% at 50% 50%, rgba(20, 2, 5, 0.40) 0%, rgba(20, 2, 5, 0.12) 65%, transparent 100%)',
+            }}
+          />
         </div>
-      </ScrollReveal>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-        {/* Left: Contact Info Cards (5 cols) */}
-        <ScrollReveal variant="slide-left" distance={16} className="lg:col-span-5 space-y-6">
-          <div className="bg-white rounded-2xl border border-gold-400/40 p-6 sm:p-8 space-y-6 shadow-sm transition-shadow duration-300 hover:shadow-luxury">
-            <h2 className="font-serif text-xl font-bold text-burgundy-950 border-b border-stone-200 pb-3">
-              Direct Contact Information
-            </h2>
-
-            <div className="space-y-4 text-xs text-stone-600">
-              <div className="flex items-start gap-3">
-                <MapPin className="w-5 h-5 text-gold-600 shrink-0 mt-0.5" />
-                <div>
-                  <strong className="block text-stone-900 font-semibold mb-0.5">
-                    {primaryStore?.name || 'Showroom Address'}
-                  </strong>
-                  <span>
-                    {storeAddress || 'Showroom advisory and viewing by appointment.'}
-                  </span>
-                </div>
-              </div>
-
-              {primaryPhones.length > 0 && (
-                <div className="flex items-start gap-3">
-                  <Phone className="w-5 h-5 text-gold-600 shrink-0 mt-0.5" />
-                  <div>
-                    <strong className="block text-stone-900 font-semibold mb-0.5">Telephone Lines</strong>
-                    <div className="flex flex-wrap gap-x-3">
-                      {primaryPhones.map((num, idx) => (
-                        <a key={idx} href={`tel:${num.replace(/\s+/g, '')}`} className="hover:text-gold-700 font-medium">
-                          {num}
-                        </a>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {primaryStore?.email && (
-                <div className="flex items-center gap-3">
-                  <Mail className="w-5 h-5 text-gold-600 shrink-0" />
-                  <div>
-                    <strong className="block text-stone-900 font-semibold mb-0.5">Electronic Mail</strong>
-                    <a href={`mailto:${primaryStore.email}`} className="hover:text-gold-700">
-                      {primaryStore.email}
-                    </a>
-                  </div>
-                </div>
-              )}
-
-              {primaryStore?.openingHours &&
-                !primaryStore.openingHours.toLowerCase().includes('confirm') && (
-                  <div className="flex items-start gap-3">
-                    <Clock className="w-5 h-5 text-gold-600 shrink-0 mt-0.5" />
-                    <div>
-                      <strong className="block text-stone-900 font-semibold mb-0.5">Visiting Hours</strong>
-                      <span>{primaryStore.openingHours}</span>
-                    </div>
-                  </div>
-                )}
+        {/* Hero Typography & Eyebrow Badge (100% exact copy of reference 2nd image) */}
+        <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-2.5 sm:space-y-3">
+          <ScrollReveal variant="fade-up" immediate>
+            {/* Pill Badge: CONTACT & ENQUIRY */}
+            <div className="inline-flex items-center px-4 py-1 rounded-full border border-[#D4AF37]/60 bg-[#24040A]/60 backdrop-blur-sm shadow-sm mb-1">
+              <span className="text-[11px] sm:text-xs font-semibold tracking-[0.25em] text-[#F3D58C] uppercase">
+                CONTACT &amp; ENQUIRY
+              </span>
             </div>
 
-            {/* Redesigned High-Contrast WhatsApp Instant Chat Button */}
-            <div className="pt-4 border-t border-stone-200">
-              <a
-                href={instantChatUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Instant Chat on WhatsApp with Sri Ramas Jewellery"
-                className="w-full py-3.5 px-6 rounded-xl font-bold text-xs uppercase tracking-wider bg-[#25D366] hover:bg-[#20BD5A] text-white shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2.5 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#25D366]"
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  className="w-4 h-4 text-white shrink-0"
-                  aria-hidden="true"
-                >
-                  <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2m.01 1.67c2.2 0 4.26.86 5.82 2.42a8.225 8.225 0 0 1 2.41 5.83c0 4.54-3.7 8.24-8.24 8.24-1.48 0-2.93-.39-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.196 8.196 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24m4.52 11.66c-.25-.13-1.47-.72-1.7-.81-.23-.08-.39-.13-.56.13-.17.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.13-1.06-.39-2.03-1.25-.75-.67-1.26-1.5-1.41-1.75-.15-.25-.02-.39.11-.51.11-.11.25-.29.37-.44.13-.15.17-.25.25-.42.08-.17.04-.31-.02-.44-.06-.13-.56-1.34-.76-1.84-.2-.49-.4-.42-.56-.43h-.48c-.17 0-.44.06-.67.31-.23.25-.88.86-.88 2.1 0 1.24.9 2.44 1.03 2.61.13.17 1.78 2.71 4.3 3.8 2.53 1.09 2.53.73 2.98.69.46-.04 1.47-.6 1.68-1.18.21-.58.21-1.08.15-1.18-.06-.1-.23-.17-.48-.29" />
-                </svg>
-                <span>Instant Chat on WhatsApp</span>
-              </a>
-            </div>
-          </div>
-        </ScrollReveal>
+            {/* Main Heading in Luxury Serif */}
+            <h1
+              className="font-serif text-2xl sm:text-4xl md:text-5xl lg:text-[46px] font-bold text-white tracking-wide uppercase leading-tight mt-1"
+              style={{
+                textShadow: '0 3px 18px rgba(0, 0, 0, 0.9), 0 1px 4px rgba(0, 0, 0, 0.85)',
+              }}
+            >
+              CONNECT WITH SRI RAMAS JEWELLERY
+            </h1>
+          </ScrollReveal>
 
-        {/* Right: Universal Enquiry Form (7 cols) */}
-        <ScrollReveal
-          variant="slide-right"
-          distance={16}
-          delay={80}
-          className="lg:col-span-7 bg-white rounded-2xl border border-gold-400/40 p-6 sm:p-10 shadow-luxury"
+          <ScrollReveal variant="fade-up" delay={60}>
+            {/* Subtitle matching exact wording */}
+            <p
+              className="text-xs sm:text-sm md:text-[15px] text-[#F5E6D3] max-w-2xl mx-auto font-light leading-relaxed"
+              style={{
+                textShadow: '0 2px 10px rgba(0, 0, 0, 0.85)',
+              }}
+            >
+              We're here to assist you with jewellery enquiries, customisation, savings schemes,<br className="hidden sm:inline" /> product availability, or any special requirements.
+            </p>
+
+            {/* Small Gold Diamond Accent Divider matching reference */}
+            <div className="flex items-center justify-center gap-2.5 mt-3 select-none">
+              <span className="w-12 sm:w-16 h-[1px] bg-gradient-to-r from-transparent to-[#D4AF37]/70"></span>
+              <span className="text-[#D4AF37] text-[10px]">◆</span>
+              <span className="w-12 sm:w-16 h-[1px] bg-gradient-to-l from-transparent to-[#D4AF37]/70"></span>
+            </div>
+          </ScrollReveal>
+        </div>
+      </section>
+
+      {/* 2. Main Page Content Section with Natural Vector Watermark Mandalas & Enlarged Bottom Ring */}
+      <div className="relative w-full overflow-hidden">
+        {/* Top-Left Side Mandala Watermark: Natural vector lines in radiant gold */}
+        <div
+          aria-hidden="true"
+          className="absolute -top-16 -left-16 sm:-top-20 sm:-left-20 w-72 h-72 sm:w-96 sm:h-96 lg:w-[460px] lg:h-[460px] opacity-45 pointer-events-none select-none z-0"
         >
-          {submissionSuccess ? (
-            <div className="text-center py-10 space-y-5 animate-fade-in">
-              <div className="w-16 h-16 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto shadow-inner">
-                <CheckCircle2 className="w-10 h-10" />
-              </div>
-              <h3 className="font-serif text-2xl font-bold text-burgundy-950">
-                Enquiry Successfully Registered &amp; Saved
-              </h3>
-              <p className="text-sm text-stone-600">
-                Your official enquiry reference number is:
-              </p>
-              <div className="inline-block bg-[#FCF7EC] border border-gold-400 px-6 py-2.5 rounded-xl font-mono font-bold text-burgundy-950 text-2xl tracking-wider shadow-sm">
-                {submissionSuccess.refNumber}
-              </div>
-              <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-900 max-w-md mx-auto space-y-1">
-                <p className="font-bold">✓ Saved in Admin Enquiry CRM</p>
-                <p className="text-[11px] text-emerald-800">
-                  Your enquiry details and product specifications have been registered. The company WhatsApp desk conversation has been opened.
-                </p>
-              </div>
+          <img
+            src="/images/mandala-corner.svg"
+            alt=""
+            className="w-full h-full object-contain filter drop-shadow-[0_0_10px_rgba(197,155,60,0.3)]"
+          />
+        </div>
 
-              {/* Direct Fallback WhatsApp Button in case popup was blocked */}
-              <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
-                <a
-                  href={submissionSuccess.whatsappUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full sm:w-auto px-6 py-3 rounded-xl bg-[#25D366] hover:bg-[#20BD5A] text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md transition-all"
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    className="w-4 h-4 text-white shrink-0"
-                    aria-hidden="true"
-                  >
-                    <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2m.01 1.67c2.2 0 4.26.86 5.82 2.42a8.225 8.225 0 0 1 2.41 5.83c0 4.54-3.7 8.24-8.24 8.24-1.48 0-2.93-.39-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.196 8.196 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24m4.52 11.66c-.25-.13-1.47-.72-1.7-.81-.23-.08-.39-.13-.56.13-.17.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.13-1.06-.39-2.03-1.25-.75-.67-1.26-1.5-1.41-1.75-.15-.25-.02-.39.11-.51.11-.11.25-.29.37-.44.13-.15.17-.25.25-.42.08-.17.04-.31-.02-.44-.06-.13-.56-1.34-.76-1.84-.2-.49-.4-.42-.56-.43h-.48c-.17 0-.44.06-.67.31-.23.25-.88.86-.88 2.1 0 1.24.9 2.44 1.03 2.61.13.17 1.78 2.71 4.3 3.8 2.53 1.09 2.53.73 2.98.69.46-.04 1.47-.6 1.68-1.18.21-.58.21-1.08.15-1.18-.06-.1-.23-.17-.48-.29" />
-                  </svg>
-                  <span>Open WhatsApp Conversation</span>
-                </a>
-                <button
-                  type="button"
-                  onClick={handleResetForm}
-                  className="w-full sm:w-auto px-5 py-3 rounded-xl border border-stone-300 text-stone-700 hover:bg-stone-50 font-semibold text-xs"
-                >
-                  Submit Another Enquiry
-                </button>
-              </div>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div>
-                <h2 className="font-serif text-2xl font-bold text-burgundy-950">
-                  Submit a Showcase Enquiry
+        {/* Top-Right Side Mandala Watermark: Natural vector lines in radiant gold framing the enquiry form card */}
+        <div
+          aria-hidden="true"
+          className="absolute -top-16 -right-16 sm:-top-20 sm:-right-20 w-72 h-72 sm:w-96 sm:h-96 lg:w-[460px] lg:h-[460px] opacity-45 pointer-events-none select-none z-0"
+        >
+          <img
+            src="/images/mandala-corner.svg"
+            alt=""
+            className="w-full h-full object-contain filter drop-shadow-[0_0_10px_rgba(197,155,60,0.3)]"
+          />
+        </div>
+
+        {/* Mid-Right Radiant Gold Mandala Flourish */}
+        <div
+          aria-hidden="true"
+          className="absolute top-[40%] -right-20 w-64 h-64 lg:w-80 lg:h-80 opacity-35 pointer-events-none select-none z-0"
+        >
+          <img
+            src="/images/mandala-corner.svg"
+            alt=""
+            className="w-full h-full object-contain filter drop-shadow-[0_0_10px_rgba(197,155,60,0.3)]"
+          />
+        </div>
+
+        {/* Enlarged Bottom-Left Image: Royal Ruby Ring, Jasmine Flowers on Burgundy Silk Velvet (Prominent & tack-sharp) */}
+        <div
+          aria-hidden="true"
+          className="absolute bottom-0 left-0 w-[420px] sm:w-[560px] md:w-[680px] lg:w-[780px] xl:w-[860px] max-w-[90vw] pointer-events-none select-none z-0"
+        >
+          <img
+            src="/images/contact-bottom-ring.png"
+            alt=""
+            className="w-full h-auto object-contain object-left-bottom"
+          />
+        </div>
+
+        {/* Floating Form & Information Cards Container */}
+        <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 md:py-16">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
+            {/* Left Card: Direct Contact Information (5 columns) */}
+            <ScrollReveal variant="slide-left" distance={16} className="lg:col-span-5 space-y-6">
+              <div className="bg-white rounded-2xl border border-[#E5D2B8] p-6 sm:p-8 space-y-6 shadow-[0_4px_24px_rgba(180,140,80,0.08)]">
+                <h2 className="font-serif text-lg sm:text-xl font-bold text-[#38060F] tracking-wide uppercase border-b border-[#F0E4D3] pb-3">
+                  DIRECT CONTACT INFORMATION
                 </h2>
-                <p className="text-xs text-stone-500 mt-0.5">
-                  Sri Ramas Jewellery is strictly an enquiry and boutique showroom platform.
-                </p>
-              </div>
 
-              {/* Selected Product Context Banner */}
-              {selectedProduct && (
-                <div className="bg-[#FAF4EA] rounded-xl border border-gold-400/60 p-4 flex items-center justify-between gap-3 shadow-xs">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-10 h-10 rounded-lg bg-burgundy-900 text-gold-300 flex items-center justify-center shrink-0">
-                      <Gem className="w-5 h-5" />
-                    </div>
-                    <div className="min-w-0">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-gold-700 block">
-                        Enquiring About Selected Jewellery Piece
+                <div className="space-y-4 text-xs sm:text-[13px] text-stone-600">
+                  <div className="flex items-start gap-3">
+                    <MapPin className="w-5 h-5 text-[#C59B3C] shrink-0 mt-0.5" />
+                    <div>
+                      <strong className="block text-stone-900 font-bold mb-0.5">
+                        Our Showroom
+                      </strong>
+                      <span className="text-stone-700 leading-relaxed">
+                        {storeAddress || '42, Chettiar Street, Gandhi Nagar, Coimbatore, Tamil Nadu - 641002'}
                       </span>
-                      <h4 className="font-serif font-bold text-sm text-burgundy-950 truncate">
-                        {selectedProduct.name}
-                      </h4>
-                      <div className="flex items-center gap-2 text-[11px] text-stone-600 font-mono">
-                        <span>SKU: {selectedProduct.sku}</span>
-                        {selectedProduct.category && <span>• {selectedProduct.category}</span>}
-                        {selectedProduct.metalType && <span>• {selectedProduct.metalType}</span>}
-                      </div>
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedProduct(null);
-                      setValue('enquiryType', 'GENERAL');
-                      setValue('message', '');
-                    }}
-                    className="p-1.5 rounded-lg hover:bg-stone-200/60 text-stone-500 hover:text-stone-800 shrink-0"
-                    title="Clear product selection"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              )}
 
-              {errorMessage && (
-                <div className="p-3 bg-red-50 border border-red-200 text-xs text-red-700 rounded-lg">
-                  {errorMessage}
-                </div>
-              )}
-
-              <div>
-                <label className="block text-xs font-semibold uppercase text-stone-700 mb-1">
-                  Your Full Name <span className="text-burgundy-700">*</span>
-                </label>
-                <input
-                  type="text"
-                  maxLength={80}
-                  {...register('customerName')}
-                  onChange={(e) => {
-                    const filtered = filterAlphabeticNameInput(e.target.value);
-                    setValue('customerName', filtered, { shouldValidate: true, shouldDirty: true });
-                  }}
-                  placeholder="e.g. Meenakshi Ramanathan"
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-stone-300 text-xs focus:border-gold-500 outline-none"
-                />
-                {errors.customerName && (
-                  <p className="text-[11px] text-red-600 mt-1">{errors.customerName.message}</p>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold uppercase text-stone-700 mb-1">
-                    Mobile Number (WhatsApp Number) <span className="text-burgundy-700">*</span>
-                  </label>
-                  <p className="text-[11px] text-stone-500 mb-1">
-                    Please provide your active WhatsApp mobile number. Our advisors will message you directly on this number.
-                  </p>
-                  <div className="relative">
-                    <span className="absolute left-3 top-2.5 text-stone-500 text-xs font-medium">+91</span>
-                    <input
-                      type="tel"
-                      inputMode="numeric"
-                      maxLength={10}
-                      {...register('customerMobile')}
-                      onChange={(e) => {
-                        const cleaned = filterIndianMobileInput(e.target.value);
-                        setValue('customerMobile', cleaned, { shouldValidate: true, shouldDirty: true });
-                      }}
-                      placeholder="9876543210"
-                      className="w-full pl-12 pr-3 py-2.5 rounded-lg border border-stone-300 text-xs focus:border-gold-500 outline-none"
-                    />
+                  <div className="flex items-start gap-3">
+                    <Phone className="w-5 h-5 text-[#C59B3C] shrink-0 mt-0.5" />
+                    <div>
+                      <strong className="block text-stone-900 font-bold mb-0.5">
+                        Enquiry Number
+                      </strong>
+                      <span className="text-stone-700">
+                        {primaryPhones[0] || '+91 98765 43210'}
+                      </span>
+                    </div>
                   </div>
-                  {errors.customerMobile && (
-                    <p className="text-[11px] text-red-600 mt-1">{errors.customerMobile.message}</p>
-                  )}
+
+                  <div className="flex items-start gap-3">
+                    <Mail className="w-5 h-5 text-[#C59B3C] shrink-0 mt-0.5" />
+                    <div>
+                      <strong className="block text-stone-900 font-bold mb-0.5">
+                        Email Us
+                      </strong>
+                      <span className="text-stone-700">
+                        {primaryStore?.email || 'enquiry@sriramasjewellery.com'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <Clock className="w-5 h-5 text-[#C59B3C] shrink-0 mt-0.5" />
+                    <div>
+                      <strong className="block text-stone-900 font-bold mb-0.5">
+                        Showroom Timings
+                      </strong>
+                      <span className="text-stone-700">
+                        {(primaryStore?.openingHours && !primaryStore.openingHours.toLowerCase().includes('confirm')) ? primaryStore.openingHours : 'Mon - Sun : 10:00 AM - 8:00 PM'}
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-semibold uppercase text-stone-700 mb-1">
-                    Enquiry Type <span className="text-burgundy-700">*</span>
-                  </label>
-                  <p className="text-[11px] text-stone-500 mb-1">
-                    Select the service you wish to enquire about.
-                  </p>
-                  <select
-                    {...register('enquiryType')}
-                    className="w-full px-3.5 py-2.5 rounded-lg border border-stone-300 text-xs focus:border-gold-500 outline-none bg-white font-medium text-stone-800"
+                {/* Instant Chat on WhatsApp Button matching reference */}
+                <div className="pt-2">
+                  <a
+                    href={instantChatUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Instant Chat on WhatsApp with Sri Ramas Jewellery"
+                    className="w-full py-3.5 px-6 rounded-xl font-bold text-xs uppercase tracking-wider bg-[#00D757] hover:bg-[#00C24E] text-white shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2.5 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D757]"
                   >
-                    <option value="PRODUCT">Product Enquiry</option>
-                    <option value="SCHEME">Savings Scheme Enquiry</option>
-                    <option value="DIGI_GOLD">DigiGold Enquiry</option>
-                    <option value="DIGI_SILVER">DigiSilver Enquiry</option>
-                    <option value="GENERAL">General Enquiry</option>
-                  </select>
-                  {errors.enquiryType && (
-                    <p className="text-[11px] text-red-600 mt-1">{errors.enquiryType.message}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold uppercase text-stone-700 mb-1">
-                    Email Address (Optional)
-                  </label>
-                  <input
-                    type="email"
-                    {...register('customerEmail')}
-                    placeholder="email@example.com"
-                    className="w-full px-3.5 py-2.5 rounded-lg border border-stone-300 text-xs focus:border-gold-500 outline-none"
-                  />
-                  {errors.customerEmail && (
-                    <p className="text-[11px] text-red-600 mt-1">{errors.customerEmail.message}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold uppercase text-stone-700 mb-1">
-                    City / Town
-                  </label>
-                  <input
-                    type="text"
-                    maxLength={60}
-                    {...register('city')}
-                    onChange={(e) => {
-                      const filtered = filterAlphabeticNameInput(e.target.value).slice(0, 60);
-                      setValue('city', filtered, { shouldValidate: true, shouldDirty: true });
-                    }}
-                    placeholder="e.g. Chennai, Coimbatore"
-                    className="w-full px-3.5 py-2.5 rounded-lg border border-stone-300 text-xs focus:border-gold-500 outline-none"
-                  />
-                  {errors.city && (
-                    <p className="text-[11px] text-red-600 mt-1">{errors.city.message}</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold uppercase text-stone-700 mb-1">
-                    Preferred Response Method
-                  </label>
-                  <select
-                    {...register('preferredContactMethod')}
-                    className="w-full px-3 py-2.5 rounded-lg border border-stone-300 text-xs focus:border-gold-500 outline-none bg-white"
-                  >
-                    <option value="WHATSAPP">WhatsApp Message</option>
-                    <option value="CALL">Phone Call</option>
-                    <option value="EMAIL">Email</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold uppercase text-stone-700 mb-1">
-                    Preferred Contact Time
-                  </label>
-                  <select
-                    {...register('preferredContactTime')}
-                    className="w-full px-3 py-2.5 rounded-lg border border-stone-300 text-xs focus:border-gold-500 outline-none bg-white"
-                  >
-                    <option value="ANYTIME">Anytime (10 AM - 8 PM)</option>
-                    <option value="MORNING">Morning (10 AM - 1 PM)</option>
-                    <option value="AFTERNOON">Afternoon (1 PM - 5 PM)</option>
-                    <option value="EVENING">Evening (5 PM - 8 PM)</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold uppercase text-stone-700 mb-1">
-                  Enquiry Message / Requirements <span className="text-burgundy-700">*</span>
-                </label>
-                <textarea
-                  rows={4}
-                  {...register('message')}
-                  placeholder="Tell us about the jewellery items you are looking for, wedding dates, or showroom visit preferences..."
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-stone-300 text-xs focus:border-gold-500 outline-none resize-none"
-                />
-                {errors.message && (
-                  <p className="text-[11px] text-red-600 mt-1">{errors.message.message}</p>
-                )}
-              </div>
-
-              {/* Single action button: Saves to MongoDB & Dispatches to Company WhatsApp */}
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full py-3.5 px-6 rounded-xl font-bold text-xs uppercase tracking-wider bg-burgundy-900 hover:bg-burgundy-800 text-gold-100 shadow-md hover:shadow-lg disabled:opacity-60 transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
-              >
-                {isSubmitting ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-gold-300 border-t-transparent rounded-full animate-spin" />
-                    <span>Registering &amp; Opening WhatsApp...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Submit Showcase Enquiry</span>
                     <svg
                       viewBox="0 0 24 24"
                       fill="currentColor"
-                      className="w-4 h-4 text-emerald-400 shrink-0"
+                      className="w-4 h-4 text-white shrink-0"
                       aria-hidden="true"
                     >
                       <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2m.01 1.67c2.2 0 4.26.86 5.82 2.42a8.225 8.225 0 0 1 2.41 5.83c0 4.54-3.7 8.24-8.24 8.24-1.48 0-2.93-.39-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.196 8.196 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24m4.52 11.66c-.25-.13-1.47-.72-1.7-.81-.23-.08-.39-.13-.56.13-.17.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.13-1.06-.39-2.03-1.25-.75-.67-1.26-1.5-1.41-1.75-.15-.25-.02-.39.11-.51.11-.11.25-.29.37-.44.13-.15.17-.25.25-.42.08-.17.04-.31-.02-.44-.06-.13-.56-1.34-.76-1.84-.2-.49-.4-.42-.56-.43h-.48c-.17 0-.44.06-.67.31-.23.25-.88.86-.88 2.1 0 1.24.9 2.44 1.03 2.61.13.17 1.78 2.71 4.3 3.8 2.53 1.09 2.53.73 2.98.69.46-.04 1.47-.6 1.68-1.18.21-.58.21-1.08.15-1.18-.06-.1-.23-.17-.48-.29" />
                     </svg>
-                  </>
-                )}
-              </button>
-            </form>
-          )}
-        </ScrollReveal>
+                    <span>INSTANT CHAT ON WHATSAPP</span>
+                  </a>
+                </div>
+              </div>
+            </ScrollReveal>
+
+            {/* Right Card: Submit a Showcase Enquiry (7 columns) */}
+            <ScrollReveal
+              variant="slide-right"
+              distance={16}
+              delay={80}
+              className="lg:col-span-7 bg-white rounded-2xl border border-[#E5D2B8] p-6 sm:p-8 md:p-10 shadow-[0_4px_24px_rgba(180,140,80,0.08)]"
+            >
+              {submissionSuccess ? (
+                <div className="text-center py-10 space-y-5 animate-fade-in">
+                  <div className="w-16 h-16 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto shadow-inner">
+                    <CheckCircle2 className="w-10 h-10" />
+                  </div>
+                  <h3 className="font-serif text-2xl font-bold text-burgundy-950">
+                    Enquiry Successfully Registered &amp; Saved
+                  </h3>
+                  <p className="text-sm text-stone-600">
+                    Your official enquiry reference number is:
+                  </p>
+                  <div className="inline-block bg-[#FCF7EC] border border-gold-400 px-6 py-2.5 rounded-xl font-mono font-bold text-burgundy-950 text-2xl tracking-wider shadow-sm">
+                    {submissionSuccess.refNumber}
+                  </div>
+                  <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-900 max-w-md mx-auto space-y-1">
+                    <p className="font-bold">✓ Saved in Admin Enquiry CRM</p>
+                    <p className="text-[11px] text-emerald-800">
+                      Your enquiry details have been registered and our showroom advisors have opened the conversation on WhatsApp.
+                    </p>
+                  </div>
+
+                  <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
+                    <a
+                      href={submissionSuccess.whatsappUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full sm:w-auto px-6 py-3 rounded-xl bg-[#25D366] hover:bg-[#20BD5A] text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md transition-all"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        className="w-4 h-4 text-white shrink-0"
+                        aria-hidden="true"
+                      >
+                        <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2m.01 1.67c2.2 0 4.26.86 5.82 2.42a8.225 8.225 0 0 1 2.41 5.83c0 4.54-3.7 8.24-8.24 8.24-1.48 0-2.93-.39-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.196 8.196 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24m4.52 11.66c-.25-.13-1.47-.72-1.7-.81-.23-.08-.39-.13-.56.13-.17.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.13-1.06-.39-2.03-1.25-.75-.67-1.26-1.5-1.41-1.75-.15-.25-.02-.39.11-.51.11-.11.25-.29.37-.44.13-.15.17-.25.25-.42.08-.17.04-.31-.02-.44-.06-.13-.56-1.34-.76-1.84-.2-.49-.4-.42-.56-.43h-.48c-.17 0-.44.06-.67.31-.23.25-.88.86-.88 2.1 0 1.24.9 2.44 1.03 2.61.13.17 1.78 2.71 4.3 3.8 2.53 1.09 2.53.73 2.98.69.46-.04 1.47-.6 1.68-1.18.21-.58.21-1.08.15-1.18-.06-.1-.23-.17-.48-.29" />
+                      </svg>
+                      <span>Open WhatsApp Conversation</span>
+                    </a>
+                    <button
+                      type="button"
+                      onClick={handleResetForm}
+                      className="w-full sm:w-auto px-5 py-3 rounded-xl border border-stone-300 text-stone-700 hover:bg-stone-50 font-semibold text-xs"
+                    >
+                      Submit Another Enquiry
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                  <div>
+                    <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#38060F] tracking-wide uppercase">
+                      SUBMIT A SHOWCASE ENQUIRY
+                    </h2>
+                    <p className="text-xs sm:text-[13px] text-stone-600 font-normal mt-1 mb-5">
+                      Share your requirements with us and our team will get in touch shortly.
+                    </p>
+                  </div>
+
+                  {/* Selected Product Context Banner */}
+                  {selectedProduct && (
+                    <div className="bg-[#FAF4EA] rounded-xl border border-gold-400/60 p-3.5 flex items-center justify-between gap-3 shadow-xs">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-9 h-9 rounded-lg bg-burgundy-900 text-gold-300 flex items-center justify-center shrink-0">
+                          <Gem className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-gold-700 block">
+                            Enquiring About Selected Jewellery Piece
+                          </span>
+                          <h4 className="font-serif font-bold text-xs sm:text-sm text-burgundy-950 truncate">
+                            {selectedProduct.name}
+                          </h4>
+                          <div className="flex items-center gap-2 text-[10px] sm:text-[11px] text-stone-600 font-mono">
+                            <span>SKU: {selectedProduct.sku}</span>
+                            {selectedProduct.category && <span>• {selectedProduct.category}</span>}
+                            {selectedProduct.metalType && <span>• {selectedProduct.metalType}</span>}
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedProduct(null);
+                          setValue('enquiryType', 'GENERAL');
+                          setValue('message', '');
+                        }}
+                        className="p-1 rounded-lg hover:bg-stone-200/60 text-stone-500 hover:text-stone-800 shrink-0"
+                        title="Clear product selection"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Selected Savings Scheme Context Banner */}
+                  {selectedScheme && !selectedProduct && (
+                    <div className="bg-[#FAF4EA] rounded-xl border border-gold-400/60 p-3.5 flex items-center justify-between gap-3 shadow-xs">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-9 h-9 rounded-lg bg-burgundy-900 text-gold-300 flex items-center justify-center shrink-0">
+                          <Sparkles className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-gold-700 block">
+                            Savings Scheme Selected
+                          </span>
+                          <h4 className="font-serif font-bold text-xs sm:text-sm text-burgundy-950 truncate">
+                            {selectedScheme.name}
+                          </h4>
+                          <p className="text-[10px] sm:text-[11px] text-stone-600 line-clamp-1">
+                            Submit this form to receive official scheme details, enrollment guidelines, and showroom consultation.
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedScheme(null);
+                          setValue('enquiryType', 'GENERAL');
+                          setValue('message', '');
+                        }}
+                        className="p-1 rounded-lg hover:bg-stone-200/60 text-stone-500 hover:text-stone-800 shrink-0"
+                        title="Clear scheme selection"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+
+                  {errorMessage && (
+                    <div className="p-3 bg-red-50 border border-red-200 text-xs text-red-700 rounded-lg">
+                      {errorMessage}
+                    </div>
+                  )}
+
+                  {/* Field 1: YOUR FULL NAME * */}
+                  <div>
+                    <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-stone-700 mb-1.5">
+                      YOUR FULL NAME *
+                    </label>
+                    <div className="relative flex items-center">
+                      <User className="w-4 h-4 text-stone-400 absolute left-3.5 pointer-events-none" />
+                      <input
+                        type="text"
+                        maxLength={80}
+                        {...register('customerName')}
+                        onChange={(e) => {
+                          const filtered = filterAlphabeticNameInput(e.target.value);
+                          setValue('customerName', filtered, { shouldValidate: true, shouldDirty: true });
+                        }}
+                        placeholder="e.g. Meenakshi Ramakrishnan"
+                        className="w-full pl-10 pr-3.5 py-2.5 rounded-lg border border-stone-300 text-xs sm:text-sm text-stone-800 focus:border-[#C59B3C] focus:outline-none bg-white transition-colors"
+                      />
+                    </div>
+                    {errors.customerName && (
+                      <p className="text-[11px] text-red-600 mt-1">{errors.customerName.message}</p>
+                    )}
+                  </div>
+
+                  {/* Field 2 & 3: Mobile & Enquiry Type */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <div>
+                      <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-stone-700 mb-1.5">
+                        MOBILE NUMBER (WHATSAPP PREFERRED) *
+                      </label>
+                      <div className="relative flex items-center">
+                        <Phone className="w-4 h-4 text-stone-400 absolute left-3.5 pointer-events-none" />
+                        <input
+                          type="tel"
+                          inputMode="numeric"
+                          maxLength={10}
+                          {...register('customerMobile')}
+                          onChange={(e) => {
+                            const cleaned = filterIndianMobileInput(e.target.value);
+                            setValue('customerMobile', cleaned, { shouldValidate: true, shouldDirty: true });
+                          }}
+                          placeholder="+91 98765 43210"
+                          className="w-full pl-10 pr-3.5 py-2.5 rounded-lg border border-stone-300 text-xs sm:text-sm text-stone-800 focus:border-[#C59B3C] focus:outline-none bg-white transition-colors"
+                        />
+                      </div>
+                      {errors.customerMobile && (
+                        <p className="text-[11px] text-red-600 mt-1">{errors.customerMobile.message}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-stone-700 mb-1.5">
+                        ENQUIRY TYPE *
+                      </label>
+                      <div className="relative flex items-center">
+                        <LayoutGrid className="w-4 h-4 text-stone-400 absolute left-3.5 pointer-events-none" />
+                        <select
+                          {...register('enquiryType')}
+                          className="w-full pl-10 pr-3.5 py-2.5 rounded-lg border border-stone-300 text-xs sm:text-sm text-stone-800 focus:border-[#C59B3C] focus:outline-none bg-white transition-colors cursor-pointer"
+                        >
+                          <option value="GENERAL">General Enquiry</option>
+                          <option value="SCHEME">Savings Scheme Enquiry</option>
+                          <option value="PRODUCT">Product Enquiry</option>
+                          <option value="DIGI_GOLD">DigiGold Enquiry</option>
+                          <option value="DIGI_SILVER">DigiSilver Enquiry</option>
+                        </select>
+                      </div>
+                      {errors.enquiryType && (
+                        <p className="text-[11px] text-red-600 mt-1">{errors.enquiryType.message}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Field 4 & 5: Email & City */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <div>
+                      <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-stone-700 mb-1.5">
+                        EMAIL ADDRESS (OPTIONAL)
+                      </label>
+                      <div className="relative flex items-center">
+                        <Mail className="w-4 h-4 text-stone-400 absolute left-3.5 pointer-events-none" />
+                        <input
+                          type="email"
+                          {...register('customerEmail')}
+                          placeholder="e.g. enquiry@gmail.com"
+                          className="w-full pl-10 pr-3.5 py-2.5 rounded-lg border border-stone-300 text-xs sm:text-sm text-stone-800 focus:border-[#C59B3C] focus:outline-none bg-white transition-colors"
+                        />
+                      </div>
+                      {errors.customerEmail && (
+                        <p className="text-[11px] text-red-600 mt-1">{errors.customerEmail.message}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-stone-700 mb-1.5">
+                        CITY / TOWN
+                      </label>
+                      <div className="relative flex items-center">
+                        <MapPin className="w-4 h-4 text-stone-400 absolute left-3.5 pointer-events-none" />
+                        <input
+                          type="text"
+                          maxLength={60}
+                          {...register('city')}
+                          onChange={(e) => {
+                            const filtered = filterAlphabeticNameInput(e.target.value).slice(0, 60);
+                            setValue('city', filtered, { shouldValidate: true, shouldDirty: true });
+                          }}
+                          placeholder="e.g. Coimbatore"
+                          className="w-full pl-10 pr-3.5 py-2.5 rounded-lg border border-stone-300 text-xs sm:text-sm text-stone-800 focus:border-[#C59B3C] focus:outline-none bg-white transition-colors"
+                        />
+                      </div>
+                      {errors.city && (
+                        <p className="text-[11px] text-red-600 mt-1">{errors.city.message}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Field 6 & 7: Preferred Purchase Period & Preferred Contact Time */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <div>
+                      <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-stone-700 mb-1.5">
+                        PREFERRED PURCHASE PERIOD
+                      </label>
+                      <div className="relative flex items-center">
+                        <Calendar className="w-4 h-4 text-stone-400 absolute left-3.5 pointer-events-none" />
+                        <select
+                          {...register('preferredPurchasePeriod')}
+                          className="w-full pl-10 pr-3.5 py-2.5 rounded-lg border border-stone-300 text-xs sm:text-sm text-stone-800 focus:border-[#C59B3C] focus:outline-none bg-white transition-colors cursor-pointer"
+                        >
+                          <option value="Within One Month">Within One Month</option>
+                          <option value="1 - 3 Months">1 - 3 Months</option>
+                          <option value="3 - 6 Months">3 - 6 Months</option>
+                          <option value="Just Exploring">Just Exploring</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-stone-700 mb-1.5">
+                        PREFERRED CONTACT TIME
+                      </label>
+                      <div className="relative flex items-center">
+                        <Clock className="w-4 h-4 text-stone-400 absolute left-3.5 pointer-events-none" />
+                        <select
+                          {...register('preferredContactTime')}
+                          className="w-full pl-10 pr-3.5 py-2.5 rounded-lg border border-stone-300 text-xs sm:text-sm text-stone-800 focus:border-[#C59B3C] focus:outline-none bg-white transition-colors cursor-pointer"
+                        >
+                          <option value="ANYTIME">Anytime (10 AM - 8 PM)</option>
+                          <option value="MORNING">Morning (10 AM - 1 PM)</option>
+                          <option value="AFTERNOON">Afternoon (1 PM - 5 PM)</option>
+                          <option value="EVENING">Evening (5 PM - 8 PM)</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Field 8: Enquiry Message */}
+                  <div>
+                    <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-stone-700 mb-1.5">
+                      ENQUIRY MESSAGE / REQUIREMENTS *
+                    </label>
+                    <div className="relative">
+                      <PenLine className="w-4 h-4 text-stone-400 absolute left-3.5 top-3 pointer-events-none" />
+                      <textarea
+                        rows={3}
+                        {...register('message')}
+                        placeholder="Tell us about the jewellery you're looking for (e.g., wedding collection, custom design, savings scheme, etc.)"
+                        className="w-full pl-10 pr-3.5 py-2.5 rounded-lg border border-stone-300 text-xs sm:text-sm text-stone-800 focus:border-[#C59B3C] focus:outline-none bg-white transition-colors resize-none"
+                      />
+                    </div>
+                    {errors.message && (
+                      <p className="text-[11px] text-red-600 mt-1">{errors.message.message}</p>
+                    )}
+                  </div>
+
+                  {/* Action Button matching reference */}
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full py-3.5 px-6 rounded-xl font-bold text-xs uppercase tracking-wider bg-gradient-to-r from-[#4E0814] via-[#6B0D1D] to-[#4E0814] hover:opacity-95 text-white shadow-md hover:shadow-lg disabled:opacity-60 transition-all flex items-center justify-center gap-2.5 active:scale-[0.98] cursor-pointer"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-gold-300 border-t-transparent rounded-full animate-spin" />
+                        <span>Registering &amp; Opening WhatsApp...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>SUBMIT SHOWCASE ENQUIRY</span>
+                        <Send className="w-4 h-4 text-gold-300 rotate-12" />
+                      </>
+                    )}
+                  </button>
+                </form>
+              )}
+            </ScrollReveal>
+          </div>
+        </div>
       </div>
     </div>
   );

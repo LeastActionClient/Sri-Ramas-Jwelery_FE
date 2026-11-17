@@ -302,7 +302,7 @@ export const DigiMetalShowcase: React.FC<DigiMetalShowcaseProps> = ({ metal }) =
   return (
     <div className="w-full min-h-screen">
       {/* 1. Full-Viewport Luxury Hero Section (No Outer Card Container) */}
-      <section className="relative w-full min-h-[85vh] lg:min-h-[88vh] flex items-center overflow-hidden bg-[#1A0307] text-gold-100 py-16 sm:py-20 lg:py-24 border-b-2 border-gold-500/30">
+      <section className="relative w-full min-h-[calc(100vh-76px)] sm:min-h-[calc(100vh-80px)] flex items-center overflow-hidden bg-[#1A0307] text-gold-100 py-16 sm:py-20 lg:py-24 border-b-2 border-gold-500/30">
         {/* Full-bleed Background Luxury Bullion Imagery */}
         <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
           <img
@@ -310,19 +310,19 @@ export const DigiMetalShowcase: React.FC<DigiMetalShowcaseProps> = ({ metal }) =
             alt={headingText}
             className="w-full h-full object-cover object-center scale-[1.02]"
           />
-          {/* Deep Burgundy Contrast Vignette Scrim for 100% Readability */}
+          {/* Deep Burgundy Contrast Vignette Scrim with softened opacity so the background bullion image is visible */}
           <div
             aria-hidden="true"
             className="absolute inset-0 pointer-events-none"
             style={{
               background:
-                'linear-gradient(180deg, rgba(20, 2, 5, 0.88) 0%, rgba(36, 5, 11, 0.80) 45%, rgba(20, 2, 5, 0.94) 100%)',
+                'linear-gradient(180deg, rgba(20, 2, 5, 0.45) 0%, rgba(36, 5, 11, 0.35) 45%, rgba(20, 2, 5, 0.65) 100%)',
             }}
           />
-          {/* Side Scrim for Left-Aligned Luxury Editorial Legibility */}
+          {/* Gentle Side Scrim for Left-Aligned Text Readability */}
           <div
             aria-hidden="true"
-            className="absolute inset-0 bg-gradient-to-r from-[#140205]/95 via-[#24050B]/85 to-transparent/60 pointer-events-none"
+            className="absolute inset-0 bg-gradient-to-r from-[#140205]/75 via-[#24050B]/45 to-transparent/20 pointer-events-none"
           />
           {/* Ambient Champagne Gold Radiance */}
           <div

@@ -13,7 +13,8 @@ import {
   Palette,
   Layers,
   Smartphone,
-  Monitor
+  Monitor,
+  X
 } from 'lucide-react';
 import { SchemePlan, SchemeLayoutConfig, SchemeLayoutElement } from '@/types';
 import { formatPaiseToInr } from '@/utils/currency';
@@ -149,7 +150,9 @@ export const SchemeBannerCard: React.FC<SchemeBannerCardProps> = ({
   const bannerSrc = scheme.bannerImageUrl || '';
   const logoSrc = scheme.logoImageUrl || '/logo.jpg';
   const ctaLabel = scheme.buttonName?.trim() || scheme.ctaText?.trim() || 'Enquire Now';
-  const destination = scheme.navigationDestination?.trim() || `/schemes/${scheme.slug}`;
+  const destination =
+    scheme.navigationDestination?.trim() ||
+    `/contact?type=SCHEME&scheme=${encodeURIComponent(scheme.name)}`;
   const summaryText = scheme.shortDescription || scheme.tagline || scheme.description;
 
   const minAmount = scheme.minMonthlyAmountPaise ?? scheme.minimumMonthlyAmountPaise;
@@ -447,12 +450,25 @@ export const SchemeBannerCard: React.FC<SchemeBannerCardProps> = ({
           id="scheme-el-primaryBtn"
           onMouseDown={(e) => handleMouseDownOnElement(e, 'primaryBtn')}
           style={btnStyle}
-          className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-full border-2 font-bold uppercase tracking-wider select-none shadow-lg transition-transform ${
+          className={`relative group/btn inline-flex items-center gap-2 px-6 py-2.5 rounded-full border-2 font-bold uppercase tracking-wider select-none shadow-lg transition-transform ${
             isSelected ? 'ring-2 ring-gold-400 ring-offset-2' : ''
           }`}
         >
           <span>{ctaLabel}</span>
           <ArrowRight className="w-3.5 h-3.5" />
+          {editable && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                updateElement('primaryBtn', { visible: false });
+              }}
+              title="Remove / Hide Button"
+              className="absolute -top-2 -right-2 w-5 h-5 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center shadow-md border border-white cursor-pointer transition-transform hover:scale-110 z-20"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          )}
         </div>
       );
     }
@@ -504,12 +520,25 @@ export const SchemeBannerCard: React.FC<SchemeBannerCardProps> = ({
           id="scheme-el-whatsappBtn"
           onMouseDown={(e) => handleMouseDownOnElement(e, 'whatsappBtn')}
           style={btnStyle}
-          className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full border text-xs font-bold uppercase tracking-wider select-none shadow-md transition-transform ${
+          className={`relative group/btn inline-flex items-center gap-2 px-5 py-2.5 rounded-full border text-xs font-bold uppercase tracking-wider select-none shadow-md transition-transform ${
             isSelected ? 'ring-2 ring-gold-400 ring-offset-2' : ''
           }`}
         >
           <MessageCircle className="w-4 h-4 fill-current text-white" />
           <span>Chat with Scheme Advisor</span>
+          {editable && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                updateElement('whatsappBtn', { visible: false });
+              }}
+              title="Remove / Hide Button"
+              className="absolute -top-2 -right-2 w-5 h-5 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center shadow-md border border-white cursor-pointer transition-transform hover:scale-110 z-20"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          )}
         </div>
       );
     }
