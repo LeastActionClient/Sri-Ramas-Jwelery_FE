@@ -39,20 +39,24 @@ export const SchemesPage: React.FC = () => {
     <div className="w-full min-h-screen bg-[#FAF6F0] text-stone-900 selection:bg-gold-200 selection:text-burgundy-950">
       {/* 1. Full-Bleed Hero Section matching reference screenshot with balanced height */}
       <section className="relative w-full bg-[#240308] text-gold-100 min-h-[440px] sm:min-h-[490px] lg:min-h-[530px] pt-14 pb-18 sm:pt-18 sm:pb-24 lg:pt-20 lg:pb-28 flex flex-col justify-center border-b border-gold-500/30">
-        {/* Background South Indian Gold Jewellery Hero Image (2nd Image provided) */}
+        {/* Background South Indian Gold Jewellery Hero Image (2nd Image provided by user) */}
         <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
           <img
             src="/images/schemes-hero-bg.jpg"
             alt="Sri Ramas Jewellery Savings Schemes Hero Background"
             className="w-full h-full object-cover object-center scale-[1.01]"
           />
-          {/* Gentle vignette in the center only to keep text readable while leaving side jewellery & flowers radiant */}
+          {/* Luxury wine vignette and gradient overlay to ensure crystal clear typography while preserving the gorgeous necklace */}
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 pointer-events-none bg-gradient-to-b from-[#1A0307]/80 via-[#1A0307]/50 to-[#1A0307]/85"
+          />
           <div
             aria-hidden="true"
             className="absolute inset-0 pointer-events-none"
             style={{
               background:
-                'radial-gradient(ellipse 70% 60% at 50% 48%, rgba(26, 3, 8, 0.45) 0%, rgba(20, 2, 5, 0.12) 65%, transparent 100%)',
+                'radial-gradient(ellipse 75% 65% at 50% 50%, rgba(26, 3, 8, 0.45) 0%, rgba(20, 2, 5, 0.15) 70%, transparent 100%)',
             }}
           />
         </div>
@@ -60,7 +64,7 @@ export const SchemesPage: React.FC = () => {
         {/* Hero Content matching exact reference typography and alignment */}
         <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-2 sm:space-y-3">
           <ScrollReveal variant="fade-up" immediate>
-            {/* Gold Lotus Emblem with clean vector paths and no background box artifacts */}
+            {/* Gold Lotus Emblem with clean vector paths */}
             <div className="flex justify-center mb-1">
               <svg
                 className="w-11 h-7 text-[#E0B250] drop-shadow-md select-none"
@@ -126,7 +130,7 @@ export const SchemesPage: React.FC = () => {
                 textShadow: '0 4px 20px rgba(0, 0, 0, 0.95), 0 2px 6px rgba(0, 0, 0, 0.85)',
               }}
             >
-              JEWELLERY SAVINGS<br />SCHEMES
+              SRI RAMAS JEWELLERY<br className="hidden sm:inline" /> SAVINGS SCHEMES
             </h1>
           </ScrollReveal>
 
