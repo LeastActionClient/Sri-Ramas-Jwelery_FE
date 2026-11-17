@@ -232,9 +232,9 @@ export const SchemeCard: React.FC<SchemeCardProps> = ({
         )}
 
         {/* 3. Action Section: BOTH Enquire Now and WhatsApp Enquiry buttons */}
-        <div className="mt-4 pt-3 flex flex-wrap items-center gap-3">
+        <div className="mt-4 pt-3 flex flex-col min-[480px]:flex-row items-stretch min-[480px]:items-center gap-3">
           {scheme.buttonName !== '' && (
-            <div className="relative inline-flex items-center">
+            <div className="relative inline-flex items-center w-full min-[480px]:w-auto">
               <Link
                 to={enquireUrl}
                 state={{
@@ -244,7 +244,7 @@ export const SchemeCard: React.FC<SchemeCardProps> = ({
                     description: descriptionText,
                   },
                 }}
-                className="inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-2.5 sm:py-3 rounded-full bg-[#460813] hover:bg-[#600C1B] text-white text-xs sm:text-sm font-semibold shadow-md transition-all duration-200 group active:scale-95 whitespace-nowrap"
+                className="inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-2.5 sm:py-3 rounded-full bg-[#460813] hover:bg-[#600C1B] text-white text-xs sm:text-sm font-semibold shadow-md transition-all duration-200 group active:scale-95 whitespace-nowrap w-full min-[480px]:w-auto text-center"
               >
                 <span>{scheme.buttonName?.trim() || 'Enquire Now'}</span>
                 <span className="text-sm group-hover:translate-x-1 transition-transform">→</span>
@@ -273,7 +273,7 @@ export const SchemeCard: React.FC<SchemeCardProps> = ({
             href={whatsappUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-2 px-5 sm:px-7 py-2.5 sm:py-3 rounded-full bg-[#25D366] hover:bg-[#20bd5a] text-white text-xs sm:text-sm font-semibold shadow-md transition-all duration-200 active:scale-95 whitespace-nowrap"
+            className="inline-flex items-center justify-center gap-2 px-5 sm:px-7 py-2.5 sm:py-3 rounded-full bg-[#25D366] hover:bg-[#20bd5a] text-white text-xs sm:text-sm font-semibold shadow-md transition-all duration-200 active:scale-95 whitespace-nowrap w-full min-[480px]:w-auto text-center"
           >
             <MessageCircle className="w-4 h-4 fill-current" />
             <span>WhatsApp Enquiry</span>

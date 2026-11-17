@@ -2,6 +2,8 @@ import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
 const ADMIN_SESSION_HINT_KEY = 'srj_admin_session_active';
+const ADMIN_ACCESS_TOKEN_KEY = 'srj_admin_access_token';
+const ADMIN_REFRESH_TOKEN_KEY = 'srj_admin_refresh_token';
 
 export const apiClient = axios.create({
   baseURL: BASE_URL,
@@ -22,7 +24,11 @@ let failedQueue: Array<{
 
 export function hasAdminSessionHint(): boolean {
   try {
-    return typeof window !== 'undefined' && window.localStorage.getItem(ADMIN_SESSION_HINT_KEY) === '1';
+    return (
+      typeof window !== 'undefined' &&
+      (window.localStorage.getItem(ADMIN_SESSION_HINT_KEY) === '1' ||
+        Boolean(window.localStorage.getItem(ADMIN_ACCESS_TOKEN_KEY)))
+    );
   } catch {
     return false;
   }
@@ -35,11 +41,38 @@ export function setAdminSessionHint(active: boolean): void {
       window.localStorage.setItem(ADMIN_SESSION_HINT_KEY, '1');
     } else {
       window.localStorage.removeItem(ADMIN_SESSION_HINT_KEY);
+      window.localStorage.removeItem(ADMIN_ACCESS_TOKEN_KEY);
+      window.localStorage.removeItem(ADMIN_REFRESH_TOKEN_KEY);
+      inMemoryToken = null;
       recentRefresh = null;
     }
   } catch {
     // Ignore storage errors in restricted browser contexts
   }
+}
+
+export function setStoredRefreshToken(token: string | null): void {
+  try {
+    if (typeof window === 'undefined') return;
+    if (token) {
+      window.localStorage.setItem(ADMIN_REFRESH_TOKEN_KEY, token);
+    } else {
+      window.localStorage.removeItem(ADMIN_REFRESH_TOKEN_KEY);
+    }
+  } catch {
+    // Ignore storage errors
+  }
+}
+
+export function getStoredRefreshToken(): string | null {
+  try {
+    if (typeof window !== 'undefined') {
+      return window.localStorage.getItem(ADMIN_REFRESH_TOKEN_KEY);
+    }
+  } catch {
+    // Ignore storage errors
+  }
+  return null;
 }
 
 export function clearRefreshCache(): void {
@@ -63,22 +96,29 @@ export async function refreshAccessToken(force = false): Promise<string> {
 
   singleFlightRefreshPromise = (async () => {
     try {
+      const fallbackRefreshToken = getStoredRefreshToken();
+      const refreshPayload = fallbackRefreshToken ? { refreshToken: fallbackRefreshToken } : {};
+
       const refreshResponse = await axios.post(
         `${BASE_URL}/auth/refresh`,
-        {},
+        refreshPayload,
         { withCredentials: true }
       );
       const newAccessToken = refreshResponse.data?.data?.accessToken as string | undefined;
+      const newRefreshToken = refreshResponse.data?.data?.refreshToken as string | undefined;
+
       if (!newAccessToken) {
         throw new Error('Refresh response missing access token.');
       }
       setAccessToken(newAccessToken);
+      if (newRefreshToken) {
+        setStoredRefreshToken(newRefreshToken);
+      }
       setAdminSessionHint(true);
       recentRefresh = { token: newAccessToken, at: Date.now() };
       return newAccessToken;
     } catch (err) {
       recentRefresh = null;
-      setAdminSessionHint(false);
       throw err;
     } finally {
       singleFlightRefreshPromise = null;
@@ -90,10 +130,33 @@ export async function refreshAccessToken(force = false): Promise<string> {
 
 export function setAccessToken(token: string | null) {
   inMemoryToken = token;
+  try {
+    if (typeof window !== 'undefined') {
+      if (token) {
+        window.localStorage.setItem(ADMIN_ACCESS_TOKEN_KEY, token);
+      } else {
+        window.localStorage.removeItem(ADMIN_ACCESS_TOKEN_KEY);
+      }
+    }
+  } catch {
+    // Ignore storage errors
+  }
 }
 
 export function getAccessToken(): string | null {
-  return inMemoryToken;
+  if (inMemoryToken) return inMemoryToken;
+  try {
+    if (typeof window !== 'undefined') {
+      const stored = window.localStorage.getItem(ADMIN_ACCESS_TOKEN_KEY);
+      if (stored) {
+        inMemoryToken = stored;
+        return stored;
+      }
+    }
+  } catch {
+    // Ignore storage errors
+  }
+  return null;
 }
 
 const processQueue = (error: any, token: string | null = null) => {
@@ -110,8 +173,9 @@ const processQueue = (error: any, token: string | null = null) => {
 // Request Interceptor: Attach Access Token
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    if (inMemoryToken && config.headers) {
-      config.headers.Authorization = `Bearer ${inMemoryToken}`;
+    const token = getAccessToken();
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },

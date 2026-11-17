@@ -1,4 +1,10 @@
-import { apiClient, clearRefreshCache, refreshAccessToken, setAdminSessionHint } from './client';
+import {
+  apiClient,
+  clearRefreshCache,
+  refreshAccessToken,
+  setAdminSessionHint,
+  setStoredRefreshToken,
+} from './client';
 import { ApiResponse, User } from '@/types';
 
 export interface LoginPayload {
@@ -28,6 +34,10 @@ export const authApi = {
       createdAt: rawUser.createdAt || new Date().toISOString(),
       updatedAt: rawUser.updatedAt || new Date().toISOString(),
     };
+    const rawRefreshToken = data.refreshToken || data.rawRefreshToken;
+    if (rawRefreshToken) {
+      setStoredRefreshToken(rawRefreshToken);
+    }
     setAdminSessionHint(true);
     return {
       user,
@@ -40,6 +50,7 @@ export const authApi = {
       await apiClient.post('/auth/logout');
     } finally {
       clearRefreshCache();
+      setStoredRefreshToken(null);
       setAdminSessionHint(false);
     }
   },

@@ -18,6 +18,18 @@ export const Navbar: React.FC = () => {
     setMobileMenuPath(open ? location.pathname : null);
   };
 
+  // Lock body scroll when mobile navigation drawer is active
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mobileMenuOpen]);
+
   useEffect(() => {
     if (!isHomePage) return;
 
@@ -75,26 +87,26 @@ export const Navbar: React.FC = () => {
       />
 
       {/* Main Brand Header with Inline Navigation Bar */}
-      <div className="relative z-10 w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="relative z-10 w-full max-w-[1440px] mx-auto px-2.5 min-[360px]:px-4 sm:px-6 lg:px-8">
         <div
-          className={`flex items-center justify-between gap-2 xl:gap-3 transition-all duration-300 ${
+          className={`flex items-center justify-between gap-1.5 sm:gap-2 xl:gap-3 transition-all duration-300 ${
             isHeroOverlay ? 'h-20 sm:h-[88px] pt-2 sm:pt-3' : 'h-16 sm:h-18'
           }`}
         >
           {/* Left: Brand Identity with Official Logo */}
           <Link
             to="/"
-            className="flex items-center gap-2.5 group shrink-0 mr-1 xl:mr-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 rounded-lg"
+            className="flex items-center gap-1.5 min-[380px]:gap-2.5 group shrink min-w-0 mr-1 xl:mr-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 rounded-lg"
           >
-            <div className="relative w-9 h-9 sm:w-11 sm:h-11 rounded-full overflow-hidden border-2 border-gold-400 p-0.5 shadow-luxury-gold group-hover:scale-105 group-hover:border-gold-300 transition-all duration-300 bg-burgundy-950 shrink-0">
+            <div className="relative w-8 h-8 min-[380px]:w-9 min-[380px]:h-9 sm:w-11 sm:h-11 rounded-full overflow-hidden border-2 border-gold-400 p-0.5 shadow-luxury-gold group-hover:scale-105 group-hover:border-gold-300 transition-all duration-300 bg-burgundy-950 shrink-0">
               <img
                 src="/logo.jpg"
                 alt="Sri Ramas Jewellery Official Logo"
                 className="w-full h-full object-cover object-center rounded-full"
               />
             </div>
-            <div className={`flex flex-col ${isHeroOverlay ? 'drop-shadow-[0_1px_2px_rgba(0,0,0,0.65)]' : ''}`}>
-              <span className="font-serif text-sm sm:text-base xl:text-lg font-bold tracking-wider text-gold-100 group-hover:text-gold-300 transition-colors whitespace-nowrap">
+            <div className={`flex flex-col min-w-0 ${isHeroOverlay ? 'drop-shadow-[0_1px_2px_rgba(0,0,0,0.65)]' : ''}`}>
+              <span className="font-serif text-[11px] min-[340px]:text-xs min-[380px]:text-sm sm:text-base xl:text-lg font-bold tracking-tight min-[380px]:tracking-wider text-gold-100 group-hover:text-gold-300 transition-colors whitespace-nowrap truncate">
                 SRI RAMAS JEWELLERY
               </span>
               <div className="hidden sm:flex items-center gap-1.5 text-[9px] xl:text-[10px] text-gold-300/80 font-medium">
@@ -128,15 +140,27 @@ export const Navbar: React.FC = () => {
           </nav>
 
           {/* Right: Actions */}
-          <div className="flex items-center gap-2.5 shrink-0 ml-1">
+          <div className="flex items-center gap-1 min-[360px]:gap-1.5 sm:gap-2.5 shrink-0 ml-auto sm:ml-1">
             <a
               href={generalWhatsAppUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden sm:inline-flex items-center justify-center gap-1.5 px-4 py-2 sm:px-5 sm:py-2 rounded-full bg-gradient-to-r from-[#F4D98C] via-[#E5BC58] to-[#CAA034] text-burgundy-950 font-bold text-xs uppercase tracking-wider shadow-luxury-gold hover:brightness-[1.05] hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 active:scale-95 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300"
+              className="hidden sm:inline-flex items-center justify-center gap-1.5 px-4 py-2 sm:px-5 sm:py-2 rounded-full bg-gradient-to-r from-[#F4D98C] via-[#E5BC58] to-[#CAA034] text-burgundy-950 font-bold text-xs uppercase tracking-wider shadow-luxury-gold hover:brightness-[1.05] hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 active:scale-95 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300 shrink-0"
             >
               <Phone className="w-3.5 h-3.5 shrink-0 fill-current" />
               <span>ENQUIRE NOW</span>
+            </a>
+
+            {/* Mobile Compact Enquire Button */}
+            <a
+              href={generalWhatsAppUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="sm:hidden inline-flex items-center gap-1 px-2 min-[340px]:px-2.5 py-1.5 rounded-full bg-gradient-to-r from-[#F4D98C] to-[#E5BC58] text-burgundy-950 font-bold text-[9px] min-[340px]:text-[10px] uppercase tracking-wider shadow-sm active:scale-95 transition-transform shrink-0 whitespace-nowrap"
+              aria-label="Enquire on WhatsApp"
+            >
+              <Phone className="w-2.5 h-2.5 fill-current shrink-0" />
+              <span>Enquire</span>
             </a>
 
             {/* Mobile Menu Toggle */}
@@ -145,28 +169,36 @@ export const Navbar: React.FC = () => {
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-expanded={mobileMenuOpen}
               aria-controls="mobile-nav-drawer"
-              className={`p-2 rounded-lg text-gold-200 hover:text-gold-100 transition-all duration-200 lg:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 ${
+              className={`p-1.5 min-[340px]:p-2 rounded-lg text-gold-200 hover:text-gold-100 transition-all duration-200 lg:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 shrink-0 ${
                 isHeroOverlay ? 'hover:bg-burgundy-950/50' : 'hover:bg-burgundy-800'
               }`}
               aria-label="Toggle navigation"
             >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {mobileMenuOpen ? <X className="w-5 h-5 shrink-0" /> : <Menu className="w-5 h-5 shrink-0" />}
             </button>
           </div>
         </div>
       </div>
 
       {/* Mobile Menu Drawer with Smooth Enter/Exit Transition */}
+      {mobileMenuOpen && (
+        <div
+          aria-hidden="true"
+          onClick={() => setMobileMenuOpen(false)}
+          className="fixed inset-0 z-0 bg-black/60 backdrop-blur-sm lg:hidden transition-opacity"
+        />
+      )}
+
       <div
         id="mobile-nav-drawer"
         aria-hidden={!mobileMenuOpen}
-        className={`relative z-10 lg:hidden bg-burgundy-950/95 backdrop-blur-md transition-all duration-300 ease-out overflow-hidden ${
+        className={`relative z-10 lg:hidden bg-burgundy-950/98 backdrop-blur-md transition-all duration-300 ease-out overflow-hidden ${
           mobileMenuOpen
-            ? 'max-h-[440px] opacity-100 border-t border-gold-700/40 p-4 space-y-4 shadow-2xl visible'
+            ? 'max-h-[500px] opacity-100 border-t border-gold-700/40 p-4 space-y-4 shadow-2xl visible'
             : 'max-h-0 opacity-0 border-t-0 p-0 pointer-events-none invisible'
         }`}
       >
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 min-[360px]:grid-cols-2 gap-2">
           {navLinks.map((link) => (
             <NavLink
               key={link.path}
@@ -174,10 +206,10 @@ export const Navbar: React.FC = () => {
               tabIndex={mobileMenuOpen ? 0 : -1}
               onClick={() => setMobileMenuOpen(false)}
               className={({ isActive }) =>
-                `px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                `px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all flex items-center min-h-[44px] ${
                   isActive
-                    ? 'bg-gold-500/20 text-gold-300 font-semibold border-l-2 border-gold-400'
-                    : 'text-gold-100/80 hover:text-gold-200 hover:bg-burgundy-900'
+                    ? 'bg-gold-500/20 text-gold-300 font-bold border-l-2 border-gold-400'
+                    : 'text-gold-100/90 hover:text-gold-200 hover:bg-burgundy-900'
                 }`
               }
             >

@@ -32,9 +32,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const isProtectedAdminPath =
       pathname.startsWith('/admin') && !pathname.startsWith('/admin/login');
 
-    // Avoid firing noisy unauthenticated /auth/refresh 401 calls on public or login routes
-    // unless a prior admin session hint exists.
-    if (!hasAdminSessionHint() && !isProtectedAdminPath) {
+    const existingToken = getAccessToken();
+    const hasHint = hasAdminSessionHint();
+
+    // Avoid firing noisy unauthenticated calls on public or login routes
+    // unless a prior admin session hint or token exists.
+    if (!existingToken && !hasHint && !isProtectedAdminPath) {
       setAccessToken(null);
       setTokenState(null);
       setUser(null);
@@ -43,7 +46,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     try {
-      // Silently restore session via single-flight HTTP-only refresh cookie
+      // 1. If an existing token is found, validate it directly with /auth/me
+      if (existingToken) {
+        setAccessToken(existingToken);
+        setTokenState(existingToken);
+        try {
+          const currentUser = await authApi.getMe();
+          setUser(currentUser);
+          setAdminSessionHint(true);
+          setIsLoading(false);
+          return;
+        } catch (meErr: any) {
+          // If 401 Unauthorized, token has expired -> proceed to refresh below
+          if (meErr?.response?.status && meErr.response.status !== 401) {
+            throw meErr;
+          }
+        }
+      }
+
+      // 2. Access token is missing or expired: attempt refresh
       const { accessToken } = await authApi.refresh();
       setAccessToken(accessToken);
       setTokenState(accessToken);

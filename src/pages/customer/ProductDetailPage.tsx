@@ -359,7 +359,7 @@ export const ProductDetailPage: React.FC = () => {
           <div className="lg:col-span-5 space-y-4">
             <div
               onClick={() => hasValidImage && !isCurrentVideo && setIsZoomOpen(true)}
-              className={`relative aspect-square w-full rounded-2xl overflow-hidden border border-stone-200 shadow-sm bg-stone-100 group ${
+              className={`relative aspect-square w-full rounded-2xl overflow-hidden border border-gold-300/60 shadow-md bg-[#FAF6F0] group flex items-center justify-center ${
                 hasValidImage && !isCurrentVideo ? 'cursor-zoom-in' : ''
               }`}
             >
@@ -369,7 +369,7 @@ export const ProductDetailPage: React.FC = () => {
                     src={currentImage}
                     controls
                     playsInline
-                    className="w-full h-full object-cover object-center bg-black"
+                    className="w-full h-full object-contain object-center bg-black"
                   />
                 ) : (
                   <>
@@ -377,7 +377,7 @@ export const ProductDetailPage: React.FC = () => {
                       src={currentImage}
                       alt={product.title || product.name}
                       onError={() => setImgFailed(true)}
-                      className="w-full h-full object-cover object-center transition-transform duration-500 ease-out group-hover:scale-105"
+                      className="w-full h-full block object-cover object-center transition-transform duration-500 ease-out group-hover:scale-105 select-none"
                     />
                     <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-xs text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                       <ZoomIn className="w-4 h-4" />
@@ -385,14 +385,14 @@ export const ProductDetailPage: React.FC = () => {
                   </>
                 )
               ) : (
-                <div className="w-full h-full bg-gradient-to-br from-[#380711] via-[#24050B] to-[#120205] flex flex-col items-center justify-center p-8 text-center">
+                <div className="w-full h-full bg-[#FAF5EC] flex flex-col items-center justify-center p-8 text-center">
                   <div className="w-16 h-16 rounded-full bg-[#C49A3A]/20 border border-[#C49A3A]/50 flex items-center justify-center mb-4">
-                    <Gem className="w-8 h-8 text-[#F5DE9C]" />
+                    <Gem className="w-8 h-8 text-[#9A7B38]" />
                   </div>
-                  <p className="font-serif text-sm uppercase tracking-[0.2em] text-[#F5DE9C] font-semibold">
+                  <p className="font-serif text-sm uppercase tracking-[0.2em] text-[#8C6D2D] font-semibold">
                     {product.category?.name || 'Sri Ramas Heritage'}
                   </p>
-                  <p className="text-xs text-stone-300 mt-2 max-w-xs">
+                  <p className="text-xs text-stone-500 mt-2 max-w-xs">
                     Studio photograph awaits admin upload for this catalogue piece.
                   </p>
                 </div>
@@ -437,7 +437,7 @@ export const ProductDetailPage: React.FC = () => {
                         <img
                           src={med.url}
                           alt={`Thumbnail ${idx + 1}`}
-                          className="w-full h-full object-cover object-center"
+                          className="w-full h-full object-cover object-center bg-stone-100"
                         />
                       )}
                     </button>

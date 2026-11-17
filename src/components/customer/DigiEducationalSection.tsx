@@ -79,7 +79,7 @@ export const DigiEducationalSection: React.FC<DigiEducationalSectionProps> = ({ 
       <section
         id={isGold ? 'what-is-digigold' : 'what-is-digisilver'}
         aria-label={sectionTitle}
-        className="relative overflow-hidden rounded-3xl border-2 border-gold-400/50 bg-gradient-to-br from-[#FCFBF7] via-[#FAF6EE] to-[#F1EAD9] p-6 sm:p-10 lg:p-12 shadow-luxury"
+        className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-gold-400/50 sm:border-2 bg-gradient-to-br from-[#FCFBF7] via-[#FAF6EE] to-[#F1EAD9] p-4 sm:p-8 lg:p-10 shadow-luxury"
       >
         {/* Subtle Ambient Decorative Gold Glow */}
         <div
@@ -92,11 +92,11 @@ export const DigiEducationalSection: React.FC<DigiEducationalSectionProps> = ({ 
         />
 
         {/* Premium Split Layout */}
-        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-10 items-center">
           {/* Side 1: Concise Editorial Content & 3 Highlight Badges (7 cols) */}
-          <div className="lg:col-span-7 space-y-6">
-            <div className="space-y-3">
-              <h2 className="font-serif text-2xl sm:text-4xl lg:text-5xl font-extrabold text-burgundy-950 tracking-tight leading-tight">
+          <div className="lg:col-span-7 space-y-5">
+            <div className="space-y-2.5">
+              <h2 className="font-serif text-xl min-[400px]:text-2xl sm:text-4xl lg:text-5xl font-extrabold text-burgundy-950 tracking-tight leading-tight">
                 {sectionTitle}
               </h2>
 
@@ -106,28 +106,28 @@ export const DigiEducationalSection: React.FC<DigiEducationalSectionProps> = ({ 
             </div>
 
             {/* 3 Luxury Feature Blocks */}
-            <div className="space-y-3.5 pt-1">
+            <div className="space-y-3 pt-1">
               {featurePoints.map((pt, idx) => {
                 const IconComponent = pt.icon;
                 return (
                   <div
                     key={idx}
-                    className="group bg-white/90 backdrop-blur-xs rounded-2xl border border-gold-300/60 p-4 sm:p-5 shadow-xs transition-all duration-300 hover:shadow-md hover:border-gold-500 hover:-translate-y-0.5 flex items-start gap-4"
+                    className="group bg-white/95 backdrop-blur-xs rounded-xl sm:rounded-2xl border border-gold-300/60 p-3.5 sm:p-5 shadow-xs transition-all duration-300 hover:shadow-md hover:border-gold-500 hover:-translate-y-0.5 flex items-start gap-3 sm:gap-4"
                   >
-                    <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-burgundy-900 to-burgundy-950 text-gold-300 flex items-center justify-center shrink-0 shadow-sm border border-gold-500/30">
-                      <IconComponent className="w-5 h-5" />
+                    <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-burgundy-900 to-burgundy-950 text-gold-300 flex items-center justify-center shrink-0 shadow-sm border border-gold-500/30 mt-0.5">
+                      <IconComponent className="w-4 h-4 sm:w-5 sm:h-5" />
                     </div>
 
                     <div className="space-y-1 min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-serif text-sm sm:text-base font-bold text-burgundy-950">
+                        <span className="font-serif text-xs sm:text-base font-bold text-burgundy-950 leading-snug">
                           {pt.title}
                         </span>
-                        <span className="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-gold-400/15 text-burgundy-900 border border-gold-400/30">
+                        <span className="px-2 py-0.5 rounded-md text-[9.5px] sm:text-[10px] font-bold uppercase tracking-wider bg-gold-400/15 text-burgundy-900 border border-gold-400/30 shrink-0">
                           {pt.badge}
                         </span>
                       </div>
-                      <p className="text-xs text-stone-600 leading-relaxed font-light">
+                      <p className="text-[11px] sm:text-xs text-stone-600 leading-relaxed font-light">
                         {pt.description}
                       </p>
                     </div>
@@ -153,32 +153,32 @@ export const DigiEducationalSection: React.FC<DigiEducationalSectionProps> = ({ 
               />
 
               {/* Floating Top Badge */}
-              <div className="absolute top-3.5 left-3.5 z-10">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-burgundy-950/90 text-gold-200 text-[11px] font-bold uppercase tracking-wider border border-gold-400/40 shadow-md backdrop-blur-sm">
-                  <Award className="w-3.5 h-3.5 text-gold-400" />
+              <div className="absolute top-3 left-3 sm:top-3.5 sm:left-3.5 z-10">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 sm:px-3 rounded-full bg-burgundy-950/90 text-gold-200 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider border border-gold-400/40 shadow-md backdrop-blur-sm">
+                  <Award className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gold-400" />
                   <span>{purityLabel}</span>
                 </span>
               </div>
 
               {/* Floating Bottom Card */}
-              <div className="absolute bottom-3.5 inset-x-3.5 z-10 bg-burgundy-950/90 backdrop-blur-md rounded-xl p-3 border border-gold-400/40 shadow-lg text-gold-100 flex items-center justify-between gap-3">
+              <div className="absolute bottom-2.5 inset-x-2.5 sm:bottom-3.5 sm:inset-x-3.5 z-10 bg-burgundy-950/90 backdrop-blur-md rounded-xl p-2.5 sm:p-3 border border-gold-400/40 shadow-lg text-gold-100 flex items-center justify-between gap-2.5">
                 <div className="min-w-0">
-                  <span className="text-[10px] uppercase font-bold tracking-wider text-gold-300 block">
+                  <span className="text-[9px] sm:text-[10px] uppercase font-bold tracking-wider text-gold-300 block">
                     Showroom Counter Handover
                   </span>
-                  <span className="text-xs font-serif font-bold text-white truncate block">
+                  <span className="text-[11px] sm:text-xs font-serif font-bold text-white block leading-snug">
                     Convert anytime to certified ornaments &amp; bullion
                   </span>
                 </div>
-                <div className="w-8 h-8 rounded-full bg-gold-400/20 border border-gold-400/50 flex items-center justify-center shrink-0 text-gold-300">
-                  <CheckCircle2 className="w-4 h-4" />
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gold-400/20 border border-gold-400/50 flex items-center justify-center shrink-0 text-gold-300">
+                  <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </div>
               </div>
             </div>
 
             {/* Heritage Trust Assurance Banner */}
-            <div className="p-3.5 rounded-xl bg-white/80 border border-gold-300/60 text-center flex items-center justify-center gap-2 text-xs text-burgundy-950 font-medium">
-              <Gem className="w-4 h-4 text-gold-600 shrink-0" />
+            <div className="p-3 sm:p-3.5 rounded-xl bg-white/80 border border-gold-300/60 text-center flex items-center justify-center gap-2 text-[11px] sm:text-xs text-burgundy-950 font-medium">
+              <Gem className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gold-600 shrink-0" />
               <span>
                 Backed by 39+ Years of Trusted Sri Ramas Jewellery Heritage (Estd. 1987)
               </span>

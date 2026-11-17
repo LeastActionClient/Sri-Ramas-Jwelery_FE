@@ -42,26 +42,26 @@ export const DashboardOverviewPage: React.FC = () => {
   return (
     <div className="space-y-8">
       {/* Page Title */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-burgundy-950">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="min-w-0">
+          <h1 className="font-serif text-xl sm:text-2xl md:text-3xl font-bold text-burgundy-950 leading-tight">
             Executive Operations Dashboard
           </h1>
-          <p className="text-xs text-stone-500 mt-0.5">
+          <p className="text-[11px] sm:text-xs text-stone-500 mt-1 leading-normal">
             Sri Ramas Jewellery (Estd. 1987) • Real-time overview of bullion, inventory, and customer leads.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col min-[420px]:flex-row items-stretch min-[420px]:items-center gap-2 w-full sm:w-auto shrink-0">
           <Link
             to="/admin/enquiries"
-            className="px-4 py-2 rounded-lg bg-burgundy-900 text-gold-200 text-xs font-semibold hover:bg-burgundy-800 transition-colors"
+            className="px-4 py-2 sm:py-2.5 rounded-lg bg-burgundy-900 text-gold-200 text-xs font-semibold hover:bg-burgundy-800 transition-colors text-center shadow-sm"
           >
             Open Enquiry CRM
           </Link>
           <Link
             to="/admin/rates"
-            className="px-4 py-2 rounded-lg border border-gold-600 bg-white text-burgundy-900 text-xs font-semibold hover:bg-gold-50 transition-colors"
+            className="px-4 py-2 sm:py-2.5 rounded-lg border border-gold-600 bg-white text-burgundy-900 text-xs font-semibold hover:bg-gold-50 transition-colors text-center shadow-sm"
           >
             Update Live Rates
           </Link>
