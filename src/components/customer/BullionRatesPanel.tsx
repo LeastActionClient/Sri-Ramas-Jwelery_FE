@@ -254,10 +254,14 @@ export const BullionRatesPanel: React.FC<BullionRatesPanelProps> = ({
                   ? 'bg-gradient-to-b from-[#FDF8EC] to-[#F7EBD5] border border-[#E2CCA1] hover:border-[#C99B3B] hover:shadow-md'
                   : 'bg-gradient-to-b from-[#F3F5F8] to-[#E6EBF1] border border-[#CBD3DE] hover:border-[#94A3B8] hover:shadow-md';
 
+              const isLastSingleTile = tile.id === 'silver-925';
+
               return (
                 <div
                   key={tile.id}
-                  className={`group rounded-xl px-3 py-3.5 sm:py-4 text-center flex flex-col justify-between transition-all duration-300 ease-out hover:-translate-y-1 ${cardClasses}`}
+                  className={`group rounded-xl px-3 py-3.5 sm:py-4 text-center flex flex-col justify-between transition-all duration-300 ease-out hover:-translate-y-1 ${cardClasses} ${
+                    isLastSingleTile ? 'col-span-2 min-[480px]:col-span-1 sm:col-span-1' : ''
+                  }`}
                 >
                   <div className="transition-transform duration-300 group-hover:scale-[1.03]">
                     <BullionBarIcon metal={tile.metal} />

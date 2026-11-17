@@ -1282,7 +1282,7 @@ export const ProductManagementPage: React.FC = () => {
                           setFormState({ ...formState, sku: upper });
                         }}
                         placeholder="Auto-generated (e.g. SRJ-NCK-001)"
-                        className="w-full p-2.5 border rounded-lg font-mono uppercase outline-none focus:border-gold-500"
+                        className="flex-1 min-w-0 p-2.5 border rounded-lg font-mono uppercase outline-none focus:border-gold-500"
                       />
                       <button
                         type="button"
@@ -1896,65 +1896,69 @@ export const ProductManagementPage: React.FC = () => {
                   </div>
 
                   {/* Upload & Paste Controls */}
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      multiple
-                      accept="image/png,image/jpeg,image/webp,image/avif,video/mp4,video/webm"
-                      className="hidden"
-                      onChange={handleFileUpload}
-                    />
-                    <button
-                      type="button"
-                      disabled={uploadingMedia}
-                      onClick={() => fileInputRef.current?.click()}
-                      className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-burgundy-900 text-gold-200 rounded-lg text-xs font-bold hover:bg-burgundy-800 disabled:opacity-50 shrink-0 shadow-sm"
-                    >
-                      {uploadingMedia ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          <span>Uploading...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Upload className="w-4 h-4 text-gold-400" />
-                          <span>Upload Files</span>
-                        </>
-                      )}
-                    </button>
-
-                    {uploadingMedia && (
+                  <div className="space-y-2.5">
+                    {/* Action Buttons Row */}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        multiple
+                        accept="image/png,image/jpeg,image/webp,image/avif,video/mp4,video/webm"
+                        className="hidden"
+                        onChange={handleFileUpload}
+                      />
                       <button
                         type="button"
-                        onClick={() => {
-                          setUploadingMedia(false);
-                          if (fileInputRef.current) fileInputRef.current.value = '';
-                        }}
-                        className="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-red-50 text-red-700 border border-red-200 rounded-lg text-xs font-bold hover:bg-red-100 shrink-0 transition-colors"
-                        title="Cancel upload in progress"
+                        disabled={uploadingMedia}
+                        onClick={() => fileInputRef.current?.click()}
+                        className="inline-flex items-center justify-center gap-2 px-3.5 py-2 bg-burgundy-900 text-gold-200 rounded-lg text-xs font-bold hover:bg-burgundy-800 disabled:opacity-50 shrink-0 shadow-sm transition-colors"
                       >
-                        <X className="w-4 h-4 text-red-600" />
-                        <span>Cancel Upload</span>
+                        {uploadingMedia ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <span>Uploading...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-4 h-4 text-gold-400" />
+                            <span>Upload Files</span>
+                          </>
+                        )}
                       </button>
-                    )}
 
-                    <button
-                      type="button"
-                      disabled={uploadingMedia}
-                      onClick={handlePasteProductMediaFromClipboard}
-                      className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gold-400 text-burgundy-950 rounded-lg text-xs font-bold hover:bg-gold-50 disabled:opacity-50 shrink-0 shadow-sm transition-colors"
-                      title="Paste image directly from clipboard (Ctrl+V)"
-                    >
-                      <ClipboardPaste className="w-4 h-4 text-gold-600" />
-                      <span>Paste Copied Image</span>
-                    </button>
+                      {uploadingMedia && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setUploadingMedia(false);
+                            if (fileInputRef.current) fileInputRef.current.value = '';
+                          }}
+                          className="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-red-50 text-red-700 border border-red-200 rounded-lg text-xs font-bold hover:bg-red-100 shrink-0 transition-colors"
+                          title="Cancel upload in progress"
+                        >
+                          <X className="w-4 h-4 text-red-600" />
+                          <span>Cancel Upload</span>
+                        </button>
+                      )}
 
-                    <div className="flex flex-1 gap-1.5">
+                      <button
+                        type="button"
+                        disabled={uploadingMedia}
+                        onClick={handlePasteProductMediaFromClipboard}
+                        className="inline-flex items-center justify-center gap-2 px-3.5 py-2 bg-white border border-gold-400 text-burgundy-950 rounded-lg text-xs font-bold hover:bg-gold-50 disabled:opacity-50 shrink-0 shadow-sm transition-colors"
+                        title="Paste image directly from clipboard (Ctrl+V)"
+                      >
+                        <ClipboardPaste className="w-4 h-4 text-gold-600" />
+                        <span>Paste Copied Image</span>
+                      </button>
+                    </div>
+
+                    {/* Media URL Input Group: Full-width container with guaranteed uncropped Add URL button */}
+                    <div className="flex items-center gap-2 w-full">
                       <select
                         value={mediaTypeInput}
                         onChange={(e) => setMediaTypeInput(e.target.value as any)}
-                        className="px-2 py-1.5 border border-stone-300 rounded-lg bg-white text-xs outline-none focus:border-gold-500 shrink-0 font-medium"
+                        className="px-2.5 py-2 border border-stone-300 rounded-lg bg-white text-xs outline-none focus:border-gold-500 shrink-0 font-medium"
                       >
                         <option value="IMAGE">Image URL</option>
                         <option value="VIDEO">Video URL</option>
@@ -1964,12 +1968,12 @@ export const ProductManagementPage: React.FC = () => {
                         placeholder="Or paste media URL..."
                         value={mediaUrlInput}
                         onChange={(e) => setMediaUrlInput(e.target.value)}
-                        className="flex-1 p-2 border border-stone-300 rounded-lg text-xs bg-white outline-none focus:border-gold-500 font-mono"
+                        className="flex-1 min-w-0 p-2 border border-stone-300 rounded-lg text-xs bg-white outline-none focus:border-gold-500 font-mono"
                       />
                       <button
                         type="button"
                         onClick={handleAddMediaUrl}
-                        className="px-3 py-1.5 bg-gold-600 text-white rounded-lg text-xs font-semibold hover:bg-gold-700 shrink-0 shadow-sm"
+                        className="px-4 py-2 bg-gold-600 text-white rounded-lg text-xs font-bold hover:bg-gold-700 shrink-0 shadow-sm whitespace-nowrap active:scale-95 transition-all"
                       >
                         Add URL
                       </button>
@@ -1991,7 +1995,7 @@ export const ProductManagementPage: React.FC = () => {
                               <div className="w-full h-full relative">
                                 <video
                                   src={item.url}
-                                  className="w-full h-full object-cover"
+                                  className="w-full h-full object-contain bg-black"
                                   controls={false}
                                   muted
                                 />
@@ -2003,7 +2007,7 @@ export const ProductManagementPage: React.FC = () => {
                               <img
                                 src={item.url}
                                 alt={`Media ${idx + 1}`}
-                                className="w-full h-full object-cover"
+                                className="w-full h-full object-cover object-center bg-stone-100"
                               />
                             )}
 

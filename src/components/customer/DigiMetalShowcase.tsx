@@ -302,7 +302,7 @@ export const DigiMetalShowcase: React.FC<DigiMetalShowcaseProps> = ({ metal }) =
   return (
     <div className="w-full min-h-screen">
       {/* 1. Full-Viewport Luxury Hero Section (No Outer Card Container) */}
-      <section className="relative w-full min-h-[calc(100vh-76px)] sm:min-h-[calc(100vh-80px)] flex items-center overflow-hidden bg-[#1A0307] text-gold-100 py-16 sm:py-20 lg:py-24 border-b-2 border-gold-500/30">
+      <section className="relative w-full min-h-[460px] sm:min-h-[520px] lg:min-h-[calc(100vh-80px)] flex items-center overflow-hidden bg-[#1A0307] text-gold-100 py-10 sm:py-16 lg:py-20 border-b-2 border-gold-500/30">
         {/* Full-bleed Background Luxury Bullion Imagery */}
         <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
           <img
@@ -333,19 +333,19 @@ export const DigiMetalShowcase: React.FC<DigiMetalShowcaseProps> = ({ metal }) =
 
         {/* Hero Content Container */}
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-10">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 lg:gap-10">
             {/* Left Content Column */}
-            <div className="space-y-6 max-w-2xl">
+            <div className="space-y-4 sm:space-y-6 max-w-2xl">
               <ScrollReveal variant="fade-up" immediate>
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-gold-400 bg-burgundy-950 p-0.5 shadow-luxury-gold shrink-0">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden border-2 border-gold-400 bg-burgundy-950 p-0.5 shadow-luxury-gold shrink-0">
                     <img
                       src="/logo.jpg"
                       alt="Sri Ramas Jewellery Crest"
                       className="w-full h-full object-cover rounded-full"
                     />
                   </div>
-                  <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-gold-400/20 text-gold-300 text-xs font-bold uppercase tracking-widest border border-gold-400/40 shadow-sm backdrop-blur-xs">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold-400/20 text-gold-300 text-[10px] sm:text-xs font-bold uppercase tracking-widest border border-gold-400/40 shadow-sm backdrop-blur-xs">
                     <ShieldCheck className="w-3.5 h-3.5 text-gold-400" />
                     <span>{eyebrowText}</span>
                   </div>
@@ -354,7 +354,7 @@ export const DigiMetalShowcase: React.FC<DigiMetalShowcaseProps> = ({ metal }) =
 
               <ScrollReveal variant="fade-up" delay={80}>
                 <h1
-                  className="font-serif text-3xl sm:text-5xl lg:text-6xl font-extrabold text-[#FCE7B2] leading-tight tracking-wide"
+                  className="font-serif text-2xl min-[400px]:text-3xl sm:text-5xl lg:text-6xl font-extrabold text-[#FCE7B2] leading-[1.15] tracking-wide break-words"
                   style={{
                     textShadow:
                       '0 4px 20px rgba(0, 0, 0, 0.95), 0 2px 6px rgba(0, 0, 0, 0.85)',
@@ -366,7 +366,7 @@ export const DigiMetalShowcase: React.FC<DigiMetalShowcaseProps> = ({ metal }) =
 
               <ScrollReveal variant="fade-up" delay={120}>
                 <p
-                  className="text-sm sm:text-base lg:text-lg text-gold-100/90 font-light leading-relaxed max-w-xl"
+                  className="text-xs sm:text-base lg:text-lg text-gold-100/90 font-light leading-relaxed max-w-xl"
                   style={{
                     textShadow: '0 2px 10px rgba(0, 0, 0, 0.85)',
                   }}
@@ -377,21 +377,21 @@ export const DigiMetalShowcase: React.FC<DigiMetalShowcaseProps> = ({ metal }) =
 
               {/* Action Buttons */}
               <ScrollReveal variant="fade-up" delay={160}>
-                <div className="flex flex-wrap items-center gap-4 pt-2">
+                <div className="flex flex-col min-[480px]:flex-row items-stretch min-[480px]:items-center gap-3 pt-2 w-full min-[480px]:w-auto">
                   <AnimatedCTA
                     variant="gold"
                     href={defaultWhatsAppHref}
                     target="_blank"
                     rel="noopener noreferrer"
                     icon={<MessageCircle className="w-4 h-4" />}
-                    className="px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-wider shadow-luxury-gold"
+                    className="px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-wider shadow-luxury-gold text-center justify-center"
                   >
                     ENQUIRE ON WHATSAPP
                   </AnimatedCTA>
 
                   <Link
                     to={secondaryCtaHref}
-                    className="px-5 py-3 rounded-xl border-2 border-gold-400/60 bg-burgundy-950/60 text-gold-200 hover:bg-gold-400/20 hover:border-gold-300 text-xs font-bold uppercase tracking-wider transition-all duration-300 backdrop-blur-xs shadow-md"
+                    className="px-5 py-3 rounded-xl border-2 border-gold-400/60 bg-burgundy-950/60 text-gold-200 hover:bg-gold-400/20 hover:border-gold-300 text-xs font-bold uppercase tracking-wider transition-all duration-300 backdrop-blur-xs shadow-md text-center justify-center"
                   >
                     {secondaryCtaLabel} →
                   </Link>
@@ -401,7 +401,7 @@ export const DigiMetalShowcase: React.FC<DigiMetalShowcaseProps> = ({ metal }) =
 
             {/* Right Column: Live Rate Display Card */}
             <ScrollReveal variant="fade-up" delay={200} className="w-full lg:w-[380px] shrink-0">
-              <div className="bg-burgundy-950/85 backdrop-blur-md rounded-2xl border-2 border-gold-400/50 p-6 sm:p-7 shadow-luxury-gold space-y-4">
+              <div className="bg-burgundy-950/85 backdrop-blur-md rounded-2xl border-2 border-gold-400/50 p-4 sm:p-6 lg:p-7 shadow-luxury-gold space-y-3.5 sm:space-y-4">
                 <div className="flex items-center justify-between gap-2">
                   <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-gold-300">
                     <TrendingUp className="w-3.5 h-3.5 text-gold-400" />
@@ -457,7 +457,7 @@ export const DigiMetalShowcase: React.FC<DigiMetalShowcaseProps> = ({ metal }) =
       </section>
 
       {/* Main Content Sections: Educational Guide, Calculator, FAQs */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 space-y-12 sm:space-y-16">
+      <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16 space-y-8 sm:space-y-12 lg:space-y-16">
         {/* 2. Educational Section — What is DigiGold / DigiSilver? */}
         <DigiEducationalSection metal={metal} />
 
@@ -466,14 +466,14 @@ export const DigiMetalShowcase: React.FC<DigiMetalShowcaseProps> = ({ metal }) =
         <ScrollReveal variant="fade-up">
           <section
             aria-label={`Digi${isGold ? 'Gold' : 'Silver'} Indicative Calculator`}
-            className="bg-white rounded-3xl border border-gold-400/60 shadow-luxury overflow-hidden"
+            className="bg-white rounded-2xl sm:rounded-3xl border border-gold-400/60 shadow-luxury overflow-hidden"
           >
-            <div className="bg-ivory-50 border-b border-gold-300/60 px-6 sm:px-8 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="bg-ivory-50 border-b border-gold-300/60 px-4 sm:px-8 py-4 sm:py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <span className="text-[11px] font-bold uppercase tracking-widest text-gold-700">
+                <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-gold-700">
                   Interactive Bullion Estimator
                 </span>
-                <h2 className="font-serif text-xl sm:text-2xl font-bold text-burgundy-950">
+                <h2 className="font-serif text-lg sm:text-2xl font-bold text-burgundy-950">
                   Digi{isGold ? 'Gold' : 'Silver'} Amount &amp; Weight Calculator
                 </h2>
               </div>
@@ -481,7 +481,7 @@ export const DigiMetalShowcase: React.FC<DigiMetalShowcaseProps> = ({ metal }) =
               <button
                 type="button"
                 onClick={handleSwapDirection}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-burgundy-900 hover:bg-burgundy-800 text-gold-200 text-xs font-bold transition-colors self-start sm:self-auto"
+                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-burgundy-900 hover:bg-burgundy-800 text-gold-200 text-xs font-bold transition-colors self-start sm:self-auto shrink-0"
               >
                 <ArrowLeftRight className="w-3.5 h-3.5 text-gold-400" />
                 <span>
@@ -492,7 +492,7 @@ export const DigiMetalShowcase: React.FC<DigiMetalShowcaseProps> = ({ metal }) =
               </button>
             </div>
 
-            <div className="p-6 sm:p-8 space-y-6">
+            <div className="p-4 sm:p-8 space-y-5 sm:space-y-6">
               {/* Quick Amount Chips */}
               {quickPresets.length > 0 && (
                 <div className="flex flex-wrap items-center gap-2">
@@ -602,7 +602,7 @@ export const DigiMetalShowcase: React.FC<DigiMetalShowcaseProps> = ({ metal }) =
               ) : (
                 <div className="p-4 rounded-xl bg-ivory-50 border border-gold-300/70 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="space-y-0.5">
-                    <p className="text-[11px] uppercase tracking-wider font-bold text-gold-700">
+                    <p className="text-[10px] sm:text-[11px] uppercase tracking-wider font-bold text-gold-700">
                       Indicative Estimation Result
                     </p>
                     <p className="font-serif text-base sm:text-lg font-bold text-burgundy-950">
@@ -615,7 +615,7 @@ export const DigiMetalShowcase: React.FC<DigiMetalShowcaseProps> = ({ metal }) =
                     </p>
                   </div>
 
-                  <div className="flex flex-wrap gap-2.5 shrink-0">
+                  <div className="flex flex-col min-[480px]:flex-row gap-2.5 w-full sm:w-auto shrink-0">
                     <AnimatedCTA
                       variant="whatsapp"
                       href={confirmWhatsAppHref}
@@ -626,7 +626,7 @@ export const DigiMetalShowcase: React.FC<DigiMetalShowcaseProps> = ({ metal }) =
                           <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2m.01 1.67c2.2 0 4.26.86 5.82 2.42a8.225 8.225 0 0 1 2.41 5.83c0 4.54-3.7 8.24-8.24 8.24-1.48 0-2.93-.39-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.196 8.196 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24m4.52 11.66c-.25-.13-1.47-.72-1.7-.81-.23-.08-.39-.13-.56.13-.17.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.13-1.06-.39-2.03-1.25-.75-.67-1.26-1.5-1.41-1.75-.15-.25-.02-.39.11-.51.11-.11.25-.29.37-.44.13-.15.17-.25.25-.42.08-.17.04-.31-.02-.44-.06-.13-.56-1.34-.76-1.84-.2-.49-.4-.42-.56-.43h-.48c-.17 0-.44.06-.67.31-.23.25-.88.86-.88 2.1 0 1.24.9 2.44 1.03 2.61.13.17 1.78 2.71 4.3 3.8 2.53 1.09 2.53.73 2.98.69.46-.04 1.47-.6 1.68-1.18.21-.58.21-1.08.15-1.18-.06-.1-.23-.17-.48-.29" />
                         </svg>
                       }
-                      className="px-5 py-3 rounded-xl text-xs font-bold uppercase tracking-wider bg-[#25D366] hover:bg-[#20BD5A] text-white shadow-md hover:shadow-lg transition-all"
+                      className="px-5 py-3 rounded-xl text-xs font-bold uppercase tracking-wider bg-[#25D366] hover:bg-[#20BD5A] text-white shadow-md hover:shadow-lg transition-all text-center justify-center"
                     >
                       Confirm on WhatsApp
                     </AnimatedCTA>
@@ -634,7 +634,7 @@ export const DigiMetalShowcase: React.FC<DigiMetalShowcaseProps> = ({ metal }) =
                       variant="outline"
                       href={telHref}
                       icon={<Phone className="w-4 h-4 text-gold-700" />}
-                      className="px-4 py-3 rounded-xl text-xs font-semibold"
+                      className="px-4 py-3 rounded-xl text-xs font-semibold text-center justify-center"
                     >
                       Call {displayPhone}
                     </AnimatedCTA>

@@ -529,7 +529,7 @@ export const CategoryManagementPage: React.FC = () => {
                           },
                         })}
                         placeholder="Auto-generated (e.g. SRJ-CAT-NCK)"
-                        className="w-full p-2.5 border rounded-lg font-mono uppercase outline-none focus:border-gold-500"
+                        className="flex-1 min-w-0 p-2.5 border rounded-lg font-mono uppercase outline-none focus:border-gold-500"
                       />
                       <button
                         type="button"

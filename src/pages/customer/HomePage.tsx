@@ -486,10 +486,10 @@ export const HomePage: React.FC = () => {
 
       {/* 4. FEATURED BRIDAL & HEIRLOOM PIECES (Product Listing with Dynamic Side Decorations) */}
       <section className="relative w-full overflow-hidden py-4 sm:py-6">
-        {/* Extreme Left Champagne-Gold Floral Ornamental Strip: Repeats seamlessly down entire section height */}
+        {/* Extreme Left Champagne-Gold Floral Ornamental Strip: Repeats seamlessly down entire section height on desktop */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute left-0 top-0 bottom-0 z-0 w-12 sm:w-16 md:w-20 lg:w-[84px] opacity-90 select-none hidden min-[480px]:block"
+          className="pointer-events-none absolute left-0 top-0 bottom-0 z-0 w-[72px] xl:w-[84px] opacity-90 select-none hidden lg:block"
           style={{
             backgroundImage: "url('/images/floral-ornament-left-tile.png')",
             backgroundRepeat: 'repeat-y',
@@ -498,10 +498,10 @@ export const HomePage: React.FC = () => {
           }}
         />
 
-        {/* Extreme Right Champagne-Gold Floral Ornamental Strip: Repeats seamlessly down entire section height */}
+        {/* Extreme Right Champagne-Gold Floral Ornamental Strip: Repeats seamlessly down entire section height on desktop */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute right-0 top-0 bottom-0 z-0 w-12 sm:w-16 md:w-20 lg:w-[84px] opacity-90 select-none hidden min-[480px]:block"
+          className="pointer-events-none absolute right-0 top-0 bottom-0 z-0 w-[72px] xl:w-[84px] opacity-90 select-none hidden lg:block"
           style={{
             backgroundImage: "url('/images/floral-ornament-right-tile.png')",
             backgroundRepeat: 'repeat-y',
@@ -510,8 +510,8 @@ export const HomePage: React.FC = () => {
           }}
         />
 
-        {/* Inner Content Container: Centered, maintaining distance from side ornaments */}
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-12 md:px-16 lg:px-20 space-y-6">
+        {/* Inner Content Container: Full width on mobile, balanced spacing on desktop */}
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-20 space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <AnimatedHeading
               kicker="Masterpiece Showcase"
@@ -600,12 +600,12 @@ export const HomePage: React.FC = () => {
           <StaggerReveal
             key={selectedCategoryId}
             staggerMs={55}
-            className={`grid gap-6 ${
+            className={`grid gap-4 sm:gap-6 ${
               visibleFeaturedProducts.length <= 2
-                ? 'grid-cols-1 sm:grid-cols-2 max-w-2xl mx-auto'
+                ? 'grid-cols-1 min-[480px]:grid-cols-2 max-w-2xl mx-auto'
                 : visibleFeaturedProducts.length === 3
-                ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
-                : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
+                ? 'grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-3'
+                : 'grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-4'
             }`}
           >
             {visibleFeaturedProducts.map((product) => (

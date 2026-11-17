@@ -234,21 +234,30 @@ export const AdminLayout: React.FC = () => {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Header */}
-        <header className="h-16 bg-white border-b border-stone-200 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30 shadow-sm">
-          <div className="flex items-center gap-3">
+        <header className="h-14 sm:h-16 bg-white border-b border-stone-200 px-2.5 sm:px-6 flex items-center justify-between sticky top-0 z-30 shadow-sm">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="md:hidden p-2 rounded-lg text-stone-600 hover:bg-stone-100"
+              className="md:hidden p-2 rounded-lg text-stone-700 hover:bg-stone-100 focus:outline-none focus:ring-2 focus:ring-gold-400 shrink-0"
+              aria-label="Open navigation menu"
             >
               <Menu className="w-5 h-5" />
             </button>
-            <span className="font-serif font-bold text-base text-burgundy-950 hidden sm:inline">
-              Sri Ramas Administrative Suite
-            </span>
+            <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+              <img
+                src="/logo.jpg"
+                alt="Logo"
+                className="w-6 h-6 rounded-full shrink-0 md:hidden border border-gold-400"
+              />
+              <span className="font-serif font-bold text-xs sm:text-base text-burgundy-950 truncate">
+                <span className="hidden sm:inline">Sri Ramas Administrative Suite</span>
+                <span className="sm:hidden">SRJ Admin</span>
+              </span>
+            </div>
           </div>
 
           {/* Right Header Status Bar */}
-          <div className="flex items-center gap-4 text-xs">
+          <div className="flex items-center gap-1.5 sm:gap-3 text-xs shrink-0">
             {rates && (
               <div className="hidden sm:flex items-center gap-2 bg-gold-50 border border-gold-300 px-3 py-1 rounded-full text-burgundy-900 font-medium">
                 <TrendingUp className="w-3.5 h-3.5 text-gold-700" />
@@ -266,18 +275,19 @@ export const AdminLayout: React.FC = () => {
 
             <button
               onClick={() => setChangePasswordOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gold-300 bg-gold-50/50 text-burgundy-900 hover:bg-gold-100 font-medium transition-colors"
+              className="flex items-center gap-1.5 p-1.5 sm:px-3 sm:py-1.5 rounded-lg border border-gold-300 bg-gold-50/50 text-burgundy-900 hover:bg-gold-100 font-medium transition-colors"
               title="Change Administrative Password"
             >
-              <Key className="w-3.5 h-3.5 text-gold-700" />
+              <Key className="w-4 h-4 text-gold-700 shrink-0" />
               <span className="hidden sm:inline">Change Password</span>
             </button>
 
             <button
               onClick={handleLogout}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-stone-200 text-stone-700 hover:bg-stone-50 font-medium"
+              className="flex items-center gap-1.5 p-1.5 sm:px-3 sm:py-1.5 rounded-lg border border-stone-200 text-stone-700 hover:bg-stone-50 font-medium transition-colors"
+              title="Sign Out"
             >
-              <LogOut className="w-3.5 h-3.5 text-stone-500" />
+              <LogOut className="w-4 h-4 text-stone-500 shrink-0" />
               <span className="hidden sm:inline">Logout</span>
             </button>
           </div>
