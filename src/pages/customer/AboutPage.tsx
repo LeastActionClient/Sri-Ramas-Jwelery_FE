@@ -8,6 +8,9 @@ import {
   AnimatedHeading,
   AnimatedCTA,
 } from '@/components/motion';
+import { FounderLegacySection } from '@/components/customer/FounderLegacySection';
+import { BisTrustSection } from '@/components/customer/BisTrustSection';
+import { SEO } from '@/components/common/SEO';
 
 interface AnimatedCounterProps {
   end: number;
@@ -82,8 +85,18 @@ export const AboutPage: React.FC = () => {
 
   return (
     <div className="w-full min-h-screen">
+      <SEO
+        title="About Sri Ramas Jewellery | Our Heritage & Craftsmanship"
+        description="Discover the heritage, craftsmanship and jewellery traditions of Sri Ramas Jewellery, established in 1987."
+        canonical="https://sriramasjewellery.com/about"
+        breadcrumbs={[
+          { name: 'Home', path: '/' },
+          { name: 'About & Heritage', path: '/about' }
+        ]}
+      />
+
       {/* 1. Full-Viewport Luxury Heritage Hero Section (No Outer Card Container) */}
-      <section className="relative w-full min-h-[calc(100vh-76px)] sm:min-h-[calc(100vh-80px)] flex items-center justify-center overflow-hidden bg-[#1A0307] text-gold-100 py-16 sm:py-20 lg:py-24 border-b-2 border-gold-500/30">
+      <section className="relative w-full min-h-[380px] sm:min-h-[440px] lg:min-h-[480px] flex items-center justify-center overflow-hidden bg-[#1A0307] text-gold-100 py-10 sm:py-14 lg:py-16 border-b-2 border-gold-500/30">
         {/* Full-bleed Background Luxury Temple Jewellery Artwork */}
         <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
           <img
@@ -164,9 +177,9 @@ export const AboutPage: React.FC = () => {
       </section>
 
       {/* Main Heritage Page Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-20 space-y-16 lg:space-y-24">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-10 lg:space-y-12">
         {/* Story Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           <ScrollReveal variant="slide-left" distance={18} className="space-y-5">
             <AnimatedHeading
               align="left"
@@ -241,9 +254,19 @@ export const AboutPage: React.FC = () => {
           </ScrollReveal>
         </div>
 
+        {/* Founder & Legacy Tribute Section */}
+        <div className="-mx-4 sm:-mx-6 lg:-mx-8">
+          <FounderLegacySection />
+        </div>
+
+        {/* BIS 100% Certified Trust Section */}
+        <div className="-mx-4 sm:-mx-6 lg:-mx-8">
+          <BisTrustSection />
+        </div>
+
         {/* Pillars of Trust */}
         <ScrollReveal variant="fade-up">
-          <div className="bg-white rounded-3xl border-2 border-gold-400/40 p-8 sm:p-12 shadow-luxury space-y-8">
+          <div className="bg-white rounded-3xl border-2 border-gold-400/40 p-6 sm:p-8 lg:p-10 shadow-luxury space-y-6 sm:space-y-8">
             <AnimatedHeading
               align="center"
               kicker="The Sri Ramas Guarantee"
@@ -310,7 +333,7 @@ export const AboutPage: React.FC = () => {
 
         {/* Showroom Bridal Appointment CTA */}
         <ScrollReveal variant="scale">
-          <div className="bg-brand-maroon-gradient rounded-3xl p-8 sm:p-12 text-gold-100 flex flex-col sm:flex-row items-center justify-between gap-6 border-2 border-gold-500/40 shadow-luxury">
+          <div className="bg-brand-maroon-gradient rounded-3xl p-6 sm:p-8 lg:p-10 text-gold-100 flex flex-col sm:flex-row items-center justify-between gap-6 border-2 border-gold-500/40 shadow-luxury">
             <div className="space-y-2 text-center sm:text-left max-w-xl">
               <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#FCE7B2]">
                 Experience Our Bridal Lounge

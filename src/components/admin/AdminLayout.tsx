@@ -16,13 +16,15 @@ import {
   AlertTriangle,
   Eye,
   EyeOff,
-  Images
+  Images,
+  Search
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useRates } from '@/hooks/useRates';
 import { formatPaiseToInr } from '@/utils/currency';
 import { authApi } from '@/services/api/auth.api';
 import { AdminModalPortal } from './AdminModalPortal';
+import { SEO } from '@/components/common/SEO';
 
 export const AdminLayout: React.FC = () => {
   const { user, isAuthenticated, isLoading, logout, refreshUser } = useAuth();
@@ -81,6 +83,7 @@ export const AdminLayout: React.FC = () => {
     { label: 'Enquiry CRM', path: '/admin/enquiries', icon: MessageSquareText },
     { label: 'Savings Schemes', path: '/admin/schemes', icon: Award },
     { label: 'Banners & Digi CMS', path: '/admin/banners', icon: Images },
+    { label: 'SEO Management', path: '/admin/seo', icon: Search },
   ];
 
   const handleLogout = async () => {
@@ -203,6 +206,8 @@ export const AdminLayout: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-stone-100 flex flex-col md:flex-row">
+      <SEO noindex title="Administrative Portal" description="Private management dashboard for Sri Ramas Jewellery." />
+
       {/* Sidebar (Desktop Sticky Full Viewport Height) */}
       <aside className="hidden md:flex flex-col w-64 md:sticky md:top-0 md:h-screen bg-burgundy-950 text-gold-100 border-r border-gold-800/40 shrink-0 select-none overflow-hidden">
         {/* Brand Header */}

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -33,6 +33,8 @@ const categorySchema = z.object({
     .or(z.literal('')),
   description: z.string().optional(),
   parentCategoryId: z.string().optional().or(z.literal('')),
+  metalType: z.enum(['GOLD', 'SILVER', 'DIAMOND', 'PLATINUM', 'GEMSTONE', 'MIXED', 'ALL']),
+  displayOrder: z.number().int(),
   imageUrl: z.string().optional().or(z.literal('')),
   imagePublicId: z.string().optional().or(z.literal('')),
   isActive: z.boolean(),
@@ -47,6 +49,7 @@ interface StatusBanner {
 
 export const CategoryManagementPage: React.FC = () => {
   const queryClient = useQueryClient();
+  const [metalFilter, setMetalFilter] = useState<'ALL' | 'GOLD' | 'SILVER'>('ALL');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [previewCategory, setPreviewCategory] = useState<Category | null>(null);
@@ -72,6 +75,54 @@ export const CategoryManagementPage: React.FC = () => {
     queryFn: categoriesApi.adminGetCategories,
   });
 
+  /**
+   * Hierarchically order categories: Parent main category followed immediately
+   * by its direct subcategories, so rows are grouped intuitively without jumbling.
+   */
+  const orderedCategories = useMemo(() => {
+    const filtered = categories.filter((c) => {
+      if (metalFilter === 'ALL') return true;
+      if (c.metalType === 'ALL') return true;
+      return (c.metalType || 'GOLD') === metalFilter;
+    });
+
+    const parents = filtered.filter((c) => !c.parentCategoryId && !c.parentCategory);
+    const children = filtered.filter((c) => Boolean(c.parentCategoryId || c.parentCategory));
+
+    parents.sort(
+      (a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0) || a.name.localeCompare(b.name)
+    );
+
+    const ordered: Category[] = [];
+    const addedChildIds = new Set<string>();
+
+    for (const parent of parents) {
+      ordered.push(parent);
+      const subList = children.filter((child) => {
+        const pId =
+          typeof child.parentCategory === 'object' && child.parentCategory
+            ? (child.parentCategory as any)._id
+            : (child.parentCategory || child.parentCategoryId);
+        return pId === parent._id;
+      });
+      subList.sort(
+        (a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0) || a.name.localeCompare(b.name)
+      );
+      for (const sub of subList) {
+        ordered.push(sub);
+        addedChildIds.add(sub._id);
+      }
+    }
+
+    const orphans = children.filter((child) => !addedChildIds.has(child._id));
+    orphans.sort(
+      (a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0) || a.name.localeCompare(b.name)
+    );
+    ordered.push(...orphans);
+
+    return ordered;
+  }, [categories, metalFilter]);
+
   const {
     register,
     handleSubmit,
@@ -82,6 +133,12 @@ export const CategoryManagementPage: React.FC = () => {
   } = useForm<CategoryFormData>({
     resolver: zodResolver(categorySchema),
     defaultValues: {
+      name: '',
+      sku: '',
+      description: '',
+      parentCategoryId: '',
+      metalType: 'GOLD',
+      displayOrder: 0,
       isActive: true,
       imageUrl: '',
       imagePublicId: '',
@@ -142,6 +199,8 @@ export const CategoryManagementPage: React.FC = () => {
       sku: '',
       description: '',
       parentCategoryId: '',
+      metalType: 'GOLD',
+      displayOrder: 0,
       imageUrl: '',
       imagePublicId: '',
       isActive: true,
@@ -164,6 +223,8 @@ export const CategoryManagementPage: React.FC = () => {
       sku: fallbackSku,
       description: cat.description || '',
       parentCategoryId: cat.parentCategoryId || '',
+      metalType: (cat.metalType as any) || 'GOLD',
+      displayOrder: cat.displayOrder ?? cat.sortOrder ?? 0,
       imageUrl: cat.imageUrl || '',
       imagePublicId: cat.imagePublicId || '',
       isActive: cat.isActive,
@@ -181,6 +242,8 @@ export const CategoryManagementPage: React.FC = () => {
         ...(shouldSendSku ? { sku: cleanedSku } : {}),
         description: data.description,
         parentCategoryId: data.parentCategoryId || null,
+        metalType: data.metalType,
+        displayOrder: Number(data.displayOrder || 0),
         imageUrl: data.imageUrl || null,
         imagePublicId: data.imagePublicId || null,
         isActive: data.isActive,
@@ -306,6 +369,49 @@ export const CategoryManagementPage: React.FC = () => {
         </div>
       )}
 
+      {/* Category Metal Group Filter Tabs */}
+      <div className="flex flex-wrap items-center gap-2 border-b border-stone-200 pb-3">
+        <button
+          type="button"
+          onClick={() => setMetalFilter('ALL')}
+          className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
+            metalFilter === 'ALL'
+              ? 'bg-burgundy-900 text-gold-200 shadow-sm'
+              : 'text-stone-600 hover:bg-stone-100'
+          }`}
+        >
+          All Categories ({categories.length})
+        </button>
+        <button
+          type="button"
+          onClick={() => setMetalFilter('GOLD')}
+          className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+            metalFilter === 'GOLD'
+              ? 'bg-amber-700 text-white shadow-sm'
+              : 'text-amber-800 hover:bg-amber-50'
+          }`}
+        >
+          <span>Gold Categories</span>
+          <span className="px-1.5 py-0.2 rounded-full bg-amber-800/40 text-[10px]">
+            {categories.filter((c) => (c.metalType || 'GOLD') === 'GOLD' || c.metalType === 'ALL').length}
+          </span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setMetalFilter('SILVER')}
+          className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+            metalFilter === 'SILVER'
+              ? 'bg-slate-700 text-white shadow-sm'
+              : 'text-slate-700 hover:bg-slate-100'
+          }`}
+        >
+          <span>Silver Categories</span>
+          <span className="px-1.5 py-0.2 rounded-full bg-slate-800/40 text-[10px]">
+            {categories.filter((c) => c.metalType === 'SILVER' || c.metalType === 'ALL').length}
+          </span>
+        </button>
+      </div>
+
       {/* Categories Table */}
       <div className="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
@@ -313,7 +419,7 @@ export const CategoryManagementPage: React.FC = () => {
             <thead className="bg-stone-50 border-b border-stone-200 text-stone-500 uppercase font-semibold">
               <tr>
                 <th className="p-4">Category</th>
-                <th className="p-4">Hierarchy / Media</th>
+                <th className="p-4">Hierarchy &amp; Metal</th>
                 <th className="p-4">Status</th>
                 <th className="p-4 text-right">Actions</th>
               </tr>
@@ -325,58 +431,91 @@ export const CategoryManagementPage: React.FC = () => {
                     Loading categories...
                   </td>
                 </tr>
-              ) : categories.length > 0 ? (
-                categories.map((cat) => (
-                  <tr key={cat._id} className="hover:bg-stone-50 transition-colors">
-                    <td className="p-4 flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-lg bg-[#3A060E] overflow-hidden shrink-0 border border-gold-400/50">
-                        <img
-                          src={cat.imageUrl || '/logo.jpg'}
-                          alt={cat.name}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = '/logo.jpg';
-                          }}
-                        />
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="font-serif font-bold text-sm text-burgundy-950">
-                            {cat.name}
-                          </span>
-                          {cat.sku && (
-                            <span className="px-1.5 py-0.5 rounded bg-burgundy-50 border border-gold-300/60 font-mono text-[10px] font-semibold text-burgundy-900">
-                              {cat.sku}
+              ) : orderedCategories.length > 0 ? (
+                orderedCategories.map((cat) => {
+                  const isNavel = cat.name.toLowerCase().includes('navel');
+                  const isSilver = cat.metalType === 'SILVER';
+                  const isCommon = cat.metalType === 'ALL';
+                  const isSubcategory = Boolean(cat.parentCategoryId || cat.parentCategory);
+
+                  return (
+                    <tr key={cat._id} className="hover:bg-stone-50 transition-colors">
+                      <td className="p-4">
+                        <div className="flex items-center gap-3.5">
+                          {/* Strictly uniform thumbnail column - zero zigzag */}
+                          <div className="w-11 h-11 rounded-lg bg-[#3A060E] overflow-hidden shrink-0 border border-gold-400/50 shadow-xs">
+                            <img
+                              src={cat.imageUrl || '/logo.jpg'}
+                              alt={cat.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = '/logo.jpg';
+                              }}
+                            />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              {isSubcategory && (
+                                <span className="text-amber-700/80 font-mono text-xs font-bold" title="Subcategory">
+                                  ↳
+                                </span>
+                              )}
+                              <span className={`font-serif text-sm ${isSubcategory ? 'font-semibold text-stone-800' : 'font-bold text-burgundy-950'}`}>
+                                {cat.name}
+                              </span>
+                              {cat.sku && (
+                                <span className="px-1.5 py-0.5 rounded bg-burgundy-50 border border-gold-300/60 font-mono text-[10px] font-semibold text-burgundy-900">
+                                  {cat.sku}
+                                </span>
+                              )}
+                              {isNavel && (
+                                <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-bold animate-pulse">
+                                  Pending Client Confirmation
+                                </span>
+                              )}
+                            </div>
+                            {cat.description && (
+                              <span className="text-[11px] text-stone-500 line-clamp-1 max-w-xs block mt-0.5">
+                                {cat.description}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+
+                        <td className="p-4 space-y-1.5">
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            {isCommon ? (
+                              <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-gold-100 text-gold-950 border border-gold-300">
+                                COMMON • ALL METALS
+                              </span>
+                            ) : isSilver ? (
+                              <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-800 border border-slate-300">
+                                SILVER
+                              </span>
+                            ) : (
+                              <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-300">
+                                {cat.metalType || 'GOLD'}
+                              </span>
+                            )}
+
+                            {cat.parentCategory ? (
+                              <span className="px-2 py-0.5 rounded bg-stone-100 text-stone-700 font-medium">
+                                Sub of: {cat.parentCategory.name}
+                              </span>
+                            ) : (
+                              <span className="px-2 py-0.5 rounded bg-gold-100 text-burgundy-900 font-bold">
+                                Main Category
+                              </span>
+                            )}
+                          </div>
+                          {cat.imagePublicId && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-mono text-stone-500">
+                              <Cloud className="w-3 h-3 text-gold-600" />
+                              <span className="truncate max-w-[140px]">{cat.imagePublicId}</span>
                             </span>
                           )}
-                        </div>
-                        {cat.description && (
-                          <span className="text-[11px] text-stone-500 line-clamp-1 max-w-xs block mt-0.5">
-                            {cat.description}
-                          </span>
-                        )}
-                      </div>
-                    </td>
-
-                    <td className="p-4 space-y-1">
-                      <div>
-                        {cat.parentCategory ? (
-                          <span className="px-2 py-0.5 rounded bg-stone-100 text-stone-700 font-medium">
-                            Sub of: {cat.parentCategory.name}
-                          </span>
-                        ) : (
-                          <span className="px-2 py-0.5 rounded bg-gold-100 text-burgundy-900 font-bold">
-                            Primary Collection
-                          </span>
-                        )}
-                      </div>
-                      {cat.imagePublicId && (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-mono text-stone-500">
-                          <Cloud className="w-3 h-3 text-gold-600" />
-                          <span className="truncate max-w-[140px]">{cat.imagePublicId}</span>
-                        </span>
-                      )}
-                    </td>
+                        </td>
 
                     <td className="p-4">
                       <button
@@ -425,8 +564,9 @@ export const CategoryManagementPage: React.FC = () => {
                       </button>
                     </td>
                   </tr>
-                ))
-              ) : (
+                );
+              })
+            ) : (
                 <tr>
                   <td colSpan={5} className="p-10 text-center text-stone-500">
                     No categories created yet. Use "Add New Category" to create and publish jewellery categories manually.
@@ -553,17 +693,46 @@ export const CategoryManagementPage: React.FC = () => {
                   </label>
                   <select
                     {...register('parentCategoryId')}
-                    className="w-full p-2.5 border rounded-lg outline-none bg-white focus:border-gold-500"
+                    className="w-full p-2.5 border rounded-lg outline-none bg-white focus:border-gold-500 font-medium text-stone-800"
                   >
                     <option value="">None (Top-Level Category)</option>
                     {categories
                       .filter((c) => !editingCategory || c._id !== editingCategory._id)
                       .map((c) => (
                         <option key={c._id} value={c._id}>
-                          {c.name}
+                          {c.name} ({c.metalType || 'GOLD'})
                         </option>
                       ))}
                   </select>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block font-semibold uppercase text-stone-700 mb-1">
+                      Metal Group
+                    </label>
+                    <select
+                      {...register('metalType')}
+                      className="w-full p-2.5 border rounded-lg outline-none bg-white focus:border-gold-500 font-medium text-stone-800"
+                    >
+                      <option value="ALL">Common / All Metals (Gold, Silver, Platinum)</option>
+                      <option value="GOLD">Gold</option>
+                      <option value="SILVER">Silver</option>
+                      <option value="PLATINUM">Platinum</option>
+                      <option value="DIAMOND">Diamond</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block font-semibold uppercase text-stone-700 mb-1">
+                      Display Order
+                    </label>
+                    <input
+                      type="number"
+                      {...register('displayOrder', { valueAsNumber: true })}
+                      placeholder="0"
+                      className="w-full p-2.5 border rounded-lg outline-none focus:border-gold-500 font-mono"
+                    />
+                  </div>
                 </div>
 
                 <ImageDropzone

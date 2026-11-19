@@ -64,6 +64,8 @@ interface ProductFormState {
   name: string;
   sku: string;
   categoryId: string;
+  subcategoryId: string;
+  classification: 'BRIDAL' | 'TRADITIONAL' | 'DAILY_WEAR' | '';
   metalType: 'GOLD' | 'SILVER' | 'PLATINUM' | 'DIAMOND';
   purity: string;
   jewelleryType: string;
@@ -76,6 +78,10 @@ interface ProductFormState {
   gender: 'WOMEN' | 'MEN' | 'UNISEX' | 'KIDS';
   occasion: string;
   huid: string;
+  hallmarkStatus: boolean;
+  isNewArrival: boolean;
+  isFeatured: boolean;
+  stockStatus: 'IN_STOCK' | 'MADE_TO_ORDER' | 'OUT_OF_STOCK';
   description: string;
   actualWastagePercent: string;
   offerWastagePercent: string;
@@ -101,6 +107,8 @@ const createEmptyProductForm = (defaultCategoryId = ''): ProductFormState => ({
   name: '',
   sku: '',
   categoryId: defaultCategoryId,
+  subcategoryId: '',
+  classification: 'TRADITIONAL',
   metalType: 'GOLD',
   purity: '22K',
   jewelleryType: '',
@@ -113,6 +121,10 @@ const createEmptyProductForm = (defaultCategoryId = ''): ProductFormState => ({
   gender: 'WOMEN',
   occasion: '',
   huid: '',
+  hallmarkStatus: true,
+  isNewArrival: false,
+  isFeatured: false,
+  stockStatus: 'IN_STOCK',
   description: '',
   actualWastagePercent: '',
   offerWastagePercent: '',
@@ -177,6 +189,16 @@ export const ProductManagementPage: React.FC = () => {
   const eligibleCategories = useMemo(
     () => categories.filter((c) => c.isActive),
     [categories]
+  );
+
+  const mainCategories = useMemo(
+    () => eligibleCategories.filter((c) => !c.parentCategoryId),
+    [eligibleCategories]
+  );
+
+  const availableSubcategories = useMemo(
+    () => eligibleCategories.filter((c) => c.parentCategoryId && c.parentCategoryId === formState.categoryId),
+    [eligibleCategories, formState.categoryId]
   );
 
   const sortedProducts = useMemo(
@@ -307,6 +329,8 @@ export const ProductManagementPage: React.FC = () => {
       name: product.name || product.title || '',
       sku: product.sku || '',
       categoryId: product.categoryId || '',
+      subcategoryId: product.subcategoryId || '',
+      classification: ((product.classification || product.collectionType || '') as any),
       metalType: (product.metalType || product.metal?.metalType || 'GOLD') as any,
       purity: product.purity || product.metal?.purity || '',
       jewelleryType: String(product.categoryAttributes?.jewelleryType || product.categoryAttributes?.productType || ''),
@@ -328,6 +352,10 @@ export const ProductManagementPage: React.FC = () => {
       gender: (product.gender as any) || 'WOMEN',
       occasion: Array.isArray(product.occasion) ? product.occasion.join(', ') : '',
       huid: product.huid || '',
+      hallmarkStatus: product.hallmarkStatus ?? true,
+      isNewArrival: Boolean(product.isNewArrival),
+      isFeatured: Boolean(product.isFeatured),
+      stockStatus: ((product.stockStatus || 'IN_STOCK') as any),
       description: product.description || '',
       actualWastagePercent: product.actualWastagePercent != null ? String(product.actualWastagePercent) : '',
       offerWastagePercent: product.offerWastagePercent != null ? String(product.offerWastagePercent) : '',
@@ -660,9 +688,11 @@ export const ProductManagementPage: React.FC = () => {
       pricingType: 'CALCULATED',
       images: images.length > 0 ? images : primaryMedia ? [{ url: primaryMedia.url, isPrimary: true }] : [],
       videos,
-      isFeatured: false,
-      isNewArrival: false,
-      hallmarkStatus: false,
+      classification: formState.classification || undefined,
+      isFeatured: formState.isFeatured,
+      isNewArrival: formState.isNewArrival,
+      hallmarkStatus: formState.hallmarkStatus,
+      stockStatus: formState.stockStatus,
       displayOrder: editingProduct?.displayOrder ?? 0,
       isActive: formState.visibility === 'PUBLISHED',
       visibility: formState.visibility,
@@ -773,6 +803,8 @@ export const ProductManagementPage: React.FC = () => {
         name: formState.name.trim(),
         ...(shouldSendSku ? { sku: cleanedSku } : {}),
         categoryId: formState.categoryId,
+        subcategoryId: formState.subcategoryId || null,
+        classification: formState.classification || null,
         metalType: formState.metalType,
         purity: formState.purity.trim(),
         description: formState.description.trim(),
@@ -782,6 +814,10 @@ export const ProductManagementPage: React.FC = () => {
         actualWastagePercent: actualWastageNum,
         offerWastagePercent: offerWastageNum,
         stockQuantity: stockQuantityNum,
+        stockStatus: formState.stockStatus,
+        isNewArrival: formState.isNewArrival,
+        isFeatured: formState.isFeatured,
+        hallmarkStatus: formState.hallmarkStatus,
         gender: formState.gender,
         occasion: formState.occasion.split(',').map((s) => s.trim()).filter(Boolean),
         huid: formState.huid.trim() || null,
@@ -868,6 +904,21 @@ export const ProductManagementPage: React.FC = () => {
       invalidateProductQueries();
     } catch (err: any) {
       setErrorMsg(err?.response?.data?.error?.message || 'Failed to update visibility.');
+    }
+  };
+
+  const handleToggleStockStatus = async (product: Product) => {
+    try {
+      const nextStatus = product.stockStatus === 'OUT_OF_STOCK' ? 'IN_STOCK' : 'OUT_OF_STOCK';
+      const nextQuantity = nextStatus === 'OUT_OF_STOCK' ? 0 : Math.max(product.stockQuantity || 1, 1);
+      await productsApi.adminUpdateProduct(product._id, {
+        stockStatus: nextStatus as any,
+        stockQuantity: nextQuantity,
+      });
+      setFeedbackMsg(`Stock status for "${product.title || product.sku}" set to ${nextStatus === 'OUT_OF_STOCK' ? 'Out of Stock' : 'In Stock'}.`);
+      invalidateProductQueries();
+    } catch (err: any) {
+      setErrorMsg(err?.response?.data?.error?.message || 'Failed to update stock status.');
     }
   };
 
@@ -1064,7 +1115,9 @@ export const ProductManagementPage: React.FC = () => {
                             <img
                               src={p.images[0].url}
                               alt={p.title}
-                              className="w-11 h-11 rounded-lg object-cover border border-gold-200"
+                              className={`w-11 h-11 rounded-lg object-cover border border-gold-200 ${
+                                p.stockStatus === 'OUT_OF_STOCK' ? 'filter grayscale opacity-70' : ''
+                              }`}
                             />
                             {((p.images?.length || 0) + (p.videos?.length || 0)) > 1 && (
                               <span className="absolute -top-1.5 -right-1.5 px-1 rounded-full bg-burgundy-900 text-gold-200 text-[9px] font-bold">
@@ -1086,7 +1139,26 @@ export const ProductManagementPage: React.FC = () => {
                       </div>
                     </td>
                     <td className="p-4 text-stone-700 font-medium">
-                      {p.category?.name || 'Uncategorized'}
+                      <div className="space-y-1">
+                        <div>{p.category?.name || 'Uncategorized'}</div>
+                        {p.subcategory?.name && (
+                          <div className="text-[11px] text-stone-500 font-mono">
+                            ↳ {p.subcategory.name}
+                          </div>
+                        )}
+                        <div className="flex flex-wrap items-center gap-1">
+                          {p.classification && (
+                            <span className="px-1.5 py-0.5 rounded bg-amber-50 border border-amber-200 text-amber-900 font-bold text-[9px] uppercase">
+                              {p.classification.replace(/_/g, ' ')}
+                            </span>
+                          )}
+                          {p.isNewArrival && (
+                            <span className="px-1.5 py-0.5 rounded bg-emerald-50 border border-emerald-200 text-emerald-800 font-bold text-[9px] uppercase">
+                              New
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </td>
                     <td className="p-4 text-stone-600">
                       <div>
@@ -1137,6 +1209,21 @@ export const ProductManagementPage: React.FC = () => {
                       </div>
                       <div className="text-[11px] text-stone-500 font-mono">
                         Stock: {p.stockQuantity ?? 1} pcs
+                      </div>
+                      <div className="pt-1.5">
+                        <button
+                          type="button"
+                          onClick={() => handleToggleStockStatus(p)}
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all shadow-xs cursor-pointer ${
+                            p.stockStatus === 'OUT_OF_STOCK'
+                              ? 'bg-stone-900 text-stone-100 border border-stone-700 hover:bg-black'
+                              : 'bg-emerald-100 text-emerald-800 border border-emerald-300 hover:bg-emerald-200'
+                          }`}
+                          title={`Click to mark ${p.stockStatus === 'OUT_OF_STOCK' ? 'In Stock' : 'Out of Stock'}`}
+                        >
+                          <span className={`w-1.5 h-1.5 rounded-full ${p.stockStatus === 'OUT_OF_STOCK' ? 'bg-red-400' : 'bg-emerald-500'}`} />
+                          <span>{p.stockStatus === 'OUT_OF_STOCK' ? 'Out of Stock' : 'In Stock'}</span>
+                        </button>
                       </div>
                     </td>
                     <td className="p-4">
@@ -1300,10 +1387,10 @@ export const ProductManagementPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div>
                     <label className="block font-semibold uppercase text-stone-700 mb-1">
-                      Category *
+                      Main Category *
                     </label>
                     {eligibleCategories.length === 0 ? (
                       <div className="p-2.5 rounded-lg border border-amber-300 bg-amber-50 text-[11px] text-amber-900 space-y-1">
@@ -1323,30 +1410,67 @@ export const ProductManagementPage: React.FC = () => {
                         value={formState.categoryId}
                         onChange={(e) => {
                           const nextCatId = e.target.value;
+                          const chosenCat = eligibleCategories.find((c) => c._id === nextCatId);
+                          let nextMetal = formState.metalType;
+                          if (chosenCat?.metalType === 'SILVER') nextMetal = 'SILVER';
+                          else if (chosenCat?.metalType === 'GOLD') nextMetal = 'GOLD';
+                          // If chosenCat?.metalType === 'ALL', preserve current metal type choice
+
                           if (!editingProduct && !isSkuManualRef.current) {
                             requestAutoProductSku(nextCatId);
                           } else {
-                            setFormState({ ...formState, categoryId: nextCatId });
+                            setFormState({ ...formState, categoryId: nextCatId, subcategoryId: '', metalType: nextMetal });
                           }
                         }}
-                        className="w-full p-2.5 border rounded-lg bg-white outline-none focus:border-gold-500"
+                        className="w-full p-2.5 border rounded-lg bg-white outline-none focus:border-gold-500 font-medium"
                       >
                         <option value="">Select Category</option>
-                        {eligibleCategories.map((c) => (
+                        {mainCategories.map((c) => (
                           <option key={c._id} value={c._id}>
-                            {c.name}
+                            {c.name} {c.metalType === 'ALL' ? '(Common • All Metals)' : `(${c.metalType || 'GOLD'})`}
                           </option>
                         ))}
                       </select>
                     )}
-                    {editingProduct &&
-                      eligibleCategories.length > 0 &&
-                      !eligibleCategories.some((c) => c._id === formState.categoryId) && (
-                        <p className="text-[11px] text-amber-700 mt-1">
-                          Previously assigned category is currently inactive. Please select an active category.
-                        </p>
-                      )}
                   </div>
+
+                  <div>
+                    <label className="block font-semibold uppercase text-stone-700 mb-1">
+                      Subcategory (Optional)
+                    </label>
+                    <select
+                      value={formState.subcategoryId}
+                      onChange={(e) => setFormState({ ...formState, subcategoryId: e.target.value })}
+                      disabled={availableSubcategories.length === 0}
+                      className="w-full p-2.5 border rounded-lg bg-white outline-none focus:border-gold-500 font-medium disabled:bg-stone-100 disabled:text-stone-400"
+                    >
+                      <option value="">
+                        {availableSubcategories.length > 0 ? 'None (Direct Category)' : 'No Subcategories'}
+                      </option>
+                      {availableSubcategories.map((sub) => (
+                        <option key={sub._id} value={sub._id}>
+                          {sub.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold uppercase text-stone-700 mb-1">
+                      Classification
+                    </label>
+                    <select
+                      value={formState.classification}
+                      onChange={(e) => setFormState({ ...formState, classification: e.target.value as any })}
+                      className="w-full p-2.5 border rounded-lg bg-white outline-none focus:border-gold-500 font-medium text-stone-800"
+                    >
+                      <option value="BRIDAL">Bridal</option>
+                      <option value="TRADITIONAL">Traditional</option>
+                      <option value="DAILY_WEAR">Daily Wear</option>
+                      <option value="">None / General</option>
+                    </select>
+                  </div>
+
                   <div>
                     <label className="block font-semibold uppercase text-stone-700 mb-1">
                       Metal Type *
@@ -1375,6 +1499,9 @@ export const ProductManagementPage: React.FC = () => {
                       <option value="DIAMOND">Diamond</option>
                     </select>
                   </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div>
                     {formState.metalType === 'GOLD' ? (
                       <>
@@ -1441,6 +1568,53 @@ export const ProductManagementPage: React.FC = () => {
                         />
                       </>
                     )}
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold uppercase text-stone-700 mb-1">
+                      Stock Availability
+                    </label>
+                    <select
+                      value={formState.stockStatus}
+                      onChange={(e) => setFormState({ ...formState, stockStatus: e.target.value as any })}
+                      className="w-full p-2.5 border rounded-lg bg-white outline-none focus:border-gold-500 font-medium"
+                    >
+                      <option value="IN_STOCK">In Stock (Showroom Viewing)</option>
+                      <option value="MADE_TO_ORDER">Made to Order (Handcrafted)</option>
+                      <option value="OUT_OF_STOCK">Out of Stock</option>
+                    </select>
+                  </div>
+
+                  <div className="flex flex-col justify-end">
+                    <div className="flex flex-wrap items-center gap-3 pt-2">
+                      <label className="flex items-center gap-1.5 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={formState.isNewArrival}
+                          onChange={(e) => setFormState({ ...formState, isNewArrival: e.target.checked })}
+                          className="w-4 h-4 rounded text-burgundy-900 focus:ring-gold-500"
+                        />
+                        <span className="font-semibold text-stone-800 text-xs">New Arrival</span>
+                      </label>
+                      <label className="flex items-center gap-1.5 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={formState.isFeatured}
+                          onChange={(e) => setFormState({ ...formState, isFeatured: e.target.checked })}
+                          className="w-4 h-4 rounded text-burgundy-900 focus:ring-gold-500"
+                        />
+                        <span className="font-semibold text-stone-800 text-xs">Featured</span>
+                      </label>
+                      <label className="flex items-center gap-1.5 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={formState.hallmarkStatus}
+                          onChange={(e) => setFormState({ ...formState, hallmarkStatus: e.target.checked })}
+                          className="w-4 h-4 rounded text-burgundy-900 focus:ring-gold-500"
+                        />
+                        <span className="font-semibold text-stone-800 text-xs">BIS Hallmark</span>
+                      </label>
+                    </div>
                   </div>
                 </div>
 

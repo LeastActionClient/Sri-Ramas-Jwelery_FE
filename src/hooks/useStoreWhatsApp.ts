@@ -46,13 +46,13 @@ export function useStoreWhatsApp() {
     return (
       primaryStore?.phoneNumbers?.[0] ||
       primaryStore?.phone ||
-      '+91 98765 43210'
+      '7871166317'
     );
   }, [primaryStore]);
 
   const telHref = useMemo(() => {
     const digits = displayPhone.replace(/[^\d+]/g, '');
-    return `tel:${digits || '+919876543210'}`;
+    return `tel:${digits || '7871166317'}`;
   }, [displayPhone]);
 
   const buildWhatsAppUrl = useCallback(

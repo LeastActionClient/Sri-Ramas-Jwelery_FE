@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { ShieldCheck, Lock, Mail, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { SEO } from '@/components/common/SEO';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid administrative email'),
@@ -59,6 +60,8 @@ export const AdminLoginPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-brand-maroon-gradient flex items-center justify-center p-4 relative overflow-hidden">
+      <SEO noindex title="Administrative Login" description="Private administrative login portal for Sri Ramas Jewellery staff." />
+
       {/* Subtle Pattern */}
       <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#D4AF37_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none" />
 

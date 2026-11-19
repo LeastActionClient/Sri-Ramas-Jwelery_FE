@@ -25,6 +25,9 @@ import { ProductCard } from '@/components/customer/ProductCard';
 import { BullionRatesPanel } from '@/components/customer/BullionRatesPanel';
 import { CategoryCarousel } from '@/components/customer/CategoryCarousel';
 import { PromotionalBannerCarousel } from '@/components/customer/PromotionalBannerCarousel';
+import { FounderLegacySection } from '@/components/customer/FounderLegacySection';
+import { BisTrustSection } from '@/components/customer/BisTrustSection';
+import { SEO } from '@/components/common/SEO';
 import {
   AnimatedCTA,
   AnimatedHeading,
@@ -39,29 +42,20 @@ const ShowroomCard: React.FC<{
   store: StoreLocation;
   isSingleLayout: boolean;
   whatsappHref: string;
-}> = ({ store, isSingleLayout, whatsappHref }) => {
-  const fullAddress = [
-    store.addressLine1 || store.address,
-    store.addressLine2,
-    [store.city, store.state].filter(Boolean).join(', '),
-    store.postalCode || store.pincode
-  ]
-    .filter(Boolean)
-    .join(', ');
+}> = ({ store, isSingleLayout }) => {
+  const fullAddress =
+    [
+      store.addressLine1 || store.address,
+      store.addressLine2,
+      [store.city, store.state].filter(Boolean).join(', '),
+      store.postalCode || store.pincode,
+    ]
+      .filter(Boolean)
+      .join(', ') || '18/995, South East Rampart, Near Old Bus Stand, Thanjavur, Tamil Nadu – 613001';
 
-  const phones =
-    store.phoneNumbers && store.phoneNumbers.length > 0
-      ? store.phoneNumbers
-      : store.phone
-      ? [store.phone]
-      : [];
-
-  const directionsUrl =
-    store.googleMapsUrl && store.googleMapsUrl.trim()
-      ? store.googleMapsUrl.trim()
-      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-          [store.name || store.storeName, fullAddress].filter(Boolean).join(', ')
-        )}`;
+  const directionsUrl = 'https://maps.app.goo.gl/7sxg7JxUVmCF7CQs5?g_st=iw';
+  const callingNumber = '7871166317';
+  const whatsappUrl = 'https://wa.me/916382573997';
 
   // Use CMS-configured image if provided, otherwise the generated South Indian gold jewellery background
   const bgImage = store.imageUrl || store.images?.[0] || '/images/showroom-jewellery-bg.jpg';
@@ -112,16 +106,12 @@ const ShowroomCard: React.FC<{
             <div className="flex flex-wrap items-center gap-3">
               <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#1A0307]/95 border-2 border-[#D4AF37] text-[#FFE28A] text-xs sm:text-sm font-extrabold uppercase tracking-[0.24em] shadow-xl backdrop-blur-md">
                 <MapPin className="w-4 h-4 text-[#FFE28A] shrink-0" />
-                <span className="drop-shadow-sm">
-                  {[store.city, store.state].filter(Boolean).join(' • ') || 'Showroom Location'}
-                </span>
+                <span className="drop-shadow-sm">Thanjavur • Tamil Nadu</span>
               </span>
 
-              {store.isFlagship && (
-                <span className="inline-flex items-center px-3.5 py-1.5 rounded-full bg-brand-gold-gradient text-burgundy-950 text-xs font-bold uppercase tracking-wider shadow-lg">
-                  Flagship Boutique
-                </span>
-              )}
+              <span className="inline-flex items-center px-3.5 py-1.5 rounded-full bg-brand-gold-gradient text-burgundy-950 text-xs font-bold uppercase tracking-wider shadow-lg">
+                Flagship Boutique Since 1987
+              </span>
             </div>
 
             {/* Showroom Name (Bold & Large with Strong Contrast Shadow) */}
@@ -133,41 +123,51 @@ const ShowroomCard: React.FC<{
                     '0 4px 20px rgba(0, 0, 0, 0.95), 0 2px 6px rgba(0, 0, 0, 0.85)',
                 }}
               >
-                {store.name || store.storeName}
+                Sri Ramas Jewellery
               </h3>
             </div>
 
             {/* Address & Phone (High Contrast Pure White & Gold, Large & Clearly Visible) */}
             <div className="space-y-4 pt-2">
-              {fullAddress && (
-                <p
-                  className="flex items-start gap-3.5 text-sm sm:text-base lg:text-lg font-medium text-white leading-relaxed"
-                  style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.85)' }}
-                >
-                  <MapPin className="w-5 h-5 sm:w-6 sm:h-6 text-[#E5C775] shrink-0 mt-0.5" />
-                  <span className="text-white font-semibold">{fullAddress}</span>
-                </p>
-              )}
+              {/* Clickable Address directly opening Google Maps */}
+              <a
+                href={directionsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Click to open Sri Ramas Jewellery in Google Maps"
+                className="group/addr inline-flex items-start gap-3.5 text-sm sm:text-base lg:text-lg font-medium text-white hover:text-[#FFE8A3] leading-relaxed transition-colors cursor-pointer"
+                style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.85)' }}
+              >
+                <MapPin className="w-5 h-5 sm:w-6 sm:h-6 text-[#E5C775] shrink-0 mt-0.5 group-hover/addr:scale-110 transition-transform" />
+                <span className="text-white group-hover/addr:text-[#FFE8A3] font-semibold underline decoration-[#E5C775]/50 underline-offset-4">
+                  {fullAddress}
+                </span>
+              </a>
 
-              {phones.length > 0 ? (
-                <div
-                  className="flex items-start gap-3.5 text-sm sm:text-base lg:text-lg"
-                  style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.85)' }}
-                >
-                  <Phone className="w-5 h-5 sm:w-6 sm:h-6 text-[#E5C775] shrink-0 mt-0.5" />
-                  <div className="flex flex-wrap gap-x-4 gap-y-1">
-                    {phones.map((num, idx) => (
-                      <a
-                        key={idx}
-                        href={`tel:${num.replace(/\s+/g, '')}`}
-                        className="font-bold text-[#FFE8A3] hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5C775] rounded underline-offset-4 hover:underline"
-                      >
-                        {num}
-                      </a>
-                    ))}
-                  </div>
+              {/* Calling Number */}
+              <div
+                className="flex items-center gap-3.5 text-sm sm:text-base lg:text-lg"
+                style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.85)' }}
+              >
+                <Phone className="w-5 h-5 sm:w-6 sm:h-6 text-[#E5C775] shrink-0" />
+                <div className="flex items-center gap-2">
+                  <span className="text-gold-200/80 text-xs sm:text-sm">Call Us:</span>
+                  <a
+                    href={`tel:${callingNumber}`}
+                    className="font-bold text-[#FFE8A3] hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5C775] rounded underline-offset-4 hover:underline"
+                  >
+                    +91 78711 66317
+                  </a>
                 </div>
-              ) : null}
+              </div>
+
+              {/* Showroom Timings */}
+              <div className="flex items-center gap-3 text-xs sm:text-sm text-[#E5C775] pt-1">
+                <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-[#E5C775] shrink-0" />
+                <span>
+                  Hours: <strong className="text-white">9:00 AM – 9:30 PM</strong> (Open All 7 Days • No Holidays)
+                </span>
+              </div>
             </div>
           </div>
 
@@ -180,11 +180,11 @@ const ShowroomCard: React.FC<{
               className="inline-flex items-center gap-2.5 px-6 sm:px-8 py-3.5 rounded-xl border-2 border-[#E5C775] hover:border-[#FFF1C2] bg-[#1A0307]/80 hover:bg-[#C49A3A]/25 text-[#FFE8A3] hover:text-white font-bold text-xs sm:text-sm tracking-wide transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5C775]"
             >
               <ExternalLink className="w-4 h-4 text-[#E5C775]" />
-              <span>Get Directions</span>
+              <span>Get Directions (Google Maps)</span>
             </a>
 
             <a
-              href={whatsappHref}
+              href={whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2.5 px-7 sm:px-9 py-3.5 rounded-xl bg-[#25D366] hover:bg-[#20ba59] text-white font-bold text-xs sm:text-sm tracking-wide transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] shadow-[0_6px_24px_rgba(37,211,102,0.4)] hover:shadow-[0_8px_30px_rgba(37,211,102,0.55)] border border-emerald-400/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
@@ -197,7 +197,7 @@ const ShowroomCard: React.FC<{
               >
                 <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2m.01 1.67c2.2 0 4.26.86 5.82 2.42a8.225 8.225 0 0 1 2.41 5.83c0 4.54-3.7 8.24-8.24 8.24-1.48 0-2.93-.39-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.196 8.196 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24m4.52 11.66c-.25-.13-1.47-.72-1.7-.81-.23-.08-.39-.13-.56.13-.17.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.13-1.06-.39-2.03-1.25-.75-.67-1.26-1.5-1.41-1.75-.15-.25-.02-.39.11-.51.11-.11.25-.29.37-.44.13-.15.17-.25.25-.42.08-.17.04-.31-.02-.44-.06-.13-.56-1.34-.76-1.84-.2-.49-.4-.42-.56-.43h-.48c-.17 0-.44.06-.67.31-.23.25-.88.86-.88 2.1 0 1.24.9 2.44 1.03 2.61.13.17 1.78 2.71 4.3 3.8 2.53 1.09 2.53.73 2.98.69.46-.04 1.47-.6 1.68-1.18.21-.58.21-1.08.15-1.18-.06-.1-.23-.17-.48-.29" />
               </svg>
-              <span>Enquire on WhatsApp</span>
+              <span>Enquire on WhatsApp (+91 63825 73997)</span>
             </a>
           </div>
         </div>
@@ -344,7 +344,7 @@ export const HomePage: React.FC = () => {
   });
 
   const activeCategories = useMemo(
-    () => categories.filter((cat) => cat.isActive !== false),
+    () => categories.filter((cat) => cat.isActive !== false && !cat.parentCategory),
     [categories]
   );
 
@@ -358,12 +358,59 @@ export const HomePage: React.FC = () => {
   const primaryScheme = activeSchemes[0];
 
   return (
-    <div className="space-y-12 lg:space-y-16 pb-16">
+    <div className="space-y-8 lg:space-y-10 pb-10">
+      <SEO
+        title="Sri Ramas Jewellery | Traditional Gold & Silver Jewellery"
+        description="Discover elegant gold and silver jewellery at Sri Ramas Jewellery. Explore traditional designs, bridal collections and timeless jewellery craftsmanship."
+        canonical="https://sriramasjewellery.com/"
+        schema={{
+          '@context': 'https://schema.org',
+          '@type': 'JewelryStore',
+          name: 'Sri Ramas Jewellery',
+          alternateName: 'Sri Ramas Jewellery Thanjavur',
+          url: 'https://sriramasjewellery.com',
+          logo: 'https://sriramasjewellery.com/logo.jpg',
+          image:
+            'https://res.cloudinary.com/m7bmcsh3/image/upload/v1795010070/sri-ramas-jewellery/categories/vr78lceiy1fsfyqdnycx.png',
+          description:
+            'Heritage South Indian jewellery showroom established in 1987 in Thanjavur. Renowned for 100% BIS 916 hallmarked bridal gold, temple harams, antique bangles, and 925 sterling silver.',
+          telephone: '+91 78711 66317',
+          address: {
+            '@type': 'PostalAddress',
+            streetAddress: '18/995, South East Rampart, Near Old Bus Stand',
+            addressLocality: 'Thanjavur',
+            addressRegion: 'Tamil Nadu',
+            postalCode: '613001',
+            addressCountry: 'IN'
+          },
+          geo: {
+            '@type': 'GeoCoordinates',
+            latitude: 10.787,
+            longitude: 79.1378
+          },
+          openingHoursSpecification: [
+            {
+              '@type': 'OpeningHoursSpecification',
+              dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+              opens: '09:00',
+              closes: '21:30'
+            }
+          ],
+          priceRange: '₹₹₹',
+          currenciesAccepted: 'INR',
+          sameAs: [
+            'https://www.instagram.com/sriramasjewellery_official',
+            'https://www.facebook.com/sriramasjewellery',
+            'https://www.youtube.com/@sriramasjewellery'
+          ]
+        }}
+      />
+
       {/* 1. HERO SECTION: Full Ambient Background Video + Luxury Jewellery Showcase */}
       <section
         ref={heroContainerRef}
         id="hero-section"
-        className="relative overflow-hidden bg-burgundy-950 text-gold-100 border-b-2 border-gold-600/40 min-h-screen lg:min-h-[92vh] xl:h-screen pt-24 pb-12 sm:pt-28 sm:pb-14 lg:pt-24 lg:pb-12 flex items-center w-full max-w-full"
+        className="relative overflow-hidden bg-burgundy-950 text-gold-100 border-b-2 border-gold-600/40 min-h-[100svh] min-h-screen sm:min-h-screen lg:min-h-[92vh] xl:h-screen pt-20 pb-10 sm:pt-24 sm:pb-12 lg:pt-20 lg:pb-10 flex items-end sm:items-center w-full max-w-full"
       >
         <div className="hero-bg-layer absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
           <div className="hero-bg-parallax w-full h-full">
@@ -373,24 +420,29 @@ export const HomePage: React.FC = () => {
               loop
               muted
               playsInline
-              className="w-full h-full object-cover object-center scale-[1.22]"
+              className="w-full h-full object-cover object-center scale-100 sm:scale-105 lg:scale-[1.22] brightness-[1.06] contrast-[1.04]"
             />
           </div>
-          <div className="absolute inset-0 bg-gradient-to-r from-burgundy-950/92 via-burgundy-950/60 to-burgundy-950/35" />
+          {/* 
+            Mobile-optimized gradient:
+            - On mobile (< lg): Soft vertical gradient (dark at bottom for text legibility, clear & luminous at center/top for video visibility)
+            - On desktop (>= lg): Horizontal gradient protecting text on the left while showcasing jewellery on the right
+          */}
+          <div className="absolute inset-0 bg-gradient-to-t from-burgundy-950/95 via-burgundy-950/35 to-black/25 lg:bg-gradient-to-r lg:from-burgundy-950/92 lg:via-burgundy-950/60 lg:to-burgundy-950/35" />
         </div>
 
         <div className="relative max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 w-full z-10">
           <div className="flex items-center">
             {/* Hero Campaign Headline & Trust Actions */}
-            <div className="max-w-2xl space-y-4 sm:space-y-5 text-center lg:text-left mx-auto lg:mx-0">
-              <div className="hero-badge inline-flex items-center gap-2 px-3 py-1 rounded-full bg-burgundy-950/75 border border-gold-400/40 backdrop-blur-md shadow-sm">
+            <div className="max-w-2xl space-y-3 sm:space-y-5 text-center lg:text-left mx-auto lg:mx-0">
+              <div className="hero-badge inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-burgundy-950/70 border border-gold-400/40 backdrop-blur-md shadow-sm">
                 <span className="w-1.5 h-1.5 rounded-full bg-gold-400" />
-                <span className="text-[10px] sm:text-[11px] font-serif uppercase tracking-[0.2em] text-gold-300 font-medium">
+                <span className="text-[9px] sm:text-[11px] font-serif uppercase tracking-[0.2em] text-gold-300 font-medium">
                   Heritage South Indian Jewellery • Estd. 1987
                 </span>
               </div>
 
-              <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl xl:text-[52px] font-extrabold tracking-wide text-gold-100 leading-tight sm:leading-[1.16] drop-shadow-lg">
+              <h1 className="font-serif text-2xl sm:text-4xl lg:text-5xl xl:text-[52px] font-extrabold tracking-wide text-gold-100 leading-tight sm:leading-[1.16] drop-shadow-lg">
                 <span className="block overflow-hidden">
                   <span className="hero-headline-line block">Purity in Every Grain.</span>
                 </span>
@@ -401,17 +453,17 @@ export const HomePage: React.FC = () => {
                 </span>
               </h1>
 
-              <p className="hero-desc text-xs sm:text-sm lg:text-base text-gold-100/85 max-w-lg font-light leading-relaxed mx-auto lg:mx-0 drop-shadow-md">
+              <p className="hero-desc text-[11px] sm:text-sm lg:text-base text-gold-100/90 max-w-lg font-light leading-relaxed mx-auto lg:mx-0 drop-shadow-md line-clamp-2 sm:line-clamp-none">
                 Welcome to Sri Ramas Jewellery. Celebrating 39 years of royal South Indian craftsmanship, BIS 916 Hallmarked bridal gold, exquisite temple jewellery, and certified diamonds.
               </p>
 
-              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 sm:gap-4 pt-1.5">
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2.5 sm:gap-4 pt-1">
                 <div className="hero-cta-item">
                   <AnimatedCTA
                     to="/products"
                     variant="gold"
                     icon={<ArrowRight className="w-4 h-4" />}
-                    className="px-6 sm:px-7 py-3 sm:py-3.5 rounded-xl text-xs sm:text-sm uppercase tracking-wider font-bold shadow-luxury-gold"
+                    className="px-5 sm:px-7 py-2.5 sm:py-3.5 rounded-xl text-xs sm:text-sm uppercase tracking-wider font-bold shadow-luxury-gold"
                   >
                     <span>Explore Collections</span>
                   </AnimatedCTA>
@@ -422,7 +474,7 @@ export const HomePage: React.FC = () => {
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label="Connect with Sri Ramas Jewellery WhatsApp Advisor"
-                    className="group inline-flex items-center justify-center gap-2.5 px-6 sm:px-7 py-3 sm:py-3.5 rounded-xl bg-[#25D366] hover:bg-[#20ba59] text-white font-bold text-xs sm:text-sm tracking-wide shadow-[0_8px_24px_rgba(37,211,102,0.38)] hover:shadow-[0_12px_32px_rgba(37,211,102,0.52)] hover:scale-[1.03] active:scale-[0.98] transition-all duration-300 border border-emerald-400/50 backdrop-blur-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+                    className="group inline-flex items-center justify-center gap-2 px-5 sm:px-7 py-2.5 sm:py-3.5 rounded-xl bg-[#25D366] hover:bg-[#20ba59] text-white font-bold text-xs sm:text-sm tracking-wide shadow-[0_8px_24px_rgba(37,211,102,0.38)] hover:shadow-[0_12px_32px_rgba(37,211,102,0.52)] hover:scale-[1.03] active:scale-[0.98] transition-all duration-300 border border-emerald-400/50 backdrop-blur-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
                   >
                     <svg
                       viewBox="0 0 24 24"
@@ -438,7 +490,7 @@ export const HomePage: React.FC = () => {
               </div>
 
               {/* Staggered Trust Indicators */}
-              <div className="pt-3 sm:pt-4 border-t border-gold-400/20 flex flex-wrap items-center justify-center lg:justify-start gap-x-5 gap-y-2 text-[11px] sm:text-xs text-gold-200/90">
+              <div className="pt-2.5 sm:pt-4 border-t border-gold-400/20 flex flex-wrap items-center justify-center lg:justify-start gap-x-4 gap-y-1.5 text-[10px] sm:text-xs text-gold-200/90">
                 <div className="hero-trust-item inline-flex items-center gap-1.5">
                   <ShieldCheck className="w-3.5 h-3.5 text-gold-400 shrink-0" />
                   <span>BIS 916 HUID Hallmarked</span>
@@ -447,7 +499,7 @@ export const HomePage: React.FC = () => {
                   <Award className="w-3.5 h-3.5 text-gold-400 shrink-0" />
                   <span>39+ Years Craftsmanship</span>
                 </div>
-                <div className="hero-trust-item inline-flex items-center gap-1.5">
+                <div className="hero-trust-item hidden min-[400px]:inline-flex sm:inline-flex items-center gap-1.5">
                   <Gem className="w-3.5 h-3.5 text-gold-400 shrink-0" />
                   <span>In-Showroom Certified Diamonds</span>
                 </div>
@@ -467,7 +519,7 @@ export const HomePage: React.FC = () => {
       />
 
       {/* 3. JEWELLERY CATEGORIES SECTION (SHOP BY CATEGORY) */}
-      <section className="bg-white py-10 sm:py-14 w-full">
+      <section className="bg-white py-6 sm:py-8 w-full">
         <CategoryCarousel
           categories={activeCategories.length > 0 ? activeCategories : categories}
           isLoading={categoriesLoading}
@@ -641,8 +693,14 @@ export const HomePage: React.FC = () => {
         </div>
       </section>
 
+      {/* 4B. FOUNDER & OUR LEGACY SECTION (Bilingual Tamil / English & Client Banner) */}
+      <FounderLegacySection />
+
+      {/* 4C. BIS 100% CERTIFIED JEWELLERY TRUST SECTION */}
+      <BisTrustSection />
+
       {/* 5. ROYAL TEMPLE JEWELLERY & BRIDAL HERITAGE EDITORIAL SHOWCASE */}
-      <section className="relative w-full bg-[#FAF5EE] py-14 sm:py-20 border-y border-[#D4AF37]/30 overflow-hidden">
+      <section className="relative w-full bg-[#FAF5EE] py-8 sm:py-12 border-y border-[#D4AF37]/30 overflow-hidden">
         {/* Subtle Ambient Decorative Gold Glows */}
         <div
           aria-hidden="true"

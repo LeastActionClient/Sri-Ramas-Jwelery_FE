@@ -7,6 +7,7 @@ interface BackendCategoryPayload {
   slug?: string;
   description?: string | null;
   parentId?: string | null;
+  metalType?: string;
   imageUrl?: string | null;
   imagePublicId?: string | null;
   displayOrder?: number;
@@ -35,6 +36,7 @@ export function adaptCategory(raw: any): Category {
     sku: raw.sku || undefined,
     parentCategoryId: parentId,
     parentCategory: raw.parentCategory ?? populatedParent,
+    metalType: raw.metalType || 'GOLD',
     imageUrl: raw.imageUrl || undefined,
     imagePublicId: raw.imagePublicId || undefined,
     sortOrder,
@@ -52,6 +54,7 @@ function serializeCategoryPayload(data: Partial<Category>): BackendCategoryPaylo
   if (data.slug !== undefined) payload.slug = data.slug;
   if (data.description !== undefined) payload.description = data.description;
   if (data.isActive !== undefined) payload.isActive = data.isActive;
+  if (data.metalType !== undefined) payload.metalType = data.metalType;
 
   if (data.parentCategoryId !== undefined) {
     payload.parentId = data.parentCategoryId || null;

@@ -5,6 +5,7 @@ export interface ProductFilters {
   category?: string;
   categoryId?: string;
   subcategoryId?: string;
+  classification?: string;
   metalType?: string;
   purity?: string;
   gender?: string;
@@ -97,6 +98,7 @@ export function adaptProduct(raw: any): Product {
     imagePublicIds: publicIds,
     gender: raw.gender,
     occasion: Array.isArray(raw.occasion) ? raw.occasion : [],
+    classification: raw.classification || raw.collectionType || undefined,
     collectionType: raw.collectionType,
     categoryAttributes: raw.categoryAttributes && typeof raw.categoryAttributes === 'object' ? raw.categoryAttributes : {},
     metalDetails: raw.metalDetails && typeof raw.metalDetails === 'object' ? raw.metalDetails : {},
@@ -125,6 +127,7 @@ export interface ProductAdminPayload {
   sku?: string;
   categoryId: string;
   subcategoryId?: string | null;
+  classification?: string | null;
   metalType: string;
   purity?: string;
   description?: string;
@@ -134,6 +137,7 @@ export interface ProductAdminPayload {
   actualWastagePercent?: number | null;
   offerWastagePercent?: number | null;
   stockQuantity?: number;
+  stockStatus?: string;
   hallmarkStatus?: boolean;
   huid?: string | null;
   gender?: 'WOMEN' | 'MEN' | 'UNISEX' | 'KIDS';
@@ -266,6 +270,12 @@ export function serializeProductPayload(
   }
   if (!isPartial || (data as any).gender !== undefined) {
     payload.gender = (data as any).gender || 'WOMEN';
+  }
+  if (!isPartial || (data as any).classification !== undefined) {
+    payload.classification = (data as any).classification || null;
+  }
+  if (!isPartial || (data as any).stockStatus !== undefined) {
+    payload.stockStatus = (data as any).stockStatus || 'IN_STOCK';
   }
   if (!isPartial || (data as any).occasion !== undefined) {
     payload.occasion = Array.isArray((data as any).occasion) ? (data as any).occasion : [];

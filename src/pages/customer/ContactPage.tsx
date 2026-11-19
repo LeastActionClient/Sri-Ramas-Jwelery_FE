@@ -17,9 +17,13 @@ import {
   Gem,
   Sparkles,
   X,
+  ExternalLink,
+  Navigation,
+  MessageCircle,
 } from 'lucide-react';
 import { enquiriesApi } from '@/services/api/enquiries.api';
 import { useStoreWhatsApp } from '@/hooks/useStoreWhatsApp';
+import { SEO } from '@/components/common/SEO';
 import {
   filterAlphabeticNameInput,
   filterIndianMobileInput,
@@ -364,8 +368,38 @@ export const ContactPage: React.FC = () => {
 
   return (
     <div className="w-full min-h-screen bg-[#FAF4EC] text-stone-900 selection:bg-gold-200 selection:text-burgundy-950 relative overflow-hidden">
+      <SEO
+        title="Contact Sri Ramas Jewellery | Visit Our Showroom"
+        description="Contact Sri Ramas Jewellery for jewellery enquiries, showroom information and assistance with our gold and silver collections."
+        canonical="https://sriramasjewellery.com/contact"
+        breadcrumbs={[
+          { name: 'Home', path: '/' },
+          { name: 'Contact Showroom', path: '/contact' }
+        ]}
+        schema={{
+          '@context': 'https://schema.org',
+          '@type': 'ContactPage',
+          name: 'Contact Sri Ramas Jewellery',
+          url: 'https://sriramasjewellery.com/contact',
+          mainEntity: {
+            '@type': 'JewelryStore',
+            name: 'Sri Ramas Jewellery',
+            telephone: '+91 78711 66317',
+            address: {
+              '@type': 'PostalAddress',
+              streetAddress: '18/995, South East Rampart, Near Old Bus Stand',
+              addressLocality: 'Thanjavur',
+              addressRegion: 'Tamil Nadu',
+              postalCode: '613001',
+              addressCountry: 'IN'
+            },
+            openingHours: 'Mo-Su 09:00-21:30'
+          }
+        }}
+      />
+
       {/* 1. Full-Bleed Luxury Hero Section (100% Matching 2nd Image Font, Words & Design) */}
-      <section className="relative w-full bg-[#1A0307] text-gold-100 min-h-[290px] sm:min-h-[330px] md:min-h-[350px] py-12 sm:py-16 md:py-18 flex flex-col justify-center border-b border-[#D4AF37]/35 overflow-hidden">
+      <section className="relative w-full bg-[#1A0307] text-gold-100 min-h-[240px] sm:min-h-[280px] md:min-h-[300px] py-8 sm:py-10 md:py-12 flex flex-col justify-center border-b border-[#D4AF37]/35 overflow-hidden">
         {/* Background Image: Exactly matching the 1st image provided */}
         <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
           <img
@@ -464,97 +498,184 @@ export const ContactPage: React.FC = () => {
           />
         </div>
 
-        {/* Enlarged Bottom-Left Image: Royal Ruby Ring, Jasmine Flowers on Burgundy Silk Velvet (Prominent & tack-sharp) */}
+        {/* Enlarged Bottom-Right Image: Royal Ruby Ring on Burgundy Silk Velvet (Moved to right corner to be fully visible without card obstruction) */}
         <div
           aria-hidden="true"
-          className="absolute bottom-0 left-0 w-[420px] sm:w-[560px] md:w-[680px] lg:w-[780px] xl:w-[860px] max-w-[90vw] pointer-events-none select-none z-0"
+          className="absolute bottom-0 right-0 w-[420px] sm:w-[560px] md:w-[680px] lg:w-[780px] xl:w-[860px] max-w-[90vw] pointer-events-none select-none z-0"
         >
           <img
-            src="/images/contact-bottom-ring.png"
+            src="/images/contact-bottom-ring-right.png"
             alt=""
-            className="w-full h-auto object-contain object-left-bottom"
+            className="w-full h-auto object-contain object-right-bottom"
           />
         </div>
 
         {/* Floating Form & Information Cards Container */}
-        <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 md:py-16">
+        <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 md:py-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
-            {/* Left Card: Direct Contact Information (5 columns) */}
-            <ScrollReveal variant="slide-left" distance={16} className="lg:col-span-5 space-y-6">
-              <div className="bg-white rounded-2xl border border-[#E5D2B8] p-6 sm:p-8 space-y-6 shadow-[0_4px_24px_rgba(180,140,80,0.08)]">
-                <h2 className="font-serif text-lg sm:text-xl font-bold text-[#38060F] tracking-wide uppercase border-b border-[#F0E4D3] pb-3">
-                  DIRECT CONTACT INFORMATION
-                </h2>
+            {/* Left Column: Premium 3-Card Contact, Location & Hours Layout (5 columns) */}
+            <ScrollReveal variant="slide-left" distance={16} className="lg:col-span-5 space-y-5">
+              {/* Card 1: Contact Card */}
+              <div className="bg-white rounded-2xl border border-[#E5D2B8] p-5 sm:p-6 space-y-4 shadow-[0_4px_24px_rgba(180,140,80,0.08)]">
+                <div className="flex items-center justify-between border-b border-[#F0E4D3] pb-3">
+                  <h2 className="font-serif text-base sm:text-lg font-bold text-[#38060F] tracking-wide uppercase">
+                    CONTACT DETAILS
+                  </h2>
+                  <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-[#C59B3C]/10 text-[#8B651B] border border-[#C59B3C]/30">
+                    Direct Line
+                  </span>
+                </div>
 
-                <div className="space-y-4 text-xs sm:text-[13px] text-stone-600">
-                  <div className="flex items-start gap-3">
-                    <MapPin className="w-5 h-5 text-[#C59B3C] shrink-0 mt-0.5" />
-                    <div>
-                      <strong className="block text-stone-900 font-bold mb-0.5">
-                        Our Showroom
-                      </strong>
-                      <span className="text-stone-700 leading-relaxed">
-                        {storeAddress || '42, Chettiar Street, Gandhi Nagar, Coimbatore, Tamil Nadu - 641002'}
+                <div className="space-y-3.5 text-xs sm:text-[13px]">
+                  {/* Calling Number */}
+                  <div className="flex items-start gap-3 p-2.5 rounded-xl bg-[#FAF5EE] border border-[#E5D2B8]/60">
+                    <div className="w-8 h-8 rounded-lg bg-[#38060F] text-[#FFE28A] flex items-center justify-center shrink-0">
+                      <Phone className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1">
+                      <span className="block text-[11px] font-semibold text-stone-500 uppercase tracking-wider">
+                        Calling Number
                       </span>
+                      <a
+                        href="tel:7871166317"
+                        className="text-stone-900 font-bold hover:text-[#C59B3C] text-sm tracking-wide transition-colors"
+                      >
+                        +91 78711 66317
+                      </a>
+                      <span className="block text-[10px] text-stone-500 mt-0.5">Direct Showroom Voice Line</span>
                     </div>
                   </div>
 
-                  <div className="flex items-start gap-3">
-                    <Phone className="w-5 h-5 text-[#C59B3C] shrink-0 mt-0.5" />
-                    <div>
-                      <strong className="block text-stone-900 font-bold mb-0.5">
-                        Enquiry Number
-                      </strong>
-                      <span className="text-stone-700">
-                        {primaryPhones[0] || '+91 98765 43210'}
+                  {/* WhatsApp Enquiry Number */}
+                  <div className="flex items-start gap-3 p-2.5 rounded-xl bg-[#25D366]/10 border border-[#25D366]/30">
+                    <div className="w-8 h-8 rounded-lg bg-[#25D366] text-white flex items-center justify-center shrink-0 shadow-sm">
+                      <MessageCircle className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1">
+                      <span className="block text-[11px] font-semibold text-emerald-800 uppercase tracking-wider">
+                        WhatsApp Enquiry Number
                       </span>
+                      <a
+                        href="https://wa.me/916382573997"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-emerald-900 font-bold hover:text-emerald-700 text-sm tracking-wide transition-colors inline-flex items-center gap-1"
+                      >
+                        +91 63825 73997
+                        <ExternalLink className="w-3 h-3 text-emerald-700" />
+                      </a>
+                      <span className="block text-[10px] text-emerald-700 mt-0.5">Instant Specialist Assistance</span>
                     </div>
                   </div>
 
-                  <div className="flex items-start gap-3">
-                    <Mail className="w-5 h-5 text-[#C59B3C] shrink-0 mt-0.5" />
-                    <div>
-                      <strong className="block text-stone-900 font-bold mb-0.5">
-                        Email Us
-                      </strong>
-                      <span className="text-stone-700">
-                        {primaryStore?.email || 'enquiry@sriramasjewellery.com'}
-                      </span>
+                  {/* Email */}
+                  <div className="flex items-start gap-3 p-2.5 rounded-xl bg-[#FAF5EE] border border-[#E5D2B8]/60">
+                    <div className="w-8 h-8 rounded-lg bg-[#C59B3C]/20 text-[#8B651B] flex items-center justify-center shrink-0">
+                      <Mail className="w-4 h-4" />
                     </div>
-                  </div>
-
-                  <div className="flex items-start gap-3">
-                    <Clock className="w-5 h-5 text-[#C59B3C] shrink-0 mt-0.5" />
-                    <div>
-                      <strong className="block text-stone-900 font-bold mb-0.5">
-                        Showroom Timings
-                      </strong>
-                      <span className="text-stone-700">
-                        {(primaryStore?.openingHours && !primaryStore.openingHours.toLowerCase().includes('confirm')) ? primaryStore.openingHours : 'Mon - Sun : 10:00 AM - 8:00 PM'}
+                    <div className="flex-1">
+                      <span className="block text-[11px] font-semibold text-stone-500 uppercase tracking-wider">
+                        Official Email
                       </span>
+                      <a
+                        href="mailto:sriramasjewel1987@gmail.com"
+                        className="text-stone-900 font-medium hover:text-[#C59B3C] break-all transition-colors"
+                      >
+                        sriramasjewel1987@gmail.com
+                      </a>
                     </div>
                   </div>
                 </div>
 
-                {/* Instant Chat on WhatsApp Button matching reference */}
-                <div className="pt-2">
+                {/* Prominent WhatsApp CTA Button */}
+                <div className="pt-1">
                   <a
-                    href={instantChatUrl}
+                    href="https://wa.me/916382573997"
                     target="_blank"
                     rel="noopener noreferrer"
-                    aria-label="Instant Chat on WhatsApp with Sri Ramas Jewellery"
-                    className="w-full py-3.5 px-6 rounded-xl font-bold text-xs uppercase tracking-wider bg-[#00D757] hover:bg-[#00C24E] text-white shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2.5 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D757]"
+                    aria-label="Enquire on WhatsApp with Sri Ramas Jewellery"
+                    className="w-full py-3.5 px-6 rounded-xl font-bold text-xs uppercase tracking-wider bg-[#25D366] hover:bg-[#20ba59] text-white shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2.5 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#25D366]"
                   >
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                      className="w-4 h-4 text-white shrink-0"
-                      aria-hidden="true"
-                    >
-                      <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2m.01 1.67c2.2 0 4.26.86 5.82 2.42a8.225 8.225 0 0 1 2.41 5.83c0 4.54-3.7 8.24-8.24 8.24-1.48 0-2.93-.39-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.196 8.196 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24m4.52 11.66c-.25-.13-1.47-.72-1.7-.81-.23-.08-.39-.13-.56.13-.17.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.13-1.06-.39-2.03-1.25-.75-.67-1.26-1.5-1.41-1.75-.15-.25-.02-.39.11-.51.11-.11.25-.29.37-.44.13-.15.17-.25.25-.42.08-.17.04-.31-.02-.44-.06-.13-.56-1.34-.76-1.84-.2-.49-.4-.42-.56-.43h-.48c-.17 0-.44.06-.67.31-.23.25-.88.86-.88 2.1 0 1.24.9 2.44 1.03 2.61.13.17 1.78 2.71 4.3 3.8 2.53 1.09 2.53.73 2.98.69.46-.04 1.47-.6 1.68-1.18.21-.58.21-1.08.15-1.18-.06-.1-.23-.17-.48-.29" />
-                    </svg>
-                    <span>INSTANT CHAT ON WHATSAPP</span>
+                    <MessageCircle className="w-4 h-4 text-white shrink-0" />
+                    <span>ENQUIRE ON WHATSAPP (+91 63825 73997)</span>
                   </a>
+                </div>
+              </div>
+
+              {/* Card 2: Location Card (Clickable to Google Maps) */}
+              <div className="bg-white rounded-2xl border border-[#E5D2B8] p-5 sm:p-6 space-y-3 shadow-[0_4px_24px_rgba(180,140,80,0.08)]">
+                <div className="flex items-center justify-between border-b border-[#F0E4D3] pb-3">
+                  <h2 className="font-serif text-base sm:text-lg font-bold text-[#38060F] tracking-wide uppercase">
+                    STORE LOCATION
+                  </h2>
+                  <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-[#38060F]/10 text-[#38060F]">
+                    Thanjavur
+                  </span>
+                </div>
+
+                <a
+                  href="https://maps.app.goo.gl/7sxg7JxUVmCF7CQs5?g_st=iw"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Click to open Sri Ramas Jewellery in Google Maps"
+                  className="group block p-3.5 rounded-xl bg-gradient-to-br from-[#FAF5EE] to-[#FFFDF8] border border-[#C59B3C]/40 hover:border-[#C59B3C] hover:shadow-md transition-all duration-200 cursor-pointer"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-[#C59B3C] text-white flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-sm">
+                      <MapPin className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-1.5">
+                        <strong className="text-stone-900 font-bold text-sm group-hover:text-[#8B651B] transition-colors">
+                          Sri Ramas Jewellery
+                        </strong>
+                        <Navigation className="w-3.5 h-3.5 text-[#C59B3C] group-hover:translate-x-0.5 transition-transform" />
+                      </div>
+                      <p className="text-xs text-stone-700 leading-relaxed">
+                        18/995, South East Rampart,<br />
+                        Near Old Bus Stand,<br />
+                        Thanjavur, Tamil Nadu – 613001.
+                      </p>
+                      <div className="pt-1.5 flex items-center gap-1 text-[11px] font-semibold text-[#8B651B] group-hover:underline">
+                        <span>Get Directions on Google Maps</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </div>
+                    </div>
+                  </div>
+                </a>
+              </div>
+
+              {/* Card 3: Business Hours Card */}
+              <div className="bg-white rounded-2xl border border-[#E5D2B8] p-5 sm:p-6 space-y-3 shadow-[0_4px_24px_rgba(180,140,80,0.08)]">
+                <div className="flex items-center justify-between border-b border-[#F0E4D3] pb-3">
+                  <h2 className="font-serif text-base sm:text-lg font-bold text-[#38060F] tracking-wide uppercase">
+                    BUSINESS HOURS
+                  </h2>
+                  <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+                    Open 365 Days
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div className="p-3 rounded-xl bg-[#FAF5EE] border border-[#E5D2B8]/60 text-center space-y-1">
+                    <span className="text-[11px] text-stone-500 uppercase tracking-wider block font-semibold">
+                      Opening Time
+                    </span>
+                    <span className="text-stone-900 font-extrabold text-sm block">9:00 AM</span>
+                  </div>
+                  <div className="p-3 rounded-xl bg-[#FAF5EE] border border-[#E5D2B8]/60 text-center space-y-1">
+                    <span className="text-[11px] text-stone-500 uppercase tracking-wider block font-semibold">
+                      Closing Time
+                    </span>
+                    <span className="text-stone-900 font-extrabold text-sm block">9:30 PM</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 p-2.5 rounded-xl bg-amber-50/70 border border-amber-200/80 text-amber-900 text-xs">
+                  <Clock className="w-4 h-4 text-amber-700 shrink-0" />
+                  <span className="font-medium">
+                    Holidays: <strong>No holidays</strong> (Open all days of the week).
+                  </span>
                 </div>
               </div>
             </ScrollReveal>

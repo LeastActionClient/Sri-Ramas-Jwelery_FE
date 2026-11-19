@@ -1,5 +1,36 @@
-# Logs
-logs
+# ==============================================================================
+# SRI RAMAS JEWELLERY — FRONTEND .GITIGNORE
+# ==============================================================================
+
+# 1. Environment variables and secrets
+.env
+.env.*
+.env.local
+.env.*.local
+.env.development
+.env.test
+.env.production
+!.env.example
+!.env.sample
+!.env.template
+
+# 2. Dependencies
+node_modules/
+**/node_modules/
+
+# 3. Production build outputs
+dist/
+dist-ssr/
+build/
+coverage/
+.nyc_output/
+*.local
+*.tsbuildinfo
+tsconfig.app.tsbuildinfo
+tsconfig.node.tsbuildinfo
+
+# 4. Logs and debug files
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -7,18 +38,28 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# 5. Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
 
-# Editor directories and files
+# 6. Credentials and certificates
+*.credentials.json
+secrets/
+*.pem
+*.key
+*.p12
+
+# 7. Editor directories and files
 .vscode/*
 !.vscode/extensions.json
-.idea
-.DS_Store
+.idea/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+.DS_Store
+Thumbs.db
+desktop.ini

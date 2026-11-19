@@ -4,7 +4,7 @@
  * Admin-configured showroom WhatsApp numbers when available.
  */
 
-export const DEFAULT_WHATSAPP_NUMBER = '919876543210';
+export const DEFAULT_WHATSAPP_NUMBER = '916382573997';
 
 export function normalizeWhatsAppNumber(rawPhone?: string | null): string {
   if (!rawPhone) return DEFAULT_WHATSAPP_NUMBER;
@@ -92,10 +92,9 @@ export function getWhatsAppEnquiryUrl(params: WhatsAppEnquiryParams = {}): strin
     message = `Namaste Sri Ramas Jewellery,\n\n`;
 
     if (params.type === 'PRODUCT' && params.productTitle) {
-      message += `I am interested in your jewellery piece: *${params.productTitle}*`;
-      if (params.productSku) message += ` (SKU: ${params.productSku})`;
-      if (params.categoryName) message += ` under *${params.categoryName}*`;
-      message += `.\nCould you please share availability, customisation options, and showroom viewing details?`;
+      message = `Hello Sri Ramas Jewellery, I would like to enquire about ${params.productTitle}${
+        params.productSku ? `, Product Code: ${params.productSku}` : ''
+      }. Please share further details.`;
     } else if (params.type === 'SCHEME' && params.schemeName) {
       message += `I would like to enquire about the *${params.schemeName}* Jewellery Savings Scheme. Please share enrollment details and showroom guidance.`;
     } else if (params.type === 'SCHEME') {

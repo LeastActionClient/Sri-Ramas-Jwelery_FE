@@ -113,7 +113,7 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({
 
   // Combine active categories from props or fallback to curated defaults if empty/short
   const effectiveList = useMemo(() => {
-    const valid = (categories || []).filter((c) => c.isActive !== false);
+    const valid = (categories || []).filter((c) => c.isActive !== false && !c.parentCategory);
     if (valid.length >= 5) {
       return valid;
     }
@@ -165,31 +165,36 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({
   }, [checkScrollState, effectiveList.length]);
 
   /**
-   * Responsive layout parameters:
-   * - Desktop (>= 1024px): Exactly 4 full cards + 5th card sliced cleanly at 50% peek (4.5 visible items).
-   * - Tablet (768px - 1023px): 3 full cards + 4th card at 50% peek (3.5 visible items).
-   * - Large Mobile (480px - 767px): 2 full cards + 3rd card at ~45% peek (2.4 visible items).
-   * - Small Mobile (< 480px): 1 full card + 2nd card at 50% peek (1.55 visible items).
+   * Responsive layout parameters tailored for uniform circular category cards:
+   * - Extra Large Desktop (>= 1440px): 4.5 visible circular cards with 50% peek.
+   * - Desktop (1280px - 1439px): 4.2 visible circular cards with 50% peek.
+   * - Laptop (1024px - 1279px): 3.5 visible circular cards.
+   * - Tablet (768px - 1023px): 2.8 visible circular cards.
+   * - Large Mobile (480px - 767px): 2.2 visible circular cards.
+   * - Small Mobile (< 480px): 1.6 visible circular cards.
    */
   const layout = useMemo(() => {
     const w = containerWidth || (typeof window !== 'undefined' ? window.innerWidth : 1200);
+    if (w >= 1440) {
+      return { itemsVisible: 4.5, gap: 28, paddingLeft: 64 };
+    }
     if (w >= 1280) {
-      return { itemsVisible: 4.5, gap: 24, paddingLeft: 56 };
+      return { itemsVisible: 4.2, gap: 24, paddingLeft: 48 };
     }
     if (w >= 1024) {
-      return { itemsVisible: 4.5, gap: 20, paddingLeft: 44 };
+      return { itemsVisible: 3.5, gap: 24, paddingLeft: 40 };
     }
     if (w >= 768) {
-      return { itemsVisible: 3.5, gap: 20, paddingLeft: 36 };
+      return { itemsVisible: 2.8, gap: 20, paddingLeft: 32 };
     }
     if (w >= 480) {
-      return { itemsVisible: 2.4, gap: 16, paddingLeft: 24 };
+      return { itemsVisible: 2.3, gap: 16, paddingLeft: 20 };
     }
-    return { itemsVisible: 1.55, gap: 12, paddingLeft: 16 };
+    return { itemsVisible: 1.8, gap: 12, paddingLeft: 16 };
   }, [containerWidth]);
 
   /**
-   * Mathematical card width calculation ensuring the peek card lands exactly at 50%
+   * Mathematical card width calculation ensuring the peek card lands cleanly
    * across the right viewport container boundary.
    */
   const computedCardWidth = useMemo(() => {
@@ -298,13 +303,13 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({
         </div>
       ) : (
         <ScrollReveal variant="fade-up" distance={16} className="relative group/carousel w-full">
-          {/* Left Navigation Chevron Button */}
+          {/* Left Navigation Chevron Button (Desktop / Tablet) */}
           <button
             type="button"
             onClick={() => scrollByDirection('left')}
             disabled={!canScrollLeft}
             aria-label="Scroll categories left"
-            className={`absolute left-2 sm:left-4 top-[38%] -translate-y-1/2 z-30 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-white text-[#380711] border-2 border-[#C49A3A] shadow-[0_8px_24px_rgba(56,7,17,0.22)] flex items-center justify-center transition-all duration-300 ${
+            className={`hidden sm:flex absolute left-2 sm:left-4 top-[40%] -translate-y-1/2 z-30 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-white text-[#380711] border-2 border-[#C49A3A] shadow-[0_8px_24px_rgba(56,7,17,0.22)] items-center justify-center transition-all duration-300 ${
               canScrollLeft
                 ? 'opacity-100 hover:bg-[#380711] hover:text-[#FFE28A] hover:border-[#380711] hover:scale-110 active:scale-95 cursor-pointer'
                 : 'opacity-0 pointer-events-none'
@@ -313,13 +318,13 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({
             <ChevronLeft className="w-6 h-6 stroke-[2.5]" />
           </button>
 
-          {/* Right Navigation Chevron Button */}
+          {/* Right Navigation Chevron Button (Desktop / Tablet) */}
           <button
             type="button"
             onClick={() => scrollByDirection('right')}
             disabled={!canScrollRight}
             aria-label="Scroll categories right"
-            className={`absolute right-2 sm:right-4 top-[38%] -translate-y-1/2 z-30 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-white text-[#380711] border-2 border-[#C49A3A] shadow-[0_8px_24px_rgba(56,7,17,0.22)] flex items-center justify-center transition-all duration-300 ${
+            className={`hidden sm:flex absolute right-2 sm:right-4 top-[40%] -translate-y-1/2 z-30 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-white text-[#380711] border-2 border-[#C49A3A] shadow-[0_8px_24px_rgba(56,7,17,0.22)] items-center justify-center transition-all duration-300 ${
               canScrollRight
                 ? 'opacity-100 hover:bg-[#380711] hover:text-[#FFE28A] hover:border-[#380711] hover:scale-110 active:scale-95 cursor-pointer'
                 : 'opacity-0 pointer-events-none'
@@ -371,6 +376,12 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* Mobile Subtle Swipe Affordance Cue */}
+          <div className="flex sm:hidden items-center justify-center gap-1 pt-2 text-[11px] font-medium text-stone-400 select-none">
+            <span>Swipe to explore more categories</span>
+            <ChevronRight className="w-3.5 h-3.5 text-gold-600 animate-pulse" />
           </div>
         </ScrollReveal>
       )}

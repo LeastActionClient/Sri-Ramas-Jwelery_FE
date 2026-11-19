@@ -5,6 +5,7 @@ import {
   ShieldCheck,
   CheckCircle2,
   ChevronRight,
+  ChevronDown,
   Gem,
   Award,
   Phone,
@@ -12,19 +13,25 @@ import {
   X,
   Sparkles,
   Play,
-  MessageSquare
+  MessageSquare,
+  MessageCircle,
+  Share2,
+  Check
 } from 'lucide-react';
 import { productsApi } from '@/services/api/products.api';
 import { formatWeight } from '@/utils/weight';
 import { useStoreWhatsApp } from '@/hooks/useStoreWhatsApp';
 import { ScrollReveal } from '@/components/motion';
+import { SEO } from '@/components/common/SEO';
 
 export const ProductDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [imgFailed, setImgFailed] = useState(false);
   const [isZoomOpen, setIsZoomOpen] = useState(false);
-  const { displayPhone, telHref } = useStoreWhatsApp();
+  const [copiedShare, setCopiedShare] = useState(false);
+  const [isSpecsOpen, setIsSpecsOpen] = useState(false);
+  const { displayPhone, telHref, buildWhatsAppUrl } = useStoreWhatsApp();
 
   // Fetch Product by Slug dynamically from backend/CMS
   const { data: product, isLoading, error } = useQuery({
@@ -32,6 +39,47 @@ export const ProductDetailPage: React.FC = () => {
     queryFn: () => productsApi.getProductBySlug(slug!),
     enabled: !!slug,
   });
+
+  const isOutOfStock = product?.stockStatus === 'OUT_OF_STOCK' || product?.stockQuantity === 0;
+
+  const whatsappEnquiryUrl = useMemo(() => {
+    if (!product) return '';
+    const prodName = product.title || product.name || 'Jewellery Piece';
+    const prodCode = product.sku || '';
+    const customMessage = isOutOfStock
+      ? `Hello Sri Ramas Jewellery, I would like to enquire about ${prodName}${
+          prodCode ? `, Product Code: ${prodCode}` : ''
+        }. I see it is currently Out of Stock. Could you please share details on custom crafting timelines or next availability?`
+      : `Hello Sri Ramas Jewellery, I would like to enquire about ${prodName}${
+          prodCode ? `, Product Code: ${prodCode}` : ''
+        }. Please share further details.`;
+    return buildWhatsAppUrl({
+      type: 'PRODUCT',
+      productTitle: prodName,
+      productSku: prodCode,
+      customMessage,
+    });
+  }, [product, isOutOfStock, buildWhatsAppUrl]);
+
+  const handleShare = async () => {
+    const prodName = product?.title || product?.name || 'Sri Ramas Jewellery';
+    const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: prodName,
+          text: `Discover ${prodName}${product?.sku ? ` (${product.sku})` : ''} at Sri Ramas Jewellery`,
+          url: currentUrl,
+        });
+      } catch {
+        // User cancelled share
+      }
+    } else if (navigator.clipboard && currentUrl) {
+      await navigator.clipboard.writeText(currentUrl);
+      setCopiedShare(true);
+      window.setTimeout(() => setCopiedShare(false), 2500);
+    }
+  };
 
   // Multi-media list (Images & Videos)
   const mediaList = useMemo(() => {
@@ -69,6 +117,7 @@ export const ProductDetailPage: React.FC = () => {
   const specRows = useMemo(() => {
     if (!product) return [];
     const rows: { label: string; value: React.ReactNode }[] = [];
+    const catAttrs = (product.categoryAttributes as Record<string, any>) || {};
 
     // 1. Product Code (SKU)
     if (product.sku) {
@@ -162,13 +211,28 @@ export const ProductDetailPage: React.FC = () => {
       });
     }
 
-    // 4. Jewellery Type / Subcategory
-    const catAttrs = product.categoryAttributes || {};
-    const jType = catAttrs.jewelleryType || catAttrs.productType || product.subcategory?.name;
-    if (jType) {
-      rows.push({ label: 'Product Type', value: String(jType) });
-    } else if (product.category?.name) {
-      rows.push({ label: 'Jewellery Category', value: product.category.name });
+    // 4. Product Classification & Category Details
+    const rawClass = product.classification || product.collectionType;
+    if (rawClass) {
+      const classMap: Record<string, string> = {
+        BRIDAL: 'Bridal Collection',
+        TRADITIONAL: 'Traditional Heritage',
+        DAILY_WEAR: 'Daily Wear',
+        HERITAGE: 'Traditional Heritage',
+        TEMPLE: 'Temple Heritage',
+        FESTIVE: 'Festive Wear',
+      };
+      rows.push({
+        label: 'Product Classification',
+        value: classMap[rawClass.toUpperCase()] || rawClass,
+      });
+    }
+
+    if (product.category?.name) {
+      rows.push({ label: 'Main Category', value: product.category.name });
+    }
+    if (product.subcategory?.name) {
+      rows.push({ label: 'Subcategory / Style', value: product.subcategory.name });
     }
 
     // 5. Weight Details (only shown if entered with positive values)
@@ -180,35 +244,6 @@ export const ProductDetailPage: React.FC = () => {
     }
     if (stoneWeight && stoneWeight > 0) {
       rows.push({ label: 'Stone Weight', value: formatWeight(stoneWeight) });
-    }
-
-    // 6. Wastage (Actual Wastage & Offer Wastage)
-    const actualW = product.actualWastagePercent;
-    const offerW = product.offerWastagePercent;
-    if (actualW != null && offerW != null) {
-      rows.push({
-        label: 'Wastage (VA)',
-        value: (
-          <span className="flex items-center gap-2">
-            <span className="text-stone-400 line-through text-xs font-mono">
-              Actual Wastage: {actualW}%
-            </span>
-            <span className="font-bold text-burgundy-950 bg-gold-100 border border-gold-300 px-2 py-0.5 rounded text-xs font-mono">
-              Offer Wastage: {offerW}%
-            </span>
-          </span>
-        )
-      });
-    } else if (actualW != null) {
-      rows.push({
-        label: 'Actual Wastage',
-        value: `${actualW}%`
-      });
-    } else if (offerW != null) {
-      rows.push({
-        label: 'Offer Wastage',
-        value: `${offerW}%`
-      });
     }
 
     // 6. Stone Details & Gemstones
@@ -330,6 +365,52 @@ export const ProductDetailPage: React.FC = () => {
 
   return (
     <>
+      <SEO
+        title={`${product.title || product.name || 'Jewellery Piece'}`}
+        description={
+          product.description ||
+          `Handcrafted ${product.metalType || 'Gold'} jewellery (${product.sku}) featuring authentic heritage craftsmanship, hallmarked purity, and showroom viewing at Sri Ramas Jewellery.`
+        }
+        image={currentImage}
+        type="product"
+        breadcrumbs={[
+          { name: 'Home', path: '/' },
+          { name: 'Catalogue', path: '/products' },
+          ...(product.category
+            ? [{ name: product.category.name, path: `/products?categoryId=${product.categoryId}` }]
+            : []),
+          { name: product.title || product.name || 'Piece', path: `/products/${product.slug}` }
+        ]}
+        schema={{
+          '@context': 'https://schema.org',
+          '@type': 'Product',
+          name: product.title || product.name,
+          description:
+            product.description ||
+            `Handcrafted ${product.metalType || 'Gold'} jewellery from Sri Ramas Jewellery.`,
+          image: currentImage,
+          sku: product.sku,
+          category: product.category?.name,
+          material: product.metalType || 'Gold',
+          brand: {
+            '@type': 'Brand',
+            name: 'Sri Ramas Jewellery'
+          },
+          offers: {
+            '@type': 'Offer',
+            priceCurrency: 'INR',
+            availability: isOutOfStock
+              ? 'https://schema.org/OutOfStock'
+              : 'https://schema.org/InStock',
+            seller: {
+              '@type': 'JewelryStore',
+              name: 'Sri Ramas Jewellery',
+              telephone: '+91 78711 66317'
+            }
+          }
+        }}
+      />
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         {/* Breadcrumb Navigation */}
         <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-stone-500 overflow-x-auto whitespace-nowrap pb-1">
@@ -377,7 +458,9 @@ export const ProductDetailPage: React.FC = () => {
                       src={currentImage}
                       alt={product.title || product.name}
                       onError={() => setImgFailed(true)}
-                      className="w-full h-full block object-cover object-center transition-transform duration-500 ease-out group-hover:scale-105 select-none"
+                      className={`w-full h-full block object-cover object-center transition-transform duration-500 ease-out group-hover:scale-105 select-none ${
+                        isOutOfStock ? 'filter grayscale contrast-[0.88] opacity-80' : ''
+                      }`}
                     />
                     <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-xs text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                       <ZoomIn className="w-4 h-4" />
@@ -398,8 +481,15 @@ export const ProductDetailPage: React.FC = () => {
                 </div>
               )}
 
-              {/* Purity & Hallmark Badge Overlay */}
-              {purity && (
+              {/* Status Badge Overlay: Out of Stock takes precedence with B&W / Stone UI */}
+              {isOutOfStock ? (
+                <div className="absolute top-3 left-3 z-20">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-stone-900/95 text-stone-100 border border-stone-400/60 text-[11px] font-bold uppercase tracking-wider shadow-xl backdrop-blur-xs">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
+                    <span>Out of Stock</span>
+                  </span>
+                </div>
+              ) : purity ? (
                 <div className="absolute top-3 left-3 bg-[#380711]/90 backdrop-blur-xs text-[#F5DE9C] text-[11px] font-bold px-3 py-1 rounded-full border border-[#C49A3A]/40 flex items-center gap-1.5 shadow-sm">
                   {product.hallmarkStatus && <ShieldCheck className="w-3.5 h-3.5 text-[#C49A3A]" />}
                   <span>
@@ -407,7 +497,7 @@ export const ProductDetailPage: React.FC = () => {
                     {product.hallmarkStatus ? ' Hallmarked' : ''}
                   </span>
                 </div>
-              )}
+              ) : null}
             </div>
 
             {/* Thumbnail Gallery Navigation */}
@@ -487,55 +577,135 @@ export const ProductDetailPage: React.FC = () => {
             </div>
 
             {/* 
-              DYNAMIC SPECIFICATIONS SECTION
-              Generated completely from Admin CMS data.
-              Only fields with actual values are displayed.
+              DYNAMIC SPECIFICATIONS ACCORDION SECTION
+              - Compact by default: click to open or close with down/up arrow.
             */}
-            <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-xs">
-              <div className="px-5 py-3.5 bg-stone-50/80 border-b border-stone-200 flex items-center justify-between">
-                <h2 className="font-serif font-bold text-sm text-[#380711] flex items-center gap-2">
-                  <Award className="w-4 h-4 text-[#C49A3A]" />
-                  <span>Product Specifications</span>
-                </h2>
-                {product.hallmarkStatus && (
-                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                    BIS 916 Verified
+            <div
+              className={`bg-white rounded-2xl border transition-all duration-300 shadow-xs overflow-hidden ${
+                isSpecsOpen
+                  ? 'border-[#C49A3A] shadow-md ring-1 ring-[#C49A3A]/30'
+                  : 'border-stone-200 hover:border-gold-300 hover:shadow-sm'
+              }`}
+            >
+              <button
+                type="button"
+                onClick={() => setIsSpecsOpen((prev) => !prev)}
+                aria-expanded={isSpecsOpen}
+                className="w-full px-5 py-4 bg-stone-50/90 hover:bg-gold-50/40 transition-colors flex items-center justify-between gap-3 text-left cursor-pointer group/spec"
+              >
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <Award className="w-4 h-4 text-[#C49A3A] shrink-0" />
+                  <span className="font-serif font-bold text-sm sm:text-base text-[#380711] tracking-wide">
+                    Product Specifications
                   </span>
+                  {specRows.length > 0 && (
+                    <span className="text-[11px] font-semibold text-stone-600 bg-stone-200/80 group-hover/spec:bg-gold-100 group-hover/spec:text-gold-900 px-2.5 py-0.5 rounded-full transition-colors">
+                      {specRows.length} details
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-3 shrink-0">
+                  {product.hallmarkStatus && (
+                    <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                      BIS 916 Verified
+                    </span>
+                  )}
+                  <span className="w-8 h-8 rounded-full bg-stone-100 group-hover/spec:bg-gold-100 flex items-center justify-center transition-all duration-300">
+                    <ChevronDown
+                      className={`w-4 h-4 text-burgundy-900 transition-transform duration-300 ${
+                        isSpecsOpen ? 'rotate-180' : ''
+                      }`}
+                    />
+                  </span>
+                </div>
+              </button>
+
+              <div
+                className={`transition-all duration-300 ease-in-out overflow-hidden ${
+                  isSpecsOpen
+                    ? 'max-h-[900px] opacity-100 border-t border-stone-200'
+                    : 'max-h-0 opacity-0 border-t-0'
+                }`}
+              >
+                {specRows.length > 0 ? (
+                  <dl className="divide-y divide-stone-100 text-xs sm:text-sm bg-white">
+                    {specRows.map((spec, i) => (
+                      <div
+                        key={i}
+                        className="grid grid-cols-2 px-5 py-3 hover:bg-stone-50/60 transition-colors items-center"
+                      >
+                        <dt className="text-stone-600 font-medium">{spec.label}</dt>
+                        <dd className="font-semibold text-[#380711] text-right sm:text-left">
+                          {spec.value}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                ) : (
+                  <div className="p-5 text-center text-xs text-stone-500 italic bg-white">
+                    Hallmark and gram weight details are verified on piece tag — enquire with our showroom specialists.
+                  </div>
                 )}
               </div>
-
-              {specRows.length > 0 ? (
-                <dl className="divide-y divide-stone-100 text-xs sm:text-sm">
-                  {specRows.map((spec, i) => (
-                    <div
-                      key={i}
-                      className="grid grid-cols-2 px-5 py-3 hover:bg-stone-50/60 transition-colors items-center"
-                    >
-                      <dt className="text-stone-600 font-medium">{spec.label}</dt>
-                      <dd className="font-semibold text-[#380711] text-right sm:text-left">
-                        {spec.value}
-                      </dd>
-                    </div>
-                  ))}
-                </dl>
-              ) : (
-                <div className="p-5 text-center text-xs text-stone-500 italic">
-                  Hallmark and gram weight details are verified on piece tag — enquire with our showroom specialists.
-                </div>
-              )}
             </div>
 
             {/* 
               ENQUIRY ACTION BUTTONS
               1. WhatsApp Enquiry: High-contrast WhatsApp Green (#25D366) with bold white text.
-                 Prefilled message: "Hello Sri Ramas Jewellery, I am interested in the [Product Name] (SKU: [Product SKU]). Please share more details."
+                 Prefilled message: "Hello Sri Ramas Jewellery, I would like to enquire about [Product Name], Product Code: [Product Code]. Please share further details."
               2. Call Showroom: High-contrast burgundy and antique gold styling with active tel: link.
+              3. Enquire About This Product: Formal showcase contact form.
+              4. Share Product: Native share or clipboard link copy.
             */}
             <ScrollReveal variant="fade-up" immediate>
-              <div className="space-y-3.5 pt-2">
+              {/* Out of Stock Notice Banner */}
+              {isOutOfStock && (
+                <div className="p-4 rounded-xl bg-stone-100 border border-stone-300 text-stone-800 text-xs sm:text-sm flex items-start gap-3 shadow-xs">
+                  <span className="text-lg leading-none">ℹ️</span>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-stone-900 uppercase tracking-wider text-xs">Currently Out of Showroom Stock</span>
+                      <span className="px-2 py-0.5 rounded bg-stone-800 text-stone-100 text-[10px] font-bold uppercase tracking-wider">
+                        Out of Stock
+                      </span>
+                    </div>
+                    <p className="text-stone-600 leading-relaxed text-xs">
+                      This design is currently unavailable for immediate showroom viewing. It can be handcrafted to order or pre-reserved. Enquire below for making timelines and gold rate confirmation.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-3 pt-2">
+                {/* Primary Action Buttons: WhatsApp & Call Showroom */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                  {/* Formal Showcase Enquiry Button to Contact Page */}
+                  {/* WhatsApp Enquiry Button */}
+                  <a
+                    href={whatsappEnquiryUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Enquire about this product on WhatsApp"
+                    className="w-full py-3.5 px-6 rounded-xl font-bold text-sm tracking-wide bg-[#25D366] hover:bg-[#20bd5a] text-white shadow-md hover:shadow-lg flex items-center justify-center gap-2.5 transition-all duration-300 hover:scale-[1.01] active:scale-[0.99]"
+                  >
+                    <MessageCircle className="w-5 h-5 text-white shrink-0 fill-current" />
+                    <span>{isOutOfStock ? 'Enquire Out of Stock / Custom Order' : 'WhatsApp Enquiry'}</span>
+                  </a>
+
+                  {/* Call Showroom Button */}
+                  <a
+                    href={telHref}
+                    aria-label={`Call Showroom at ${displayPhone}`}
+                    className="w-full py-3.5 px-6 rounded-xl font-bold text-sm tracking-wide bg-[#380711] hover:bg-[#4E0A18] text-[#F5DE9C] border border-[#C49A3A]/40 shadow-luxury flex items-center justify-center gap-2.5 transition-all duration-300 hover:scale-[1.01] active:scale-[0.99]"
+                  >
+                    <Phone className="w-4 h-4 text-[#C49A3A] shrink-0" />
+                    <span>Call Showroom ({displayPhone})</span>
+                  </a>
+                </div>
+
+                {/* Secondary Action Buttons: Formal Showcase Enquiry Form & Share */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <Link
                     to={{
                       pathname: '/contact',
@@ -553,21 +723,29 @@ export const ProductDetailPage: React.FC = () => {
                         url: typeof window !== 'undefined' ? window.location.href : `/products/${product.slug}`,
                       },
                     }}
-                    className="w-full py-3.5 px-6 rounded-xl font-bold text-sm tracking-wide bg-burgundy-900 hover:bg-burgundy-800 text-gold-100 shadow-md hover:shadow-lg flex items-center justify-center gap-2.5 transition-all duration-300 hover:scale-[1.01] active:scale-[0.99]"
+                    className="w-full py-2.5 px-4 rounded-xl font-semibold text-xs sm:text-sm tracking-wide bg-burgundy-900/90 hover:bg-burgundy-800 text-gold-100 border border-gold-500/30 flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.01] active:scale-[0.99]"
                   >
-                    <MessageSquare className="w-5 h-5 text-gold-400 shrink-0" />
-                    <span>Enquire About This Piece</span>
+                    <MessageSquare className="w-4 h-4 text-gold-400 shrink-0" />
+                    <span>Enquire via Form</span>
                   </Link>
 
-                  {/* Call Showroom Button */}
-                  <a
-                    href={telHref}
-                    aria-label={`Call Showroom at ${displayPhone}`}
-                    className="w-full py-3.5 px-6 rounded-xl font-bold text-sm tracking-wide bg-[#380711] hover:bg-[#4E0A18] text-[#F5DE9C] border border-[#C49A3A]/40 shadow-luxury flex items-center justify-center gap-2.5 transition-all duration-300 hover:scale-[1.01] active:scale-[0.99]"
+                  <button
+                    type="button"
+                    onClick={handleShare}
+                    className="w-full py-2.5 px-4 rounded-xl font-semibold text-xs sm:text-sm tracking-wide bg-stone-100 hover:bg-stone-200 text-stone-800 border border-stone-300 flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.01] active:scale-[0.99]"
                   >
-                    <Phone className="w-4 h-4 text-[#C49A3A] shrink-0" />
-                    <span>Call Showroom ({displayPhone})</span>
-                  </a>
+                    {copiedShare ? (
+                      <>
+                        <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                        <span className="text-emerald-700 font-bold">Link Copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Share2 className="w-4 h-4 text-stone-600 shrink-0" />
+                        <span>Share Product</span>
+                      </>
+                    )}
+                  </button>
                 </div>
 
                 {/* Showroom Trust Assurances */}

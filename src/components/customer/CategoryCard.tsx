@@ -80,6 +80,12 @@ export function resolveCategoryIsolatedImage(category: Partial<Category>): strin
   if (rawIdentifier.includes('earring') || rawIdentifier.includes('jhumka') || rawIdentifier.includes('ear')) {
     return '/images/categories/earrings.jpg?v=2';
   }
+  if (rawIdentifier.includes('anklet') || rawIdentifier.includes('kolusu')) {
+    return '/images/categories/silver-jewellery.jpg?v=2';
+  }
+  if (rawIdentifier.includes('toe ring') || rawIdentifier.includes('metti')) {
+    return '/images/categories/silver-jewellery.jpg?v=2';
+  }
   if (
     rawIdentifier.includes('bangle') ||
     rawIdentifier.includes('kada') ||
@@ -140,25 +146,34 @@ export const CategoryCard: React.FC<CategoryCardProps> = ({
       className={`group flex flex-col items-center justify-start text-center cursor-pointer select-none py-1 transition-transform duration-300 w-full ${className}`}
     >
       {/* 
-        1. Isolated Jewellery Product Image (Expanded visual presence, uncropped and proportional)
-        Naturally floating on the clean white background with generous breathing space
+        1. Circular Jewellery Image Frame:
+        Strictly locked 1:1 circle with identical width and height on all viewports.
+        Absolute positioning prevents image intrinsic dimensions from distorting circle into an oval.
       */}
-      <div className="relative w-full aspect-square max-w-[210px] sm:max-w-[230px] md:max-w-[250px] lg:max-w-[270px] xl:max-w-[290px] flex items-center justify-center pointer-events-none p-2 sm:p-3">
-        <img
-          key={primarySrc}
-          src={imgFailed ? fallbackSrc : primarySrc}
-          alt={category.name}
-          loading="lazy"
-          draggable={false}
-          onError={() => {
-            if (!imgFailed) setImgFailed(true);
-          }}
-          className="w-full h-full object-contain filter drop-shadow-[0_6px_16px_rgba(56,7,17,0.08)] transition-transform duration-300 ease-out group-hover:scale-108 pointer-events-none select-none"
-        />
+      <div className="relative w-32 h-32 min-[360px]:w-36 min-[360px]:h-36 sm:w-44 sm:h-44 md:w-52 md:h-52 lg:w-56 lg:h-56 mx-auto shrink-0 select-none">
+        {/* Decorative subtle outer gold halo ring on hover */}
+        <div className="absolute -inset-1 rounded-full border border-[#DFC389]/50 group-hover:border-[#A4792B] group-hover:scale-105 transition-all duration-300 pointer-events-none" />
+
+        {/* Circular Viewport with Luxury Gold Border & Soft Shadow */}
+        <div className="relative w-full h-full rounded-full overflow-hidden bg-gradient-to-br from-[#FFFDF8] via-[#FAF4EA] to-[#F3E7D3] border-2 sm:border-[3px] border-[#DFC389] group-hover:border-[#A4792B] shadow-[0_6px_20px_rgba(69,10,19,0.12)] group-hover:shadow-[0_10px_28px_rgba(69,10,19,0.22)] ring-2 sm:ring-4 ring-[#FAF4EA] group-hover:ring-[#DFC389]/50 transition-all duration-300">
+          <img
+            key={primarySrc}
+            src={imgFailed ? fallbackSrc : primarySrc}
+            alt={category.name}
+            loading="lazy"
+            draggable={false}
+            onError={() => {
+              if (!imgFailed) setImgFailed(true);
+            }}
+            className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-500 ease-out group-hover:scale-110 pointer-events-none select-none"
+          />
+          {/* Subtle elegant radial sheen overlay */}
+          <div className="absolute inset-0 rounded-full pointer-events-none bg-gradient-to-t from-black/20 via-transparent to-white/10 opacity-50 group-hover:opacity-30 transition-opacity" />
+        </div>
       </div>
 
-      {/* 2. Category Name Directly Below (Dark Burgundy #380711, hover antique gold #C49A3A) */}
-      <span className="mt-3 sm:mt-4 font-serif text-xs sm:text-sm md:text-base font-bold tracking-wider uppercase text-[#380711] group-hover:text-[#C49A3A] transition-colors duration-200 text-center leading-snug line-clamp-2 max-w-[220px]">
+      {/* 2. Category Name Directly Below (Dark Burgundy #380711, hover antique gold #A4792B) */}
+      <span className="mt-2.5 sm:mt-3.5 font-serif text-xs sm:text-sm md:text-base font-bold tracking-wider uppercase text-[#380711] group-hover:text-[#A4792B] transition-colors duration-200 text-center leading-snug line-clamp-1 max-w-[130px] sm:max-w-[200px]">
         {category.name}
       </span>
     </div>
@@ -172,7 +187,7 @@ export const CategoryCard: React.FC<CategoryCardProps> = ({
     <Link
       to={`/products?categoryId=${category._id}`}
       aria-label={`Explore ${category.name} collection`}
-      className="block focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#C49A3A] rounded-lg transition-transform duration-300"
+      className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C49A3A] rounded-2xl transition-transform duration-300"
     >
       {itemContent}
     </Link>
