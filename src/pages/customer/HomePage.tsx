@@ -344,7 +344,7 @@ export const HomePage: React.FC = () => {
   });
 
   const activeCategories = useMemo(
-    () => categories.filter((cat) => cat.isActive !== false && !cat.parentCategory),
+    () => categories.filter((cat) => cat.isActive !== false && !cat.parentCategory && !cat.parentCategoryId),
     [categories]
   );
 

@@ -4,7 +4,6 @@ import { useQuery } from '@tanstack/react-query';
 import {
   ShieldCheck,
   CheckCircle2,
-  ChevronRight,
   ChevronDown,
   Gem,
   Award,
@@ -411,24 +410,7 @@ export const ProductDetailPage: React.FC = () => {
         }}
       />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        {/* Breadcrumb Navigation */}
-        <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-stone-500 overflow-x-auto whitespace-nowrap pb-1">
-          <Link to="/" className="hover:text-[#380711] transition-colors">Home</Link>
-          <ChevronRight className="w-3.5 h-3.5 text-stone-400 shrink-0" />
-          <Link to="/products" className="hover:text-[#380711] transition-colors">Catalogue</Link>
-          {product.category && (
-            <>
-              <ChevronRight className="w-3.5 h-3.5 text-stone-400 shrink-0" />
-              <Link to={`/products?categoryId=${product.categoryId}`} className="hover:text-[#380711] transition-colors">
-                {product.category.name}
-              </Link>
-            </>
-          )}
-          <ChevronRight className="w-3.5 h-3.5 text-stone-400 shrink-0" />
-          <span className="text-[#380711] font-semibold truncate max-w-xs">{product.title || product.name}</span>
-        </nav>
-
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Main Product Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
           {/* 
