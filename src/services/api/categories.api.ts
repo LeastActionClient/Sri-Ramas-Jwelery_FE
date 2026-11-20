@@ -125,4 +125,19 @@ export const categoriesApi = {
     );
     return res.data.data?.sku || '';
   },
+
+  getSubcategories: async (parentId: string): Promise<Category[]> => {
+    const res = await apiClient.get<ApiResponse<any[]>>(`/public/categories/${parentId}/subcategories`);
+    return (res.data.data || [])
+      .map(adaptCategory)
+      .filter((c) => c.isActive)
+      .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.name.localeCompare(b.name));
+  },
+
+  adminGetSubcategories: async (parentId: string): Promise<Category[]> => {
+    const res = await apiClient.get<ApiResponse<any[]>>(`/admin/categories/${parentId}/subcategories`);
+    return (res.data.data || [])
+      .map(adaptCategory)
+      .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.name.localeCompare(b.name));
+  },
 };

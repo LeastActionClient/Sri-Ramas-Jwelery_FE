@@ -77,8 +77,8 @@ export const AdminLayout: React.FC = () => {
 
   const navItems = [
     { label: 'Overview', path: '/admin/dashboard', icon: LayoutDashboard },
-    { label: 'Product Catalogue', path: '/admin/products', icon: Gem },
     { label: 'Categories', path: '/admin/categories', icon: FolderTree },
+    { label: 'Product Catalogue', path: '/admin/products', icon: Gem },
     { label: 'Bullion Rates', path: '/admin/rates', icon: TrendingUp },
     { label: 'Enquiry CRM', path: '/admin/enquiries', icon: MessageSquareText },
     { label: 'Savings Schemes', path: '/admin/schemes', icon: Award },

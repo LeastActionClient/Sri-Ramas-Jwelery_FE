@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Filter, X, Search, RotateCcw } from 'lucide-react';
 import { productsApi, ProductFilters } from '@/services/api/products.api';
 import { categoriesApi } from '@/services/api/categories.api';
+import type { Category } from '@/types';
 import { ProductCard } from '@/components/customer/ProductCard';
 import { ScrollReveal, StaggerReveal } from '@/components/motion';
 import { SEO } from '@/components/common/SEO';
@@ -99,6 +100,18 @@ export const CLASSIFICATION_OPTIONS = [
   { value: 'DAILY_WEAR', label: 'Daily Wear' },
 ] as const;
 
+function getCategoryParentId(c: Category): string | null {
+  if (c.parentCategoryId) return String(c.parentCategoryId);
+  if (c.parentCategory) {
+    return typeof c.parentCategory === 'string'
+      ? c.parentCategory
+      : (c.parentCategory as any)?._id
+        ? String((c.parentCategory as any)._id)
+        : null;
+  }
+  return null;
+}
+
 export const ProductCatalogPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -173,7 +186,7 @@ export const ProductCatalogPage: React.FC = () => {
   // Filter root categories (optionally matching selected metal group)
   const rootCategories = useMemo(() => {
     return categories.filter((c) => {
-      const isRoot = !c.parentCategory;
+      const isRoot = !c.parentCategory && !c.parentCategoryId;
       if (!isRoot) return false;
       if (c.metalType === 'ALL' || c.metalType === 'MIXED') return true;
       if (metalType === 'GOLD') return c.metalType === 'GOLD' || !c.metalType;
@@ -183,15 +196,61 @@ export const ProductCatalogPage: React.FC = () => {
   }, [categories, metalType]);
 
   // Subcategories belonging to the currently selected main category
-  const availableSubcategories = useMemo(() => {
+  const categorySubcategories = useMemo(() => {
     if (!effectiveCategoryId) return [];
-    return categories.filter((c) => {
-      const parentId = typeof c.parentCategory === 'string'
-        ? c.parentCategory
-        : (c.parentCategory as any)?._id;
-      return parentId === effectiveCategoryId;
-    });
+    return categories
+      .filter((c) => getCategoryParentId(c) === effectiveCategoryId)
+      .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.name.localeCompare(b.name));
   }, [categories, effectiveCategoryId]);
+
+  const availableSubcategories = categorySubcategories;
+
+  // Subcategories grouped by parent category for when "All Categories" is selected
+  const groupedSubcategories = useMemo(() => {
+    const rootMap = new Map<string, Category>();
+    for (const r of rootCategories) {
+      rootMap.set(r._id, r);
+    }
+
+    const groupMap = new Map<string, Category[]>();
+    for (const cat of categories) {
+      const pid = getCategoryParentId(cat);
+      if (!pid) continue;
+      if (!rootMap.has(pid)) continue;
+
+      if (!groupMap.has(pid)) {
+        groupMap.set(pid, []);
+      }
+      groupMap.get(pid)!.push(cat);
+    }
+
+    const groups: { parent: Category; subcategories: Category[] }[] = [];
+    for (const [pid, subcats] of groupMap.entries()) {
+      const parent = rootMap.get(pid);
+      if (parent) {
+        groups.push({
+          parent,
+          subcategories: subcats.sort(
+            (a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.name.localeCompare(b.name)
+          )
+        });
+      }
+    }
+
+    return groups.sort(
+      (a, b) =>
+        (a.parent.sortOrder ?? 0) - (b.parent.sortOrder ?? 0) ||
+        a.parent.name.localeCompare(b.parent.name)
+    );
+  }, [categories, rootCategories]);
+
+  // Subcategories for mobile filter drawer based on mobileDraftCategoryId
+  const mobileCategorySubcategories = useMemo(() => {
+    if (!mobileDraftCategoryId) return [];
+    return categories
+      .filter((c) => getCategoryParentId(c) === mobileDraftCategoryId)
+      .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.name.localeCompare(b.name));
+  }, [categories, mobileDraftCategoryId]);
 
   const filters: ProductFilters = useMemo(() => {
     let minCarat: number | undefined;
@@ -293,8 +352,17 @@ export const ProductCatalogPage: React.FC = () => {
 
   const handleSubcategoryChange = (nextSubcategoryId: string) => {
     updateUrlParams((next) => {
-      if (nextSubcategoryId) next.set('subcategoryId', nextSubcategoryId);
-      else next.delete('subcategoryId');
+      if (nextSubcategoryId) {
+        next.set('subcategoryId', nextSubcategoryId);
+        const sub = categories.find((c) => c._id === nextSubcategoryId);
+        const parentId = sub ? getCategoryParentId(sub) : null;
+        if (parentId && !effectiveCategoryId) {
+          next.set('categoryId', parentId);
+          next.delete('category');
+        }
+      } else {
+        next.delete('subcategoryId');
+      }
     });
   };
 
@@ -775,34 +843,61 @@ export const ProductCatalogPage: React.FC = () => {
             )}
           </div>
 
-          {/* Subcategory (Dynamic when selected category has subcategories) */}
-          {availableSubcategories.length > 0 && (
-            <div className="space-y-2 pt-2 border-t border-stone-100 animate-fade-in">
-              <label
-                htmlFor="catalog-subcategory-select"
-                className="text-[13px] font-bold uppercase tracking-wider text-burgundy-900 flex items-center gap-1.5"
-              >
-                <span>Subcategory</span>
-                <span className="text-[10px] font-normal text-stone-500">
-                  ({resolvedCategory?.name || 'Selected Category'})
+          {/* Subcategory (Dynamic from Admin CMS) */}
+          <div className="space-y-2 pt-2 border-t border-stone-100">
+            <label
+              htmlFor="catalog-subcategory-select"
+              className="text-[13px] font-bold uppercase tracking-wider text-stone-800 flex items-center justify-between"
+            >
+              <span>Subcategory</span>
+              {resolvedCategory && (
+                <span className="text-[11px] font-normal text-stone-500">
+                  in {resolvedCategory.name}
                 </span>
-              </label>
-              <select
-                id="catalog-subcategory-select"
-                value={urlSubcategoryId}
-                onChange={(e) => handleSubcategoryChange(e.target.value)}
-                aria-label="Filter by subcategory"
-                className="w-full text-sm p-2.5 border border-gold-300 rounded-xl outline-none focus:border-gold-500 bg-gold-50/40 text-stone-800 font-medium"
-              >
-                <option value="">All {resolvedCategory?.name || ''} Subcategories</option>
-                {availableSubcategories.map((sub) => (
-                  <option key={sub._id} value={sub._id}>
-                    {sub.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
+              )}
+            </label>
+            <select
+              id="catalog-subcategory-select"
+              value={urlSubcategoryId}
+              onChange={(e) => handleSubcategoryChange(e.target.value)}
+              aria-label="Filter by subcategory"
+              disabled={Boolean(effectiveCategoryId && categorySubcategories.length === 0)}
+              className="w-full text-sm p-2.5 border border-stone-300 rounded-xl outline-none focus:border-gold-500 bg-white text-stone-800 font-medium disabled:bg-stone-100 disabled:text-stone-400 disabled:cursor-not-allowed"
+            >
+              {effectiveCategoryId ? (
+                categorySubcategories.length > 0 ? (
+                  <>
+                    <option value="">All {resolvedCategory?.name || ''} Subcategories</option>
+                    {categorySubcategories.map((sub) => (
+                      <option key={sub._id} value={sub._id}>
+                        {sub.name}
+                      </option>
+                    ))}
+                  </>
+                ) : (
+                  <option value="">No subcategories available</option>
+                )
+              ) : (
+                <>
+                  <option value="">All Subcategories</option>
+                  {groupedSubcategories.map((group) => (
+                    <optgroup key={group.parent._id} label={group.parent.name}>
+                      {group.subcategories.map((sub) => (
+                        <option key={sub._id} value={sub._id}>
+                          {sub.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </>
+              )}
+            </select>
+            {effectiveCategoryId && categorySubcategories.length === 0 && (
+              <p className="text-[11px] text-stone-400">
+                No subcategories under {resolvedCategory?.name || 'this category'}.
+              </p>
+            )}
+          </div>
 
           {/* Product Classification (Bridal / Traditional / Daily Wear) */}
           <div className="space-y-2 pt-2 border-t border-stone-100">
@@ -1240,7 +1335,7 @@ export const ProductCatalogPage: React.FC = () => {
             </div>
           ) : products.length > 0 ? (
             <StaggerReveal
-              key={`${effectiveCategoryId}-${effectiveCategorySlug}-${metalType}-${purity}-${page}-${urlSearch}`}
+              key={`${effectiveCategoryId}-${urlSubcategoryId}-${effectiveCategorySlug}-${metalType}-${purity}-${page}-${urlSearch}`}
               staggerMs={55}
               className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
             >
@@ -1378,35 +1473,64 @@ export const ProductCatalogPage: React.FC = () => {
                   </select>
                 </div>
 
-                {/* Subcategory (when available) */}
-                {mobileDraftCategoryId && categories.some((c) => {
-                  const pid = typeof c.parentCategory === 'string' ? c.parentCategory : (c.parentCategory as any)?._id;
-                  return pid === mobileDraftCategoryId;
-                }) && (
-                  <div>
-                    <label htmlFor="mobile-filter-subcategory" className="block text-xs font-bold uppercase tracking-wider mb-1.5 text-stone-800">
-                      Subcategory
-                    </label>
-                    <select
-                      id="mobile-filter-subcategory"
-                      value={mobileDraftSubcategoryId}
-                      onChange={(e) => setMobileDraftSubcategoryId(e.target.value)}
-                      className="w-full p-2.5 text-sm border border-gold-300 bg-gold-50/40 rounded-lg outline-none focus:border-gold-500 font-medium"
-                    >
-                      <option value="">All Subcategories</option>
-                      {categories
-                        .filter((c) => {
-                          const pid = typeof c.parentCategory === 'string' ? c.parentCategory : (c.parentCategory as any)?._id;
-                          return pid === mobileDraftCategoryId;
-                        })
-                        .map((sub) => (
-                          <option key={sub._id} value={sub._id}>
-                            {sub.name}
+                {/* Subcategory */}
+                <div>
+                  <label htmlFor="mobile-filter-subcategory" className="block text-xs font-bold uppercase tracking-wider mb-1.5 text-stone-800 flex items-center justify-between">
+                    <span>Subcategory</span>
+                    {mobileDraftCategoryId && (
+                      <span className="text-[10px] font-normal text-stone-500">
+                        in {categories.find((c) => c._id === mobileDraftCategoryId)?.name}
+                      </span>
+                    )}
+                  </label>
+                  <select
+                    id="mobile-filter-subcategory"
+                    value={mobileDraftSubcategoryId}
+                    onChange={(e) => {
+                      const nextSubId = e.target.value;
+                      setMobileDraftSubcategoryId(nextSubId);
+                      if (nextSubId && !mobileDraftCategoryId) {
+                        const sub = categories.find((c) => c._id === nextSubId);
+                        const parentId = sub ? getCategoryParentId(sub) : null;
+                        if (parentId) {
+                          setMobileDraftCategoryId(parentId);
+                        }
+                      }
+                    }}
+                    disabled={Boolean(mobileDraftCategoryId && mobileCategorySubcategories.length === 0)}
+                    className="w-full p-2.5 text-sm border border-stone-300 bg-white rounded-lg outline-none focus:border-gold-500 font-medium disabled:bg-stone-100 disabled:text-stone-400 disabled:cursor-not-allowed"
+                  >
+                    {mobileDraftCategoryId ? (
+                      mobileCategorySubcategories.length > 0 ? (
+                        <>
+                          <option value="">
+                            All {categories.find((c) => c._id === mobileDraftCategoryId)?.name || ''} Subcategories
                           </option>
+                          {mobileCategorySubcategories.map((sub) => (
+                            <option key={sub._id} value={sub._id}>
+                              {sub.name}
+                            </option>
+                          ))}
+                        </>
+                      ) : (
+                        <option value="">No subcategories available</option>
+                      )
+                    ) : (
+                      <>
+                        <option value="">All Subcategories</option>
+                        {groupedSubcategories.map((group) => (
+                          <optgroup key={group.parent._id} label={group.parent.name}>
+                            {group.subcategories.map((sub) => (
+                              <option key={sub._id} value={sub._id}>
+                                {sub.name}
+                              </option>
+                            ))}
+                          </optgroup>
                         ))}
-                    </select>
-                  </div>
-                )}
+                      </>
+                    )}
+                  </select>
+                </div>
 
                 {/* Classification (Bridal / Traditional / Daily Wear) */}
                 <div>

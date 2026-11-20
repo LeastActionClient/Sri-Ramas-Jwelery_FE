@@ -192,14 +192,21 @@ export const ProductManagementPage: React.FC = () => {
   );
 
   const mainCategories = useMemo(
-    () => eligibleCategories.filter((c) => !c.parentCategoryId),
+    () => eligibleCategories.filter((c) => !c.parentCategoryId && !c.parentCategory),
     [eligibleCategories]
   );
 
-  const availableSubcategories = useMemo(
-    () => eligibleCategories.filter((c) => c.parentCategoryId && c.parentCategoryId === formState.categoryId),
-    [eligibleCategories, formState.categoryId]
-  );
+  const availableSubcategories = useMemo(() => {
+    if (!formState.categoryId) return [];
+    return eligibleCategories.filter((c) => {
+      const pId =
+        c.parentCategoryId ||
+        (typeof c.parentCategory === 'string'
+          ? c.parentCategory
+          : (c.parentCategory as any)?._id);
+      return pId === formState.categoryId;
+    });
+  }, [eligibleCategories, formState.categoryId]);
 
   const sortedProducts = useMemo(
     () =>
@@ -235,7 +242,7 @@ export const ProductManagementPage: React.FC = () => {
 
     setFormState((prev) => ({
       ...prev,
-      ...(categoryId !== undefined ? { categoryId } : {}),
+      ...(categoryId !== undefined ? { categoryId, subcategoryId: '' } : {}),
       sku: localPreview,
     }));
 
@@ -259,20 +266,24 @@ export const ProductManagementPage: React.FC = () => {
     setModalError(null);
     setIsSkuManual(false);
     isSkuManualRef.current = false;
-    const activeCat = eligibleCategories[0];
-    const initialPreviewSku = activeCat
+    const initialCat = mainCategories[0];
+    const initialMetal = (initialCat?.metalType === 'SILVER' ? 'SILVER' : 'GOLD') as any;
+    const initialPurity = initialMetal === 'SILVER' ? '925' : '22K';
+    const initialPreviewSku = initialCat
       ? generateLocalProductSkuPreview(
-          activeCat,
+          initialCat,
           sortedProducts.map((p) => p.sku)
         )
       : '';
     setFormState({
-      ...createEmptyProductForm(activeCat?._id || ''),
+      ...createEmptyProductForm(initialCat?._id || ''),
+      metalType: initialMetal,
+      purity: initialPurity,
       sku: initialPreviewSku
     });
     setIsModalOpen(true);
-    if (activeCat?._id) {
-      requestAutoProductSku(activeCat._id);
+    if (initialCat?._id) {
+      requestAutoProductSku(initialCat._id);
     }
   };
 
@@ -325,11 +336,21 @@ export const ProductManagementPage: React.FC = () => {
       (product.categoryAttributes as any) ||
       {};
 
+    const savedCategoryId =
+      typeof product.categoryId === 'object' && product.categoryId
+        ? (product.categoryId as any)._id
+        : (product.categoryId || product.category?._id || '');
+
+    const savedSubcategoryId =
+      typeof product.subcategoryId === 'object' && product.subcategoryId
+        ? (product.subcategoryId as any)._id
+        : (product.subcategoryId || product.subcategory?._id || '');
+
     setFormState({
       name: product.name || product.title || '',
       sku: product.sku || '',
-      categoryId: product.categoryId || '',
-      subcategoryId: product.subcategoryId || '',
+      categoryId: savedCategoryId,
+      subcategoryId: savedSubcategoryId,
       classification: ((product.classification || product.collectionType || '') as any),
       metalType: (product.metalType || product.metal?.metalType || 'GOLD') as any,
       purity: product.purity || product.metal?.purity || '',
@@ -719,6 +740,19 @@ export const ProductManagementPage: React.FC = () => {
         );
       }
 
+      // Validate that selected subcategory strictly belongs to the chosen main category
+      if (formState.subcategoryId) {
+        const subcat = eligibleCategories.find((c) => c._id === formState.subcategoryId);
+        const pId =
+          subcat?.parentCategoryId ||
+          (typeof subcat?.parentCategory === 'string'
+            ? subcat?.parentCategory
+            : (subcat?.parentCategory as any)?._id);
+        if (!subcat || pId !== formState.categoryId) {
+          throw new Error('Selected subcategory does not belong to the selected category.');
+        }
+      }
+
       const weightValidationError = computeWeightValidationError(
         formState.grossWeightGrams,
         formState.netMetalWeightGrams
@@ -968,7 +1002,7 @@ export const ProductManagementPage: React.FC = () => {
           className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-maroon-gradient text-gold-200 text-xs font-bold uppercase tracking-wider shadow-md hover:opacity-95"
         >
           <Plus className="w-4 h-4 text-gold-400" />
-          <span>Add New Jewellery Piece</span>
+          <span>Add New Product</span>
         </button>
       </div>
 
@@ -1285,7 +1319,7 @@ export const ProductManagementPage: React.FC = () => {
             <div className="bg-white rounded-2xl border border-gold-400 w-full max-w-5xl overflow-hidden shadow-2xl my-auto max-h-[94vh] flex flex-col animate-modal-enter">
             <div className="bg-brand-maroon-gradient p-4 sm:p-5 text-gold-100 flex items-center justify-between shrink-0">
               <h2 className="font-serif font-bold text-lg text-gold-100">
-                {editingProduct ? `Edit Product — ${editingProduct.sku}` : 'Add New Jewellery Product'}
+                {editingProduct ? `Edit Product — ${editingProduct.sku}` : 'Add New Product'}
               </h2>
               <button
                 type="button"
@@ -1387,12 +1421,12 @@ export const ProductManagementPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
                     <label className="block font-semibold uppercase text-stone-700 mb-1">
-                      Main Category *
+                      Category *
                     </label>
-                    {eligibleCategories.length === 0 ? (
+                    {mainCategories.length === 0 ? (
                       <div className="p-2.5 rounded-lg border border-amber-300 bg-amber-50 text-[11px] text-amber-900 space-y-1">
                         <p className="font-medium">
                           No categories available. Please create a category from Category Management.
@@ -1410,16 +1444,35 @@ export const ProductManagementPage: React.FC = () => {
                         value={formState.categoryId}
                         onChange={(e) => {
                           const nextCatId = e.target.value;
-                          const chosenCat = eligibleCategories.find((c) => c._id === nextCatId);
+                          const chosenCat = mainCategories.find((c) => c._id === nextCatId);
                           let nextMetal = formState.metalType;
                           if (chosenCat?.metalType === 'SILVER') nextMetal = 'SILVER';
                           else if (chosenCat?.metalType === 'GOLD') nextMetal = 'GOLD';
-                          // If chosenCat?.metalType === 'ALL', preserve current metal type choice
+                          else if (chosenCat?.metalType === 'PLATINUM') nextMetal = 'PLATINUM';
+                          else if (chosenCat?.metalType === 'DIAMOND') nextMetal = 'DIAMOND';
+                          else if (chosenCat?.metalType === 'ALL') {
+                            if (!nextMetal) nextMetal = 'GOLD';
+                          }
 
-                          if (!editingProduct && !isSkuManualRef.current) {
+                          let nextPurity = formState.purity;
+                          if (nextMetal === 'GOLD' && !['24K', '22K', '20K', '18K', '14K', '9K'].includes(nextPurity)) {
+                            nextPurity = '22K';
+                          } else if (nextMetal === 'SILVER' && !['999', '925', '900', '835', '800'].includes(nextPurity)) {
+                            nextPurity = '925';
+                          } else if (nextMetal === 'PLATINUM' && !['Pt950', 'Pt900', 'Pt850', 'Pt999'].includes(nextPurity)) {
+                            nextPurity = 'Pt950';
+                          }
+
+                          setFormState((prev) => ({
+                            ...prev,
+                            categoryId: nextCatId,
+                            subcategoryId: '', // Clear subcategory whenever category changes
+                            metalType: nextMetal,
+                            purity: nextPurity
+                          }));
+
+                          if (!editingProduct && !isSkuManualRef.current && nextCatId) {
                             requestAutoProductSku(nextCatId);
-                          } else {
-                            setFormState({ ...formState, categoryId: nextCatId, subcategoryId: '', metalType: nextMetal });
                           }
                         }}
                         className="w-full p-2.5 border rounded-lg bg-white outline-none focus:border-gold-500 font-medium"
@@ -1440,12 +1493,16 @@ export const ProductManagementPage: React.FC = () => {
                     </label>
                     <select
                       value={formState.subcategoryId}
-                      onChange={(e) => setFormState({ ...formState, subcategoryId: e.target.value })}
-                      disabled={availableSubcategories.length === 0}
+                      onChange={(e) => setFormState((prev) => ({ ...prev, subcategoryId: e.target.value }))}
+                      disabled={!formState.categoryId || availableSubcategories.length === 0}
                       className="w-full p-2.5 border rounded-lg bg-white outline-none focus:border-gold-500 font-medium disabled:bg-stone-100 disabled:text-stone-400"
                     >
                       <option value="">
-                        {availableSubcategories.length > 0 ? 'None (Direct Category)' : 'No Subcategories'}
+                        {!formState.categoryId
+                          ? 'Select a category first'
+                          : availableSubcategories.length > 0
+                          ? 'Select Subcategory (or leave empty for Direct Category)'
+                          : 'No subcategories available for this category'}
                       </option>
                       {availableSubcategories.map((sub) => (
                         <option key={sub._id} value={sub._id}>
@@ -1453,6 +1510,11 @@ export const ProductManagementPage: React.FC = () => {
                         </option>
                       ))}
                     </select>
+                    {formState.categoryId && availableSubcategories.length === 0 && (
+                      <p className="text-[11px] text-stone-500 mt-1">
+                        No subcategories available for this category.
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -1468,35 +1530,6 @@ export const ProductManagementPage: React.FC = () => {
                       <option value="TRADITIONAL">Traditional</option>
                       <option value="DAILY_WEAR">Daily Wear</option>
                       <option value="">None / General</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block font-semibold uppercase text-stone-700 mb-1">
-                      Metal Type *
-                    </label>
-                    <select
-                      value={formState.metalType}
-                      onChange={(e) => {
-                        const nextMetal = e.target.value as any;
-                        let nextPurity = formState.purity;
-                        if (nextMetal === 'GOLD' && !['24K', '22K', '20K', '18K', '14K', '9K'].includes(nextPurity)) {
-                          nextPurity = '22K';
-                        } else if (nextMetal === 'SILVER' && !['999', '925', '900', '835', '800'].includes(nextPurity)) {
-                          nextPurity = '925';
-                        } else if (nextMetal === 'PLATINUM' && !['Pt950', 'Pt900', 'Pt850', 'Pt999'].includes(nextPurity)) {
-                          nextPurity = 'Pt950';
-                        } else if (nextMetal === 'DIAMOND') {
-                          nextPurity = '';
-                        }
-                        setFormState({ ...formState, metalType: nextMetal, purity: nextPurity });
-                      }}
-                      className="w-full p-2.5 border rounded-lg bg-white outline-none focus:border-gold-500 font-medium"
-                    >
-                      <option value="GOLD">Gold</option>
-                      <option value="SILVER">Silver</option>
-                      <option value="PLATINUM">Platinum</option>
-                      <option value="DIAMOND">Diamond</option>
                     </select>
                   </div>
                 </div>
