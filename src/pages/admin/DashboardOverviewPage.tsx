@@ -184,7 +184,8 @@ export const DashboardOverviewPage: React.FC = () => {
           </Link>
         </div>
 
-        <div className="overflow-x-auto">
+        {/* Desktop Table Presentation */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-stone-50 border-b border-stone-200 text-stone-500 uppercase font-semibold">
               <tr>
@@ -276,6 +277,96 @@ export const DashboardOverviewPage: React.FC = () => {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile App-Style Cards Presentation */}
+        <div className="block md:hidden p-3.5 space-y-3">
+          {recentEnquiries.length > 0 ? (
+            recentEnquiries.map((enquiry) => {
+              const targetPhone = (enquiry as any).customerMobile || (enquiry as any).customerPhone;
+              const chatUrl = getAdminCustomerWhatsAppUrl({
+                customerPhone: targetPhone,
+                customerName: enquiry.customerName,
+                enquiryNumber: enquiry.enquiryNumber,
+                enquiryType: enquiry.enquiryType,
+              });
+
+              return (
+                <div
+                  key={enquiry._id}
+                  className="bg-[#FCFAF6] border border-stone-200/90 rounded-xl p-3.5 space-y-2.5 shadow-xs"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-mono font-bold text-xs text-burgundy-900 break-all">
+                      {enquiry.enquiryNumber}
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full bg-stone-200/70 font-bold text-[9px] uppercase text-stone-700">
+                      {enquiry.enquiryType}
+                    </span>
+                  </div>
+
+                  <div>
+                    <span className="font-bold text-sm text-stone-900 block">
+                      {enquiry.customerName}
+                    </span>
+                    {targetPhone && (
+                      <a
+                        href={`tel:${targetPhone}`}
+                        className="text-xs text-stone-500 font-mono hover:text-burgundy-900 inline-block mt-0.5"
+                      >
+                        📞 {targetPhone}
+                      </a>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between gap-2 pt-2 border-t border-stone-200/60 text-[11px]">
+                    <div className="flex items-center gap-1.5">
+                      <select
+                        value={enquiry.status}
+                        onChange={(e) => handleStatusChange(enquiry._id, e.target.value)}
+                        className={`text-[10px] font-bold px-2 py-1 rounded-md border outline-none ${
+                          enquiry.status === 'NEW'
+                            ? 'bg-blue-50 text-blue-700 border-blue-200'
+                            : enquiry.status === 'CONTACTED'
+                            ? 'bg-amber-50 text-amber-700 border-amber-200'
+                            : enquiry.status === 'RESOLVED'
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                            : 'bg-stone-50 text-stone-700 border-stone-200'
+                        }`}
+                      >
+                        <option value="NEW">NEW</option>
+                        <option value="CONTACTED">CONTACTED</option>
+                        <option value="IN_PROGRESS">IN PROGRESS</option>
+                        <option value="RESOLVED">RESOLVED</option>
+                        <option value="CLOSED">CLOSED</option>
+                      </select>
+                      <span className="text-[10px] text-stone-400">
+                        {getRelativeTime(enquiry.createdAt)}
+                      </span>
+                    </div>
+
+                    {chatUrl ? (
+                      <a
+                        href={chatUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-[10px] shadow-xs"
+                      >
+                        <span>WhatsApp</span>
+                        <ExternalLink className="w-2.5 h-2.5" />
+                      </a>
+                    ) : (
+                      <span className="text-[10px] text-stone-400 italic">No WhatsApp</span>
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <div className="p-6 text-center text-stone-400 text-xs">
+              No customer enquiries registered yet.
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -315,7 +315,8 @@ export const SchemesManagementPage: React.FC = () => {
 
       {/* Schemes Table */}
       <div className="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Desktop Table View */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-stone-50 border-b border-stone-200 text-stone-500 uppercase font-semibold">
               <tr>
@@ -467,6 +468,137 @@ export const SchemesManagementPage: React.FC = () => {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile App-Style Schemes Cards */}
+        <div className="block md:hidden p-3.5 space-y-3">
+          {isLoading ? (
+            <div className="p-8 text-center text-stone-400 text-xs">
+              Loading savings schemes...
+            </div>
+          ) : sortedSchemes.length > 0 ? (
+            sortedSchemes.map((scheme, index) => {
+              const minPaise = scheme.minMonthlyAmountPaise ?? scheme.minimumMonthlyAmountPaise;
+              const schemeBenefits = Array.isArray(scheme.benefits) ? scheme.benefits.filter(Boolean) : [];
+
+              return (
+                <div
+                  key={scheme._id}
+                  className="bg-[#FCFAF6] border border-stone-200/90 rounded-xl p-3.5 space-y-3 shadow-xs"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="w-16 h-10 rounded-lg bg-[#3A060E] overflow-hidden shrink-0 border border-gold-400/50">
+                      {scheme.bannerImageUrl ? (
+                        <img
+                          src={scheme.bannerImageUrl}
+                          alt={scheme.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gold-400">
+                          <Award className="w-4 h-4" />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-1.5">
+                        <h4 className="font-serif font-bold text-sm text-burgundy-950 truncate">
+                          {scheme.name}
+                        </h4>
+                        <div className="flex items-center gap-1 shrink-0 bg-stone-100 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold text-stone-700">
+                          <span>#{scheme.displayOrder ?? index + 1}</span>
+                          <div className="flex flex-col -my-0.5">
+                            <button
+                              type="button"
+                              disabled={index === 0}
+                              onClick={() => handleMoveOrder(scheme, 'up')}
+                              className="text-stone-400 hover:text-burgundy-900 disabled:opacity-20"
+                              title="Move Up"
+                            >
+                              <ArrowUp className="w-2.5 h-2.5" />
+                            </button>
+                            <button
+                              type="button"
+                              disabled={index === sortedSchemes.length - 1}
+                              onClick={() => handleMoveOrder(scheme, 'down')}
+                              className="text-stone-400 hover:text-burgundy-900 disabled:opacity-20"
+                              title="Move Down"
+                            >
+                              <ArrowDown className="w-2.5 h-2.5" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {scheme.description && (
+                        <p className="text-[11px] text-stone-500 line-clamp-1 mt-0.5">
+                          {scheme.description}
+                        </p>
+                      )}
+
+                      <div className="text-[11px] font-semibold text-gold-800 mt-1">
+                        {scheme.tenureMonths ? `${scheme.tenureMonths} Months` : 'Flexible duration'}
+                        {minPaise && minPaise > 0 ? ` • ₹${paiseToRupees(minPaise).toLocaleString('en-IN')}/mo` : ''}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Benefits */}
+                  {schemeBenefits.length > 0 && (
+                    <div className="pt-2 border-t border-stone-200/60 flex flex-wrap gap-1">
+                      {schemeBenefits.slice(0, 3).map((b, i) => (
+                        <span
+                          key={i}
+                          className="px-1.5 py-0.5 rounded bg-gold-50 border border-gold-200 text-[10px] text-stone-700 whitespace-nowrap"
+                        >
+                          {b}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Status & Actions Footer */}
+                  <div className="pt-2 border-t border-stone-200/60 flex items-center justify-between gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleToggleActive(scheme)}
+                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase transition-colors ${
+                        scheme.isActive
+                          ? 'bg-emerald-100 text-emerald-800'
+                          : 'bg-stone-200 text-stone-600'
+                      }`}
+                    >
+                      <span>{scheme.isActive ? 'Active' : 'Hidden'}</span>
+                    </button>
+
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => openEditModal(scheme)}
+                        className="p-1.5 rounded-lg border border-stone-200 hover:bg-stone-100 text-stone-700"
+                        title="Edit Scheme"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(scheme)}
+                        className="p-1.5 rounded-lg border border-red-200 hover:bg-red-50 text-red-600"
+                        title="Delete Scheme"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <div className="p-8 text-center text-stone-400 text-xs">
+              No savings schemes configured yet.
+            </div>
+          )}
         </div>
       </div>
 

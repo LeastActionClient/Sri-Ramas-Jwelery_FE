@@ -162,9 +162,9 @@ export const AdminLoginPage: React.FC = () => {
           <div className="pt-2 text-center">
             <a
               href="/"
-              className="text-xs text-stone-500 hover:text-burgundy-900 transition-colors"
+              className="inline-flex items-center justify-center text-xs text-stone-500 hover:text-burgundy-900 transition-colors whitespace-nowrap"
             >
-              ← Return to Customer Showcase Website
+              ← Back To Website
             </a>
           </div>
         </div>

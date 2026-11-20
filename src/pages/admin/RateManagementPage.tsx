@@ -173,53 +173,67 @@ export const RateManagementPage: React.FC = () => {
       )}
 
       {/* Current Rates Overview */}
-      <div className="bg-white rounded-2xl border border-gold-400/50 p-6 shadow-sm space-y-4">
-        <h2 className="font-serif font-bold text-base text-burgundy-950 border-b border-stone-200 pb-3 flex items-center justify-between">
+      <div className="bg-white rounded-2xl border border-gold-400/50 p-4 sm:p-6 shadow-sm space-y-4">
+        <h2 className="font-serif font-bold text-sm sm:text-base text-burgundy-950 border-b border-stone-200 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
           <span className="flex items-center gap-2">
             <TrendingUp className="w-4 h-4 text-gold-600" />
             <span>Live Published Benchmarks</span>
           </span>
-          <span className="text-xs text-stone-500 font-sans font-normal">
+          <span className="text-[11px] sm:text-xs text-stone-500 font-sans font-normal">
             Effective: {liveRates?.effectiveDate ? formatDateTime(liveRates.effectiveDate) : 'Today'}
           </span>
         </h2>
 
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
-          <div className="bg-ivory-50 p-3.5 rounded-xl border border-stone-200">
-            <span className="text-[11px] font-bold text-stone-500 uppercase block">24K Gold</span>
-            <span className="font-serif font-bold text-xl text-burgundy-950 block mt-1">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-2.5 sm:gap-4 text-center">
+          {/* 22K Gold: Featured benchmark banner on mobile spanning full 2 cols, regular 1 col on md+ */}
+          <div className="col-span-2 md:col-span-1 order-1 md:order-2 bg-gradient-to-br from-amber-50 to-amber-100/90 p-3.5 sm:p-4 rounded-xl border-2 border-gold-500 shadow-xs flex flex-row md:flex-col items-center justify-between md:justify-center gap-2">
+            <div className="text-left md:text-center">
+              <span className="text-[11px] sm:text-xs font-bold text-burgundy-900 uppercase block tracking-wide">
+                22K 916 Gold
+              </span>
+              <span className="text-[10px] text-burgundy-700 font-semibold block">
+                Standard Jewellery Gold
+              </span>
+            </div>
+            <div className="text-right md:text-center">
+              <span className="font-serif font-extrabold text-base sm:text-lg md:text-xl lg:text-2xl text-burgundy-950 block tracking-tight">
+                {liveRates ? formatPaiseToInr(liveRates.gold['22K']) : '—'}
+              </span>
+              <span className="text-[10px] text-stone-500">per gram</span>
+            </div>
+          </div>
+
+          {/* 24K Gold */}
+          <div className="col-span-1 order-2 md:order-1 bg-ivory-50 p-3 sm:p-3.5 rounded-xl border border-stone-200 flex flex-col justify-between">
+            <span className="text-[10px] sm:text-[11px] font-bold text-stone-600 uppercase block">24K Gold</span>
+            <span className="font-serif font-bold text-xs min-[360px]:text-sm sm:text-base md:text-lg text-burgundy-950 block my-1 tracking-tight truncate">
               {liveRates ? formatPaiseToInr(liveRates.gold['24K']) : '—'}
             </span>
             <span className="text-[10px] text-stone-400">per gram</span>
           </div>
 
-          <div className="bg-gold-50 p-3.5 rounded-xl border-2 border-gold-500">
-            <span className="text-[11px] font-bold text-burgundy-900 uppercase block">22K 916 Gold</span>
-            <span className="font-serif font-bold text-xl text-burgundy-900 block mt-1">
-              {liveRates ? formatPaiseToInr(liveRates.gold['22K']) : '—'}
-            </span>
-            <span className="text-[10px] text-burgundy-700 font-semibold">Standard Jewellery</span>
-          </div>
-
-          <div className="bg-ivory-50 p-3.5 rounded-xl border border-stone-200">
-            <span className="text-[11px] font-bold text-stone-500 uppercase block">18K Gold</span>
-            <span className="font-serif font-bold text-xl text-burgundy-950 block mt-1">
+          {/* 18K Gold */}
+          <div className="col-span-1 order-3 md:order-3 bg-ivory-50 p-3 sm:p-3.5 rounded-xl border border-stone-200 flex flex-col justify-between">
+            <span className="text-[10px] sm:text-[11px] font-bold text-stone-600 uppercase block">18K Gold</span>
+            <span className="font-serif font-bold text-xs min-[360px]:text-sm sm:text-base md:text-lg text-burgundy-950 block my-1 tracking-tight truncate">
               {liveRates ? formatPaiseToInr(liveRates.gold['18K']) : '—'}
             </span>
             <span className="text-[10px] text-stone-400">per gram</span>
           </div>
 
-          <div className="bg-stone-50 p-3.5 rounded-xl border border-stone-300">
-            <span className="text-[11px] font-bold text-stone-700 uppercase block">999 Silver</span>
-            <span className="font-serif font-bold text-xl text-burgundy-950 block mt-1">
+          {/* 999 Silver */}
+          <div className="col-span-1 order-4 md:order-4 bg-stone-50 p-3 sm:p-3.5 rounded-xl border border-stone-300 flex flex-col justify-between">
+            <span className="text-[10px] sm:text-[11px] font-bold text-stone-700 uppercase block">999 Silver</span>
+            <span className="font-serif font-bold text-xs min-[360px]:text-sm sm:text-base md:text-lg text-burgundy-950 block my-1 tracking-tight truncate">
               {liveRates ? formatPaiseToInr(liveRates.silver['999']) : '—'}
             </span>
             <span className="text-[10px] text-stone-500">per gram</span>
           </div>
 
-          <div className="bg-stone-50 p-3.5 rounded-xl border border-stone-300">
-            <span className="text-[11px] font-bold text-stone-700 uppercase block">925 Silver</span>
-            <span className="font-serif font-bold text-xl text-burgundy-950 block mt-1">
+          {/* 925 Silver */}
+          <div className="col-span-1 order-5 md:order-5 bg-stone-50 p-3 sm:p-3.5 rounded-xl border border-stone-300 flex flex-col justify-between">
+            <span className="text-[10px] sm:text-[11px] font-bold text-stone-700 uppercase block">925 Silver</span>
+            <span className="font-serif font-bold text-xs min-[360px]:text-sm sm:text-base md:text-lg text-burgundy-950 block my-1 tracking-tight truncate">
               {liveRates ? formatPaiseToInr(liveRates.silver['925']) : '—'}
             </span>
             <span className="text-[10px] text-stone-500">per gram</span>
@@ -227,11 +241,11 @@ export const RateManagementPage: React.FC = () => {
         </div>
 
         {liveRates?.isOverride && (
-          <div className="pt-3 border-t border-stone-100 flex flex-wrap justify-end gap-3">
+          <div className="pt-3 border-t border-stone-100 flex flex-col sm:flex-row justify-end gap-2.5 sm:gap-3">
             <button
               type="button"
               onClick={() => handleRestoreAuto('GOLD')}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-semibold"
+              className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-semibold w-full sm:w-auto"
             >
               <Unlock className="w-3.5 h-3.5 text-stone-600" />
               <span>Restore Automated Gold Feed</span>
@@ -239,7 +253,7 @@ export const RateManagementPage: React.FC = () => {
             <button
               type="button"
               onClick={() => handleRestoreAuto('SILVER')}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-semibold"
+              className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-semibold w-full sm:w-auto"
             >
               <Unlock className="w-3.5 h-3.5 text-stone-600" />
               <span>Restore Automated Silver Feed</span>

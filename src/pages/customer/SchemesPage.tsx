@@ -161,35 +161,43 @@ export const SchemesPage: React.FC = () => {
       </section>
 
       {/* Floating Benefits Strip: Positioned in the middle straddling the boundary, slightly enlarged */}
-      <div className="relative z-20 max-w-[1100px] mx-auto px-4 sm:px-6 -mt-7 sm:-mt-8 md:-mt-9">
+      <div className="relative z-20 max-w-[1100px] mx-auto px-3 sm:px-6 -mt-7 sm:-mt-8 md:-mt-9">
         <ScrollReveal variant="fade-up" delay={80}>
-          <div className="rounded-2xl bg-[#28040C]/90 backdrop-blur-md border border-[#D4AF37]/50 shadow-[0_12px_36px_rgba(0,0,0,0.48)] py-3 sm:py-3.5 px-4 sm:px-8">
-            <div className="grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-[#D4AF37]/25 items-center text-center">
-              <div className="flex items-center justify-center gap-2.5 py-2 px-2.5">
-                <ShieldCheck className="w-5 sm:w-6 h-5 sm:h-6 text-[#E0B250] shrink-0 stroke-[1.8]" />
-                <span className="text-xs sm:text-sm font-medium text-white/95 whitespace-nowrap">
+          <div className="rounded-2xl bg-[#240309] md:bg-[#28040C]/95 md:backdrop-blur-md border border-[#D4AF37]/50 shadow-[0_12px_36px_rgba(0,0,0,0.48)] py-3 sm:py-3.5 px-3 sm:px-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-4 md:divide-x md:divide-[#D4AF37]/25 items-center text-center">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-2.5 py-1.5 px-2">
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#E0B250]/15 border border-[#E0B250]/30 flex items-center justify-center shrink-0">
+                  <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-[#FFE082] stroke-2" />
+                </div>
+                <span className="text-[11px] sm:text-xs md:text-sm font-semibold text-white/95 leading-tight">
                   Trusted Since 1947
                 </span>
               </div>
 
-              <div className="flex items-center justify-center gap-2.5 py-2 px-2.5">
-                <Coins className="w-5 sm:w-6 h-5 sm:h-6 text-[#E0B250] shrink-0 stroke-[1.8]" />
-                <span className="text-xs sm:text-sm font-medium text-white/95 whitespace-nowrap">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-2.5 py-1.5 px-2">
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#E0B250]/15 border border-[#E0B250]/30 flex items-center justify-center shrink-0">
+                  <Coins className="w-4 h-4 sm:w-5 sm:h-5 text-[#FFE082] stroke-2" />
+                </div>
+                <span className="text-[11px] sm:text-xs md:text-sm font-semibold text-white/95 leading-tight">
                   Save Systematically
                 </span>
               </div>
 
-              <div className="flex items-center justify-center gap-2.5 py-2 px-2.5">
-                <Gem className="w-5 sm:w-6 h-5 sm:h-6 text-[#E0B250] shrink-0 stroke-[1.8]" />
-                <span className="text-xs sm:text-sm font-medium text-white/95 whitespace-nowrap">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-2.5 py-1.5 px-2">
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#E0B250]/15 border border-[#E0B250]/30 flex items-center justify-center shrink-0">
+                  <Gem className="w-4 h-4 sm:w-5 sm:h-5 text-[#FFE082] stroke-2" />
+                </div>
+                <span className="text-[11px] sm:text-xs md:text-sm font-semibold text-white/95 leading-tight">
                   Get More Value
                 </span>
               </div>
 
-              <div className="flex items-center justify-center gap-2.5 py-2 px-2.5">
-                <Heart className="w-5 sm:w-6 h-5 sm:h-6 text-[#E0B250] shrink-0 stroke-[1.8]" />
-                <span className="text-xs sm:text-sm font-medium text-white/95 text-left md:text-center leading-snug">
-                  Ideal for Weddings &amp; Special Occasions
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-2.5 py-1.5 px-2">
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#E0B250]/15 border border-[#E0B250]/30 flex items-center justify-center shrink-0">
+                  <Heart className="w-4 h-4 sm:w-5 sm:h-5 text-[#FFE082] stroke-2" />
+                </div>
+                <span className="text-[11px] sm:text-xs md:text-sm font-semibold text-white/95 leading-tight">
+                  Ideal for Weddings &amp; Occasions
                 </span>
               </div>
             </div>

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Filter, X, Search, RotateCcw } from 'lucide-react';
@@ -115,6 +116,16 @@ function getCategoryParentId(c: Category): string | null {
 export const ProductCatalogPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+
+  // Prevent background scroll when mobile filter is open
+  useEffect(() => {
+    if (!mobileFiltersOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [mobileFiltersOpen]);
 
   // URL search params are the single source of truth for committed catalogue filters
   const urlSearch = searchParams.get('search') || '';
@@ -684,45 +695,48 @@ export const ProductCatalogPage: React.FC = () => {
       />
 
       {/* Top Metal Group Switcher Tabs */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-stone-200/80 pb-4">
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              if (metalType) handleToggleMetal(metalType);
-            }}
-            className={`px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl font-serif text-xs sm:text-sm tracking-wide transition-all duration-200 ${
-              metalType === ''
-                ? 'bg-burgundy-900 text-gold-200 font-bold shadow-md border border-gold-600/40'
-                : 'bg-white text-stone-700 hover:bg-stone-50 border border-stone-200 font-medium'
-            }`}
-          >
-            All Jewellery
-          </button>
-          <button
-            type="button"
-            onClick={() => handleToggleMetal('GOLD')}
-            className={`flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl font-serif text-xs sm:text-sm tracking-wide transition-all duration-200 ${
-              metalType === 'GOLD'
-                ? 'bg-brand-maroon-gradient text-gold-200 font-bold shadow-md border border-gold-500'
-                : 'bg-white text-stone-700 hover:bg-stone-50 border border-stone-200 font-medium'
-            }`}
-          >
-            <span className="w-2.5 h-2.5 rounded-full bg-gold-400 inline-block shadow-xs" />
-            <span>Gold Jewellery</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => handleToggleMetal('SILVER')}
-            className={`flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl font-serif text-xs sm:text-sm tracking-wide transition-all duration-200 ${
-              metalType === 'SILVER'
-                ? 'bg-brand-maroon-gradient text-gold-200 font-bold shadow-md border border-stone-300'
-                : 'bg-white text-stone-700 hover:bg-stone-50 border border-stone-200 font-medium'
-            }`}
-          >
-            <span className="w-2.5 h-2.5 rounded-full bg-stone-300 inline-block shadow-xs" />
-            <span>Silver Jewellery</span>
-          </button>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 border-b border-stone-200/80 pb-3 sm:pb-4">
+        {/* Horizontally scrollable metal tabs on mobile */}
+        <div className="w-full sm:w-auto overflow-x-auto no-scrollbar scroll-smooth py-1 -mx-4 px-4 sm:mx-0 sm:px-0">
+          <div className="flex items-center gap-2 whitespace-nowrap min-w-max">
+            <button
+              type="button"
+              onClick={() => {
+                if (metalType) handleToggleMetal(metalType);
+              }}
+              className={`shrink-0 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl font-serif text-xs sm:text-sm tracking-wide transition-all duration-200 whitespace-nowrap ${
+                metalType === ''
+                  ? 'bg-burgundy-900 text-gold-200 font-bold shadow-md border border-gold-600/40'
+                  : 'bg-white text-stone-700 hover:bg-stone-50 border border-stone-200 font-medium'
+              }`}
+            >
+              All Jewellery
+            </button>
+            <button
+              type="button"
+              onClick={() => handleToggleMetal('GOLD')}
+              className={`shrink-0 flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl font-serif text-xs sm:text-sm tracking-wide transition-all duration-200 whitespace-nowrap ${
+                metalType === 'GOLD'
+                  ? 'bg-brand-maroon-gradient text-gold-200 font-bold shadow-md border border-gold-500'
+                  : 'bg-white text-stone-700 hover:bg-stone-50 border border-stone-200 font-medium'
+              }`}
+            >
+              <span className="w-2.5 h-2.5 rounded-full bg-gold-400 inline-block shadow-xs shrink-0" />
+              <span>Gold Jewellery</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleToggleMetal('SILVER')}
+              className={`shrink-0 flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl font-serif text-xs sm:text-sm tracking-wide transition-all duration-200 whitespace-nowrap ${
+                metalType === 'SILVER'
+                  ? 'bg-brand-maroon-gradient text-gold-200 font-bold shadow-md border border-stone-300'
+                  : 'bg-white text-stone-700 hover:bg-stone-50 border border-stone-200 font-medium'
+              }`}
+            >
+              <span className="w-2.5 h-2.5 rounded-full bg-stone-300 inline-block shadow-xs shrink-0" />
+              <span>Silver Jewellery</span>
+            </button>
+          </div>
         </div>
 
         {/* Mobile Filter Trigger Button (Visible only on smaller viewports) */}
@@ -730,7 +744,7 @@ export const ProductCatalogPage: React.FC = () => {
           <button
             type="button"
             onClick={openMobileDrawer}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gold-600 bg-white text-burgundy-900 text-xs sm:text-sm font-semibold transition-all duration-200 hover:bg-gold-50 active:scale-[0.98] shadow-sm"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-gold-600 bg-white text-burgundy-900 text-xs sm:text-sm font-semibold transition-all duration-200 hover:bg-gold-50 active:scale-[0.98] shadow-xs"
           >
             <Filter className="w-4 h-4 text-gold-600" />
             <span>Filter Catalogue</span>
@@ -1411,49 +1425,62 @@ export const ProductCatalogPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile Filters Drawer */}
-      {mobileFiltersOpen && (
+      {/* Mobile Filters Bottom Sheet Portal */}
+      {mobileFiltersOpen && typeof document !== 'undefined' && createPortal(
         <div
-          className="fixed inset-0 z-50 flex bg-charcoal-950/70 backdrop-blur-sm lg:hidden animate-fade-in"
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-xs p-0 sm:p-4 animate-fade-in"
           onClick={(e) => {
             if (e.target === e.currentTarget) setMobileFiltersOpen(false);
           }}
         >
-          <div className="w-4/5 max-w-xs bg-white h-full p-5 flex flex-col justify-between overflow-y-auto shadow-2xl border-r border-gold-400/30 animate-drawer-enter">
-            <div className="space-y-5">
-              <div className="flex items-center justify-between pb-3 border-b border-stone-200">
-                <h3 className="font-serif font-bold text-base text-burgundy-950">
+          <div
+            className="w-full sm:max-w-md bg-white rounded-t-2xl sm:rounded-2xl max-h-[80vh] sm:max-h-[85vh] flex flex-col overflow-hidden shadow-2xl border-t sm:border border-gold-400/40 animate-bottom-sheet"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header with Title and Close Button */}
+            <div className="bg-burgundy-900 text-gold-100 py-2.5 px-4 border-b border-gold-600/30 flex items-center justify-between shrink-0 shadow-xs">
+              <div className="flex items-center gap-2">
+                <Filter className="w-3.5 h-3.5 text-gold-400" />
+                <h3 className="font-serif font-bold text-sm text-gold-100">
                   Filter Catalogue
                 </h3>
-                <button
-                  type="button"
-                  onClick={() => setMobileFiltersOpen(false)}
-                  className="p-1 text-stone-400 hover:text-stone-700"
-                  aria-label="Close filters drawer"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+                {activeFilterCount > 0 && (
+                  <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-gold-400 text-burgundy-950 text-[10px] font-extrabold">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setMobileFiltersOpen(false)}
+                className="p-1 rounded-lg text-gold-300 hover:text-white hover:bg-burgundy-800 transition-colors"
+                aria-label="Close filters drawer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Scrollable Filter Body */}
+            <div className="flex-1 overflow-y-auto p-3 sm:p-3.5 space-y-2.5 text-xs">
+              <div>
+                <label htmlFor="mobile-filter-search" className="block text-[10.5px] font-bold uppercase tracking-wider mb-0.5 text-stone-700">
+                  Keyword Search
+                </label>
+                <input
+                  id="mobile-filter-search"
+                  type="text"
+                  value={mobileDraftSearch}
+                  onChange={(e) => setMobileDraftSearch(e.target.value)}
+                  placeholder="Name, SKU, description..."
+                  className="w-full h-8 px-2.5 text-xs border border-stone-300 rounded-lg outline-none focus:border-gold-500 bg-white"
+                />
               </div>
 
-              {/* Mobile Inputs */}
-              <div className="space-y-4 text-sm">
+              {/* Main Category & Subcategory side-by-side to minimize vertical space */}
+              <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label htmlFor="mobile-filter-search" className="block text-xs font-bold uppercase tracking-wider mb-1.5 text-stone-800">
-                    Keyword Search
-                  </label>
-                  <input
-                    id="mobile-filter-search"
-                    type="text"
-                    value={mobileDraftSearch}
-                    onChange={(e) => setMobileDraftSearch(e.target.value)}
-                    placeholder="Name, SKU, description..."
-                    className="w-full p-2.5 text-sm border border-stone-300 rounded-lg outline-none focus:border-gold-500"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="mobile-filter-category" className="block text-xs font-bold uppercase tracking-wider mb-1.5 text-stone-800">
-                    Main Category
+                  <label htmlFor="mobile-filter-category" className="block text-[10.5px] font-bold uppercase tracking-wider mb-0.5 text-stone-700 truncate">
+                    Category
                   </label>
                   <select
                     id="mobile-filter-category"
@@ -1462,7 +1489,7 @@ export const ProductCatalogPage: React.FC = () => {
                       setMobileDraftCategoryId(e.target.value);
                       setMobileDraftSubcategoryId('');
                     }}
-                    className="w-full p-2.5 text-sm border border-stone-300 rounded-lg bg-white outline-none focus:border-gold-500 font-medium"
+                    className="w-full h-8 px-2 text-xs border border-stone-300 rounded-lg bg-white outline-none focus:border-gold-500 font-medium truncate"
                   >
                     <option value="">All Categories</option>
                     {rootCategories.map((c) => (
@@ -1473,15 +1500,9 @@ export const ProductCatalogPage: React.FC = () => {
                   </select>
                 </div>
 
-                {/* Subcategory */}
                 <div>
-                  <label htmlFor="mobile-filter-subcategory" className="block text-xs font-bold uppercase tracking-wider mb-1.5 text-stone-800 flex items-center justify-between">
-                    <span>Subcategory</span>
-                    {mobileDraftCategoryId && (
-                      <span className="text-[10px] font-normal text-stone-500">
-                        in {categories.find((c) => c._id === mobileDraftCategoryId)?.name}
-                      </span>
-                    )}
+                  <label htmlFor="mobile-filter-subcategory" className="block text-[10.5px] font-bold uppercase tracking-wider mb-0.5 text-stone-700 truncate">
+                    Subcategory
                   </label>
                   <select
                     id="mobile-filter-subcategory"
@@ -1498,14 +1519,12 @@ export const ProductCatalogPage: React.FC = () => {
                       }
                     }}
                     disabled={Boolean(mobileDraftCategoryId && mobileCategorySubcategories.length === 0)}
-                    className="w-full p-2.5 text-sm border border-stone-300 bg-white rounded-lg outline-none focus:border-gold-500 font-medium disabled:bg-stone-100 disabled:text-stone-400 disabled:cursor-not-allowed"
+                    className="w-full h-8 px-2 text-xs border border-stone-300 bg-white rounded-lg outline-none focus:border-gold-500 font-medium truncate disabled:bg-stone-100 disabled:text-stone-400 disabled:cursor-not-allowed"
                   >
                     {mobileDraftCategoryId ? (
                       mobileCategorySubcategories.length > 0 ? (
                         <>
-                          <option value="">
-                            All {categories.find((c) => c._id === mobileDraftCategoryId)?.name || ''} Subcategories
-                          </option>
+                          <option value="">All Subcategories</option>
                           {mobileCategorySubcategories.map((sub) => (
                             <option key={sub._id} value={sub._id}>
                               {sub.name}
@@ -1513,7 +1532,7 @@ export const ProductCatalogPage: React.FC = () => {
                           ))}
                         </>
                       ) : (
-                        <option value="">No subcategories available</option>
+                        <option value="">No subcategories</option>
                       )
                     ) : (
                       <>
@@ -1531,36 +1550,100 @@ export const ProductCatalogPage: React.FC = () => {
                     )}
                   </select>
                 </div>
+              </div>
 
-                {/* Classification (Bridal / Traditional / Daily Wear) */}
-                <div>
-                  <span className="block text-xs font-bold uppercase tracking-wider mb-1.5 text-stone-800">
-                    Classification
-                  </span>
-                  <div className="flex flex-wrap gap-1.5">
+              {/* Classification */}
+              <div>
+                <span className="block text-[10.5px] font-bold uppercase tracking-wider mb-1 text-stone-700">
+                  Classification
+                </span>
+                <div className="flex flex-wrap gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setMobileDraftClassification('')}
+                    className={`px-2.5 py-1 text-[11px] rounded-md border transition-colors ${
+                      mobileDraftClassification === ''
+                        ? 'bg-burgundy-900 text-gold-200 border-burgundy-900 font-semibold shadow-xs'
+                        : 'border-stone-200 text-stone-700 hover:bg-stone-50'
+                    }`}
+                  >
+                    All
+                  </button>
+                  {CLASSIFICATION_OPTIONS.map((opt) => (
                     <button
+                      key={opt.value}
                       type="button"
-                      onClick={() => setMobileDraftClassification('')}
-                      className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
-                        mobileDraftClassification === ''
-                          ? 'bg-burgundy-900 text-gold-200 border-burgundy-900 font-semibold'
-                          : 'border-stone-200 text-stone-700'
+                      onClick={() => {
+                        setMobileDraftClassification(
+                          mobileDraftClassification === opt.value ? '' : opt.value
+                        );
+                      }}
+                      className={`px-2.5 py-1 text-[11px] rounded-md border transition-colors ${
+                        mobileDraftClassification === opt.value
+                          ? 'bg-burgundy-900 text-gold-200 border-burgundy-900 font-semibold shadow-xs'
+                          : 'border-stone-200 text-stone-700 hover:bg-stone-50'
                       }`}
                     >
-                      All
+                      {opt.label}
                     </button>
-                    {CLASSIFICATION_OPTIONS.map((opt) => (
+                  ))}
+                </div>
+              </div>
+
+              {/* Precious Metal */}
+              <div>
+                <span className="block text-[10.5px] font-bold uppercase tracking-wider mb-1 text-stone-700">Precious Metal</span>
+                <div className="flex flex-wrap gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setMobileDraftMetal('')}
+                    className={`px-2.5 py-1 text-[11px] rounded-md border transition-colors ${
+                      mobileDraftMetal === ''
+                        ? 'bg-burgundy-900 text-gold-200 border-burgundy-900 font-semibold shadow-xs'
+                        : 'border-stone-200 text-stone-700 hover:bg-stone-50'
+                    }`}
+                  >
+                    All Metals
+                  </button>
+                  {METAL_OPTIONS.map((metal) => (
+                    <button
+                      key={metal.value}
+                      type="button"
+                      onClick={() => {
+                        const nextMetal = mobileDraftMetal === metal.value ? '' : metal.value;
+                        setMobileDraftMetal(nextMetal);
+                        setMobileDraftPurity('');
+                        setMobileDraftCut('');
+                        setMobileDraftColor('');
+                        setMobileDraftClarity('');
+                        setMobileDraftShape('');
+                        setMobileDraftCert('');
+                        setMobileDraftCarat('');
+                      }}
+                      className={`px-2.5 py-1 text-[11px] rounded-md border transition-colors ${
+                        mobileDraftMetal === metal.value
+                          ? 'bg-burgundy-900 text-gold-200 border-burgundy-900 font-semibold shadow-xs'
+                          : 'border-stone-200 text-stone-700 hover:bg-stone-50'
+                      }`}
+                    >
+                      {metal.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {mobileDraftMetal === 'GOLD' && (
+                <div>
+                  <span className="block font-semibold uppercase mb-1 text-[10.5px]">Gold Karat &amp; Fineness</span>
+                  <div className="flex flex-wrap gap-1">
+                    {GOLD_PURITY_OPTIONS.map((opt) => (
                       <button
                         key={opt.value}
                         type="button"
-                        onClick={() => {
-                          setMobileDraftClassification(
-                            mobileDraftClassification === opt.value ? '' : opt.value
-                          );
-                        }}
-                        className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
-                          mobileDraftClassification === opt.value
-                            ? 'bg-burgundy-900 text-gold-200 border-burgundy-900 font-semibold'
+                        onClick={() => setMobileDraftPurity(mobileDraftPurity === opt.value ? '' : opt.value)}
+                        className={`px-2 py-1 rounded-md border text-[10.5px] transition-colors ${
+                          mobileDraftPurity === opt.value
+                            ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold'
                             : 'border-stone-200 text-stone-700'
                         }`}
                       >
@@ -1569,60 +1652,65 @@ export const ProductCatalogPage: React.FC = () => {
                     ))}
                   </div>
                 </div>
+              )}
 
+              {mobileDraftMetal === 'SILVER' && (
                 <div>
-                  <span className="block text-xs font-bold uppercase tracking-wider mb-1.5 text-stone-800">Precious Metal</span>
-                  <div className="flex flex-wrap gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => setMobileDraftMetal('')}
-                      className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
-                        mobileDraftMetal === ''
-                          ? 'bg-burgundy-900 text-gold-200 border-burgundy-900 font-semibold'
-                          : 'border-stone-200 text-stone-700'
-                      }`}
-                    >
-                      All Metals
-                    </button>
-                    {METAL_OPTIONS.map((metal) => (
+                  <span className="block font-semibold uppercase mb-1 text-[10.5px]">Silver Fineness</span>
+                  <div className="flex flex-wrap gap-1">
+                    {SILVER_FINENESS_OPTIONS.map((opt) => (
                       <button
-                        key={metal.value}
+                        key={opt.value}
                         type="button"
-                        onClick={() => {
-                          const nextMetal = mobileDraftMetal === metal.value ? '' : metal.value;
-                          setMobileDraftMetal(nextMetal);
-                          setMobileDraftPurity('');
-                          setMobileDraftCut('');
-                          setMobileDraftColor('');
-                          setMobileDraftClarity('');
-                          setMobileDraftShape('');
-                          setMobileDraftCert('');
-                          setMobileDraftCarat('');
-                        }}
-                        className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
-                          mobileDraftMetal === metal.value
-                            ? 'bg-burgundy-900 text-gold-200 border-burgundy-900 font-semibold'
+                        onClick={() => setMobileDraftPurity(mobileDraftPurity === opt.value ? '' : opt.value)}
+                        className={`px-2 py-1 rounded-md border text-[10.5px] transition-colors ${
+                          mobileDraftPurity === opt.value
+                            ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold'
                             : 'border-stone-200 text-stone-700'
                         }`}
                       >
-                        {metal.label}
+                        {opt.label}
                       </button>
                     ))}
                   </div>
                 </div>
+              )}
 
-                {mobileDraftMetal === 'GOLD' && (
+              {mobileDraftMetal === 'PLATINUM' && (
+                <div>
+                  <span className="block font-semibold uppercase mb-1 text-[10.5px]">Platinum Hallmark</span>
+                  <div className="flex flex-wrap gap-1">
+                    {PLATINUM_HALLMARK_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setMobileDraftPurity(mobileDraftPurity === opt.value ? '' : opt.value)}
+                        className={`px-2 py-1 rounded-md border text-[10.5px] transition-colors ${
+                          mobileDraftPurity === opt.value
+                            ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold'
+                            : 'border-stone-200 text-stone-700'
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {mobileDraftMetal === 'DIAMOND' && (
+                <div className="space-y-2">
                   <div>
-                    <span className="block font-semibold uppercase mb-1.5">Gold Karat &amp; Fineness</span>
-                    <div className="flex flex-wrap gap-1.5">
-                      {GOLD_PURITY_OPTIONS.map((opt) => (
+                    <span className="block font-semibold uppercase mb-1 text-[10.5px]">Cut</span>
+                    <div className="flex flex-wrap gap-1">
+                      {DIAMOND_CUT_OPTIONS.map((opt) => (
                         <button
                           key={opt.value}
                           type="button"
-                          onClick={() => setMobileDraftPurity(mobileDraftPurity === opt.value ? '' : opt.value)}
-                          className={`px-2.5 py-1.5 rounded-md border transition-colors ${
-                            mobileDraftPurity === opt.value
-                              ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold'
+                          onClick={() => setMobileDraftCut(mobileDraftCut === opt.value ? '' : opt.value)}
+                          className={`px-2 py-0.5 rounded-md border text-[10.5px] ${
+                            mobileDraftCut === opt.value
+                              ? 'bg-gold-500 text-burgundy-950 font-bold'
                               : 'border-stone-200 text-stone-700'
                           }`}
                         >
@@ -1631,20 +1719,18 @@ export const ProductCatalogPage: React.FC = () => {
                       ))}
                     </div>
                   </div>
-                )}
 
-                {mobileDraftMetal === 'SILVER' && (
                   <div>
-                    <span className="block font-semibold uppercase mb-1.5">Silver Fineness</span>
-                    <div className="flex flex-wrap gap-1.5">
-                      {SILVER_FINENESS_OPTIONS.map((opt) => (
+                    <span className="block font-semibold uppercase mb-1 text-[10.5px]">Clarity</span>
+                    <div className="flex flex-wrap gap-1">
+                      {DIAMOND_CLARITY_OPTIONS.map((opt) => (
                         <button
                           key={opt.value}
                           type="button"
-                          onClick={() => setMobileDraftPurity(mobileDraftPurity === opt.value ? '' : opt.value)}
-                          className={`px-2.5 py-1.5 rounded-md border transition-colors ${
-                            mobileDraftPurity === opt.value
-                              ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold'
+                          onClick={() => setMobileDraftClarity(mobileDraftClarity === opt.value ? '' : opt.value)}
+                          className={`px-2 py-0.5 rounded-md border text-[10.5px] ${
+                            mobileDraftClarity === opt.value
+                              ? 'bg-gold-500 text-burgundy-950 font-bold'
                               : 'border-stone-200 text-stone-700'
                           }`}
                         >
@@ -1653,20 +1739,18 @@ export const ProductCatalogPage: React.FC = () => {
                       ))}
                     </div>
                   </div>
-                )}
 
-                {mobileDraftMetal === 'PLATINUM' && (
                   <div>
-                    <span className="block font-semibold uppercase mb-1.5">Platinum Hallmark</span>
-                    <div className="flex flex-wrap gap-1.5">
-                      {PLATINUM_HALLMARK_OPTIONS.map((opt) => (
+                    <span className="block font-semibold uppercase mb-1 text-[10.5px]">Colour Scale (D - Z)</span>
+                    <div className="flex flex-wrap gap-1">
+                      {DIAMOND_COLOR_OPTIONS.map((opt) => (
                         <button
                           key={opt.value}
                           type="button"
-                          onClick={() => setMobileDraftPurity(mobileDraftPurity === opt.value ? '' : opt.value)}
-                          className={`px-2.5 py-1.5 rounded-md border transition-colors ${
-                            mobileDraftPurity === opt.value
-                              ? 'bg-gold-500 text-burgundy-950 border-gold-500 font-bold'
+                          onClick={() => setMobileDraftColor(mobileDraftColor === opt.value ? '' : opt.value)}
+                          className={`px-2 py-0.5 rounded-md border text-[10.5px] ${
+                            mobileDraftColor === opt.value
+                              ? 'bg-gold-500 text-burgundy-950 font-bold'
                               : 'border-stone-200 text-stone-700'
                           }`}
                         >
@@ -1675,132 +1759,83 @@ export const ProductCatalogPage: React.FC = () => {
                       ))}
                     </div>
                   </div>
-                )}
 
-                {mobileDraftMetal === 'DIAMOND' && (
-                  <div className="space-y-3">
-                    <div>
-                      <span className="block font-semibold uppercase mb-1">Cut</span>
-                      <div className="flex flex-wrap gap-1.5">
-                        {DIAMOND_CUT_OPTIONS.map((opt) => (
-                          <button
-                            key={opt.value}
-                            type="button"
-                            onClick={() => setMobileDraftCut(mobileDraftCut === opt.value ? '' : opt.value)}
-                            className={`px-2 py-1 rounded-md border text-[11px] ${
-                              mobileDraftCut === opt.value
-                                ? 'bg-gold-500 text-burgundy-950 font-bold'
-                                : 'border-stone-200 text-stone-700'
-                            }`}
-                          >
-                            {opt.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <span className="block font-semibold uppercase mb-1">Clarity</span>
-                      <div className="flex flex-wrap gap-1.5">
-                        {DIAMOND_CLARITY_OPTIONS.map((opt) => (
-                          <button
-                            key={opt.value}
-                            type="button"
-                            onClick={() => setMobileDraftClarity(mobileDraftClarity === opt.value ? '' : opt.value)}
-                            className={`px-2 py-1 rounded-md border text-[11px] ${
-                              mobileDraftClarity === opt.value
-                                ? 'bg-gold-500 text-burgundy-950 font-bold'
-                                : 'border-stone-200 text-stone-700'
-                            }`}
-                          >
-                            {opt.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <span className="block font-semibold uppercase mb-1">Colour Scale (D - Z)</span>
-                      <div className="flex flex-wrap gap-1.5">
-                        {DIAMOND_COLOR_OPTIONS.map((opt) => (
-                          <button
-                            key={opt.value}
-                            type="button"
-                            onClick={() => setMobileDraftColor(mobileDraftColor === opt.value ? '' : opt.value)}
-                            className={`px-2 py-1 rounded-md border text-[11px] ${
-                              mobileDraftColor === opt.value
-                                ? 'bg-gold-500 text-burgundy-950 font-bold'
-                                : 'border-stone-200 text-stone-700'
-                            }`}
-                          >
-                            {opt.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <span className="block font-semibold uppercase mb-1">Shape</span>
-                      <div className="flex flex-wrap gap-1.5">
-                        {DIAMOND_SHAPE_OPTIONS.map((opt) => (
-                          <button
-                            key={opt.value}
-                            type="button"
-                            onClick={() => setMobileDraftShape(mobileDraftShape === opt.value ? '' : opt.value)}
-                            className={`px-2 py-1 rounded-md border text-[11px] ${
-                              mobileDraftShape === opt.value
-                                ? 'bg-gold-500 text-burgundy-950 font-bold'
-                                : 'border-stone-200 text-stone-700'
-                            }`}
-                          >
-                            {opt.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <span className="block font-semibold uppercase mb-1">Carat Weight</span>
-                      <div className="flex flex-wrap gap-1.5">
-                        {DIAMOND_CARAT_RANGES.map((opt) => (
-                          <button
-                            key={opt.value}
-                            type="button"
-                            onClick={() => setMobileDraftCarat(mobileDraftCarat === opt.value ? '' : opt.value)}
-                            className={`px-2 py-1 rounded-md border text-[11px] ${
-                              mobileDraftCarat === opt.value
-                                ? 'bg-gold-500 text-burgundy-950 font-bold'
-                                : 'border-stone-200 text-stone-700'
-                            }`}
-                          >
-                            {opt.label}
-                          </button>
-                        ))}
-                      </div>
+                  <div>
+                    <span className="block font-semibold uppercase mb-1 text-[10.5px]">Shape</span>
+                    <div className="flex flex-wrap gap-1">
+                      {DIAMOND_SHAPE_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => setMobileDraftShape(mobileDraftShape === opt.value ? '' : opt.value)}
+                          className={`px-2 py-0.5 rounded-md border text-[10.5px] ${
+                            mobileDraftShape === opt.value
+                              ? 'bg-gold-500 text-burgundy-950 font-bold'
+                              : 'border-stone-200 text-stone-700'
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
                     </div>
                   </div>
-                )}
-              </div>
+
+                  <div>
+                    <span className="block font-semibold uppercase mb-1 text-[10.5px]">Carat Weight</span>
+                    <div className="flex flex-wrap gap-1">
+                      {DIAMOND_CARAT_RANGES.map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => setMobileDraftCarat(mobileDraftCarat === opt.value ? '' : opt.value)}
+                          className={`px-2 py-0.5 rounded-md border text-[10.5px] ${
+                            mobileDraftCarat === opt.value
+                              ? 'bg-gold-500 text-burgundy-950 font-bold'
+                              : 'border-stone-200 text-stone-700'
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
-            <div className="pt-4 border-t border-stone-200 flex gap-2">
+            {/* Sticky Footer Action Buttons */}
+            <div className="p-2.5 sm:p-3 bg-white border-t border-stone-200 shrink-0 flex items-center gap-2 shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
               <button
                 type="button"
-                onClick={handleClearAllFilters}
-                className="w-1/2 py-2 border border-stone-300 rounded-lg text-xs font-semibold text-stone-700"
+                onClick={() => {
+                  setMobileDraftSearch('');
+                  setMobileDraftCategoryId('');
+                  setMobileDraftSubcategoryId('');
+                  setMobileDraftClassification('');
+                  setMobileDraftMetal('');
+                  setMobileDraftPurity('');
+                  setMobileDraftCut('');
+                  setMobileDraftColor('');
+                  setMobileDraftClarity('');
+                  setMobileDraftShape('');
+                  setMobileDraftCert('');
+                  setMobileDraftCarat('');
+                }}
+                className="w-1/3 py-2 border border-stone-300 rounded-xl text-xs font-bold text-stone-700 hover:bg-stone-50 active:scale-[0.98] transition-all"
               >
                 Clear All
               </button>
               <button
                 type="button"
                 onClick={handleApplyMobileDrawer}
-                className="w-1/2 py-2 bg-burgundy-900 text-gold-200 rounded-lg text-xs font-semibold"
+                className="flex-1 py-2 bg-brand-maroon-gradient text-gold-200 rounded-xl text-xs font-bold uppercase tracking-wider shadow-md hover:opacity-95 active:scale-[0.98] transition-all"
               >
                 Show Results
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

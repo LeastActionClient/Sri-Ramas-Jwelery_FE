@@ -239,13 +239,13 @@ export const AboutPage: React.FC = () => {
           </ScrollReveal>
 
           <ScrollReveal variant="slide-right" distance={18} delay={100} className="relative">
-            <div className="group relative rounded-3xl overflow-hidden aspect-[4/3] border-2 border-gold-400/50 shadow-luxury-gold bg-burgundy-950">
+            <div className="group relative -mx-4 sm:mx-0 rounded-none sm:rounded-3xl overflow-hidden aspect-[16/10] sm:aspect-[4/3] border-y sm:border-2 border-gold-400/50 shadow-none sm:shadow-luxury-gold bg-burgundy-950">
               <img
                 src="/images/generated/heritage-hero-bg.jpg"
                 alt="Sri Ramas Authentic Heritage Craftsmanship"
                 className="w-full h-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
               />
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-burgundy-950/90 via-burgundy-950/30 to-transparent flex items-end p-6 sm:p-8">
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-burgundy-950/90 via-burgundy-950/30 to-transparent flex items-end p-5 sm:p-8">
                 <p className="text-xs sm:text-sm font-serif text-[#FCE7B2] italic leading-relaxed">
                   "Purity in gold is not just a standard—it is our sacred family promise passed down through generations."
                 </p>
@@ -347,7 +347,7 @@ export const AboutPage: React.FC = () => {
               href={buildWhatsAppUrl({ type: 'SHOWROOM' })}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-8 py-3.5 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap shadow-luxury-gold"
+              className="w-full sm:w-auto text-center justify-center px-6 sm:px-8 py-3.5 rounded-full text-xs sm:text-sm font-bold uppercase tracking-wider shadow-luxury-gold whitespace-normal leading-snug break-words max-w-full"
             >
               Book Bridal Appointment on WhatsApp
             </AnimatedCTA>

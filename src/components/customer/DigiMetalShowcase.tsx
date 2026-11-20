@@ -655,10 +655,10 @@ export const DigiMetalShowcase: React.FC<DigiMetalShowcaseProps> = ({ metal }) =
       )}
 
       {/* 3. Verified Pillar Cards */}
-      <StaggerReveal staggerMs={85} className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="group bg-white p-6 rounded-2xl border border-gold-300/60 shadow-sm space-y-2 transition-all duration-300 hover:-translate-y-1 hover:border-gold-400 hover:shadow-luxury">
-          <TrendingUp className="w-8 h-8 text-gold-700" />
-          <h3 className="font-serif text-lg font-bold text-burgundy-950">
+      <StaggerReveal staggerMs={85} className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+        <div className="group bg-white p-4 sm:p-5 md:p-6 rounded-2xl border border-gold-300/60 shadow-sm space-y-2 transition-all duration-300 hover:-translate-y-1 hover:border-gold-400 hover:shadow-luxury">
+          <TrendingUp className="w-8 h-8 text-gold-700 hidden md:block" />
+          <h3 className="font-serif text-base sm:text-lg font-bold text-burgundy-950">
             Live Rate Transparency
           </h3>
           <p className="text-xs text-stone-600 leading-relaxed">
@@ -666,9 +666,9 @@ export const DigiMetalShowcase: React.FC<DigiMetalShowcaseProps> = ({ metal }) =
           </p>
         </div>
 
-        <div className="group bg-white p-6 rounded-2xl border border-gold-300/60 shadow-sm space-y-2 transition-all duration-300 hover:-translate-y-1 hover:border-gold-400 hover:shadow-luxury">
-          <Sparkles className="w-8 h-8 text-gold-700" />
-          <h3 className="font-serif text-lg font-bold text-burgundy-950">
+        <div className="group bg-white p-4 sm:p-5 md:p-6 rounded-2xl border border-gold-300/60 shadow-sm space-y-2 transition-all duration-300 hover:-translate-y-1 hover:border-gold-400 hover:shadow-luxury">
+          <Sparkles className="w-8 h-8 text-gold-700 hidden md:block" />
+          <h3 className="font-serif text-base sm:text-lg font-bold text-burgundy-950">
             Showroom Jewellery Choice
           </h3>
           <p className="text-xs text-stone-600 leading-relaxed">
@@ -676,9 +676,9 @@ export const DigiMetalShowcase: React.FC<DigiMetalShowcaseProps> = ({ metal }) =
           </p>
         </div>
 
-        <div className="group bg-white p-6 rounded-2xl border border-gold-300/60 shadow-sm space-y-2 transition-all duration-300 hover:-translate-y-1 hover:border-gold-400 hover:shadow-luxury">
-          <ShieldCheck className="w-8 h-8 text-gold-700" />
-          <h3 className="font-serif text-lg font-bold text-burgundy-950">
+        <div className="group bg-white p-4 sm:p-5 md:p-6 rounded-2xl border border-gold-300/60 shadow-sm space-y-2 transition-all duration-300 hover:-translate-y-1 hover:border-gold-400 hover:shadow-luxury">
+          <ShieldCheck className="w-8 h-8 text-gold-700 hidden md:block" />
+          <h3 className="font-serif text-base sm:text-lg font-bold text-burgundy-950">
             Verified Showroom Settlement
           </h3>
           <p className="text-xs text-stone-600 leading-relaxed">
