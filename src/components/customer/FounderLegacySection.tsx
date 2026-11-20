@@ -78,11 +78,11 @@ export const FounderLegacySection: React.FC = () => {
           </div>
         </div>
 
-        {/* Founder Banner Main Visual (Complete Original Client Asset) */}
+        {/* Founder Banner Main Visual (Full-width section on mobile, preserved card on desktop) */}
         <ScrollReveal variant="fade-up" distance={20} className="w-full">
-          <div className="group relative rounded-2xl sm:rounded-3xl overflow-hidden border-2 border-[#C49A3A]/60 shadow-[0_20px_50px_rgba(0,0,0,0.6)] bg-[#24050B]">
+          <div className="group relative -mx-4 sm:mx-0 rounded-none sm:rounded-3xl overflow-hidden border-y sm:border-2 border-[#C49A3A]/60 shadow-none sm:shadow-[0_20px_50px_rgba(0,0,0,0.6)] bg-[#24050B]">
             {/* The Original Client-Supplied Banner */}
-            <div className="w-full aspect-[21/9] sm:aspect-[24/9] md:aspect-[2.5/1] max-h-[520px] bg-[#24050B] flex items-center justify-center overflow-hidden">
+            <div className="w-full aspect-[16/9] sm:aspect-[24/9] md:aspect-[2.5/1] max-h-[520px] bg-[#24050B] flex items-center justify-center overflow-hidden">
               <img
                 src="/images/founder-legacy-banner.jpg"
                 alt="Sri Ramas Legacy in Gold - S. R. Vasu, Founder"
@@ -93,7 +93,7 @@ export const FounderLegacySection: React.FC = () => {
             {/* Subtle Gradient Framing Scrim */}
             <div
               aria-hidden="true"
-              className="absolute inset-0 pointer-events-none border border-[#FFE28A]/20 rounded-2xl sm:rounded-3xl"
+              className="absolute inset-0 pointer-events-none border-y sm:border border-[#FFE28A]/20 rounded-none sm:rounded-3xl"
             />
           </div>
         </ScrollReveal>

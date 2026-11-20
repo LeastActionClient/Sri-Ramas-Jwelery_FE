@@ -1086,7 +1086,8 @@ export const ProductManagementPage: React.FC = () => {
 
       {/* Inventory Table */}
       <div className="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Desktop Table View */}
+        <div className="hidden lg:block overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-stone-50 border-b border-stone-200 text-stone-500 uppercase font-semibold">
               <tr>
@@ -1309,6 +1310,185 @@ export const ProductManagementPage: React.FC = () => {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile App-Style Product Cards */}
+        <div className="block lg:hidden p-3.5 space-y-3">
+          {isLoading ? (
+            <div className="p-8 text-center text-stone-500 text-xs">
+              Loading catalogue...
+            </div>
+          ) : products.length === 0 ? (
+            <div className="p-8 text-center text-stone-500 text-xs">
+              No jewellery items matching current filters.
+            </div>
+          ) : (
+            products.map((p, index) => {
+              const metalLabel = p.metalType || p.metal?.metalType;
+              const purityLabel = p.purity || p.metal?.purity;
+
+              return (
+                <div
+                  key={p._id}
+                  className="bg-[#FCFAF6] border border-stone-200/90 rounded-xl p-3.5 space-y-3 shadow-xs"
+                >
+                  <div className="flex items-start gap-3">
+                    {/* Thumbnail */}
+                    {p.images?.[0]?.url ? (
+                      <div className="relative shrink-0">
+                        <img
+                          src={p.images[0].url}
+                          alt={p.title}
+                          className={`w-14 h-14 rounded-xl object-cover border border-gold-300 shadow-xs ${
+                            p.stockStatus === 'OUT_OF_STOCK' ? 'filter grayscale opacity-70' : ''
+                          }`}
+                        />
+                        {((p.images?.length || 0) + (p.videos?.length || 0)) > 1 && (
+                          <span className="absolute -top-1.5 -right-1.5 px-1 rounded-full bg-burgundy-900 text-gold-200 text-[8px] font-bold">
+                            +{((p.images?.length || 0) + (p.videos?.length || 0)) - 1}
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="w-14 h-14 rounded-xl bg-stone-100 text-stone-400 border border-stone-200 flex items-center justify-center shrink-0">
+                        <ImageIcon className="w-5 h-5" />
+                      </div>
+                    )}
+
+                    {/* Title & SKU & Order */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-1.5">
+                        <h4 className="font-serif font-bold text-sm text-burgundy-950 leading-snug">
+                          {p.title}
+                        </h4>
+                        <div className="flex items-center gap-1 shrink-0 bg-stone-100 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold text-stone-700">
+                          <span>#{p.displayOrder ?? 0}</span>
+                          <div className="flex flex-col -my-0.5">
+                            <button
+                              type="button"
+                              disabled={index === 0}
+                              onClick={() => handleMoveOrder(index, -1)}
+                              className="text-stone-400 hover:text-burgundy-900 disabled:opacity-20"
+                              title="Move up"
+                            >
+                              <ArrowUp className="w-2.5 h-2.5" />
+                            </button>
+                            <button
+                              type="button"
+                              disabled={index === products.length - 1}
+                              onClick={() => handleMoveOrder(index, 1)}
+                              className="text-stone-400 hover:text-burgundy-900 disabled:opacity-20"
+                              title="Move down"
+                            >
+                              <ArrowDown className="w-2.5 h-2.5" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="font-mono text-[10px] text-stone-500 mt-0.5">
+                        {p.sku}
+                      </div>
+
+                      {/* Category & Subcategory */}
+                      <div className="text-[11px] text-stone-700 mt-1 flex flex-wrap items-center gap-1">
+                        <span className="font-semibold">{p.category?.name || 'Uncategorized'}</span>
+                        {p.subcategory?.name && (
+                          <span className="text-stone-500 font-mono">
+                            ↳ {p.subcategory.name}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Metal, Classification & Stock Metadata */}
+                  <div className="pt-2 border-t border-stone-200/60 flex flex-wrap items-center justify-between gap-2 text-xs">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase bg-amber-50 border border-amber-200 text-amber-900">
+                        {metalLabel} {purityLabel ? `• ${purityLabel}` : ''}
+                      </span>
+                      {p.classification && (
+                        <span className="px-1.5 py-0.5 rounded bg-stone-100 border border-stone-200 text-stone-700 font-bold text-[9px] uppercase">
+                          {p.classification.replace(/_/g, ' ')}
+                        </span>
+                      )}
+                      {p.isNewArrival && (
+                        <span className="px-1.5 py-0.5 rounded bg-emerald-50 border border-emerald-200 text-emerald-800 font-bold text-[9px] uppercase">
+                          New
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="text-[10px] font-mono text-stone-500">
+                      {p.metal?.grossWeightGrams ? `Gross ${p.metal.grossWeightGrams}g` : 'Stock: ' + (p.stockQuantity ?? 1) + ' pcs'}
+                    </div>
+                  </div>
+
+                  {/* Action & Visibility Footer */}
+                  <div className="pt-2 border-t border-stone-200/60 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5">
+                      {/* Stock toggle */}
+                      <button
+                        type="button"
+                        onClick={() => handleToggleStockStatus(p)}
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
+                          p.stockStatus === 'OUT_OF_STOCK'
+                            ? 'bg-stone-900 text-stone-100 border border-stone-700'
+                            : 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                        }`}
+                      >
+                        <span className={`w-1.5 h-1.5 rounded-full ${p.stockStatus === 'OUT_OF_STOCK' ? 'bg-red-400' : 'bg-emerald-500'}`} />
+                        <span>{p.stockStatus === 'OUT_OF_STOCK' ? 'Out' : 'In Stock'}</span>
+                      </button>
+
+                      {/* Visibility toggle */}
+                      <button
+                        type="button"
+                        onClick={() => handleToggleStatus(p)}
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
+                          p.visibility === 'PUBLISHED'
+                            ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                            : 'bg-amber-50 text-amber-800 border border-amber-200'
+                        }`}
+                      >
+                        {p.visibility === 'PUBLISHED' ? <Eye className="w-2.5 h-2.5" /> : <EyeOff className="w-2.5 h-2.5" />}
+                        <span>{p.visibility === 'PUBLISHED' ? 'Live' : 'Draft'}</span>
+                      </button>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setPreviewProduct(p)}
+                        className="p-1.5 text-stone-600 hover:bg-stone-100 rounded-md border border-stone-200"
+                        title="Preview storefront card"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => openEditModal(p)}
+                        className="p-1.5 text-burgundy-800 hover:bg-burgundy-50 rounded-md border border-burgundy-200"
+                        title="Edit piece"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(p)}
+                        className="p-1.5 text-red-600 hover:bg-red-50 rounded-md border border-red-200"
+                        title="Archive piece"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
 

@@ -92,9 +92,13 @@ export const CategoryManagementPage: React.FC = () => {
     queryFn: categoriesApi.adminGetCategories,
   });
 
-  // Helper to extract parent category ID
+  // Helper to extract parent category ID (robust for parentCategoryId, parentId, and parentCategory)
   const getCategoryParentId = (c: Category): string | null => {
     if (c.parentCategoryId) return String(c.parentCategoryId);
+    if ((c as any).parentId) {
+      const pid = (c as any).parentId;
+      return typeof pid === 'string' ? pid : pid._id ? String(pid._id) : null;
+    }
     if (c.parentCategory) {
       return typeof c.parentCategory === 'string'
         ? c.parentCategory
@@ -496,11 +500,11 @@ export const CategoryManagementPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full sm:w-auto">
           <button
             type="button"
             onClick={openCreateModal}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-maroon-gradient text-gold-200 text-xs font-bold uppercase tracking-wider shadow-md hover:opacity-95"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-brand-maroon-gradient text-gold-200 text-xs font-bold uppercase tracking-wider shadow-md hover:opacity-95 w-full sm:w-auto"
           >
             <Plus className="w-4 h-4 text-gold-400" />
             <span>Add New Category</span>
@@ -508,7 +512,7 @@ export const CategoryManagementPage: React.FC = () => {
           <button
             type="button"
             onClick={() => openCreateSubcategoryModal()}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gold-500/60 bg-burgundy-950 text-gold-300 text-xs font-bold uppercase tracking-wider shadow-md hover:bg-burgundy-900 hover:text-gold-100"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-gold-500/60 bg-burgundy-950 text-gold-300 text-xs font-bold uppercase tracking-wider shadow-md hover:bg-burgundy-900 hover:text-gold-100 w-full sm:w-auto"
           >
             <Plus className="w-4 h-4 text-gold-400" />
             <span>Add New Subcategory</span>
@@ -539,11 +543,11 @@ export const CategoryManagementPage: React.FC = () => {
       {/* View Mode & Metal Filter Bar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-stone-200 pb-3">
         {/* View Mode Switcher: Categories vs Subcategories vs Split View */}
-        <div className="flex flex-wrap items-center gap-1.5 p-1 bg-stone-100 rounded-xl border border-stone-200">
+        <div className="flex items-center gap-1.5 p-1 bg-stone-100 rounded-xl border border-stone-200 overflow-x-auto no-scrollbar scroll-smooth shrink-0">
           <button
             type="button"
             onClick={() => setViewMode('split')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 whitespace-nowrap ${
               viewMode === 'split'
                 ? 'bg-burgundy-900 text-gold-200 shadow-sm'
                 : 'text-stone-600 hover:text-stone-900 hover:bg-white/60'
@@ -556,7 +560,7 @@ export const CategoryManagementPage: React.FC = () => {
           <button
             type="button"
             onClick={() => setViewMode('categories')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 whitespace-nowrap ${
               viewMode === 'categories'
                 ? 'bg-burgundy-900 text-gold-200 shadow-sm'
                 : 'text-stone-600 hover:text-stone-900 hover:bg-white/60'
@@ -578,7 +582,7 @@ export const CategoryManagementPage: React.FC = () => {
           <button
             type="button"
             onClick={() => setViewMode('subcategories')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 whitespace-nowrap ${
               viewMode === 'subcategories'
                 ? 'bg-burgundy-900 text-gold-200 shadow-sm'
                 : 'text-stone-600 hover:text-stone-900 hover:bg-white/60'
@@ -598,50 +602,50 @@ export const CategoryManagementPage: React.FC = () => {
           </button>
         </div>
 
-        {/* Metal Group Filter: ALL / GOLD / SILVER */}
-        <div className="flex items-center gap-1.5">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-stone-400 mr-1">
+        {/* Metal Group Filter: ALL / GOLD / SILVER (Horizontally scrollable with no visible scrollbar) */}
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth shrink-0 py-0.5">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-stone-400 mr-1 shrink-0">
             Metal:
           </span>
           <button
             type="button"
             onClick={() => setMetalFilter('ALL')}
-            className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+            className={`px-3 py-1 rounded-lg text-xs font-bold transition-all shrink-0 whitespace-nowrap ${
               metalFilter === 'ALL'
                 ? 'bg-stone-800 text-white shadow-xs'
                 : 'text-stone-600 hover:bg-stone-100 border border-stone-200 bg-white'
             }`}
           >
-            All Metals ({categories.length})
+            All Metals ({allMainCategories.length})
           </button>
           <button
             type="button"
             onClick={() => setMetalFilter('GOLD')}
-            className={`px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+            className={`px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap ${
               metalFilter === 'GOLD'
                 ? 'bg-amber-700 text-white shadow-xs'
                 : 'text-amber-800 hover:bg-amber-50 border border-amber-200 bg-white'
             }`}
           >
-            <span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />
+            <span className="w-2 h-2 rounded-full bg-amber-400 inline-block shrink-0" />
             <span>Gold</span>
             <span className="px-1.5 py-0.2 rounded-full bg-amber-900/30 text-[10px]">
-              {categories.filter((c) => (c.metalType || 'GOLD') === 'GOLD' || c.metalType === 'ALL').length}
+              {allMainCategories.filter((c) => (c.metalType || 'GOLD') === 'GOLD' || c.metalType === 'ALL').length}
             </span>
           </button>
           <button
             type="button"
             onClick={() => setMetalFilter('SILVER')}
-            className={`px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+            className={`px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap ${
               metalFilter === 'SILVER'
                 ? 'bg-slate-700 text-white shadow-xs'
                 : 'text-slate-700 hover:bg-slate-100 border border-slate-200 bg-white'
             }`}
           >
-            <span className="w-2 h-2 rounded-full bg-slate-300 inline-block" />
+            <span className="w-2 h-2 rounded-full bg-slate-300 inline-block shrink-0" />
             <span>Silver</span>
             <span className="px-1.5 py-0.2 rounded-full bg-slate-800/30 text-[10px]">
-              {categories.filter((c) => c.metalType === 'SILVER' || c.metalType === 'ALL').length}
+              {allMainCategories.filter((c) => c.metalType === 'SILVER' || c.metalType === 'ALL').length}
             </span>
           </button>
         </div>
@@ -678,7 +682,8 @@ export const CategoryManagementPage: React.FC = () => {
             </button>
           </div>
 
-          <div className="overflow-x-auto">
+          {/* Desktop Table Presentation */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead className="bg-stone-50/80 border-b border-stone-200 text-stone-500 uppercase font-semibold text-[11px]">
                 <tr>
@@ -874,6 +879,130 @@ export const CategoryManagementPage: React.FC = () => {
               </tbody>
             </table>
           </div>
+
+          {/* Mobile Subcategories Cards */}
+          <div className="block md:hidden p-3.5 space-y-3">
+            {isLoading ? (
+              <div className="p-6 text-center text-stone-400 text-xs">
+                Loading subcategories...
+              </div>
+            ) : filteredSubcategories.length > 0 ? (
+              filteredSubcategories.map((sub) => {
+                const pid = getCategoryParentId(sub);
+                const parent = allMainCategories.find((p) => p._id === pid);
+                const effectiveMetal = sub.metalType || parent?.metalType || 'GOLD';
+                const isSilver = effectiveMetal === 'SILVER';
+                const isCommon = effectiveMetal === 'ALL';
+
+                return (
+                  <div
+                    key={sub._id}
+                    className="bg-[#FCFAF6] border border-stone-200/90 rounded-xl p-3.5 space-y-3 shadow-xs"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-8 h-8 rounded-lg bg-gold-50 border border-gold-300/80 flex items-center justify-center text-burgundy-900 font-bold shrink-0">
+                          <GitFork className="w-3.5 h-3.5 text-gold-700" />
+                        </div>
+                        <div className="min-w-0">
+                          <h4 className="font-serif font-bold text-sm text-burgundy-950 truncate">
+                            {sub.name}
+                          </h4>
+                          {sub.sku && (
+                            <span className="inline-block mt-0.5 px-1.5 py-0.2 rounded bg-gold-50 border border-gold-300 font-mono text-[9px] font-semibold text-burgundy-900">
+                              {sub.sku}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {isCommon ? (
+                        <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase bg-gold-100 text-gold-950 border border-gold-300 shrink-0">
+                          ALL
+                        </span>
+                      ) : isSilver ? (
+                        <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase bg-slate-100 text-slate-800 border border-slate-300 shrink-0">
+                          SILVER
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase bg-amber-100 text-amber-900 border border-amber-300 shrink-0">
+                          {effectiveMetal}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Assigned Parent Category Pill */}
+                    <div className="pt-2 border-t border-stone-200/60 flex items-center justify-between gap-2 text-xs">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="text-[10px] font-semibold text-stone-500 uppercase shrink-0">Parent:</span>
+                        {parent ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-burgundy-50 border border-gold-300 text-burgundy-950 font-bold text-[10px] truncate">
+                            <FolderTree className="w-3 h-3 text-gold-700 shrink-0" />
+                            <span className="truncate">{parent.name}</span>
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-red-600 font-semibold italic">Unassigned</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Actions and Status Footer */}
+                    <div className="pt-2 border-t border-stone-200/60 flex items-center justify-between gap-2">
+                      <button
+                        type="button"
+                        disabled={busyCategoryId === sub._id}
+                        onClick={() => handleToggleActive(sub)}
+                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase transition-colors disabled:opacity-50 ${
+                          sub.isActive
+                            ? 'bg-emerald-100 text-emerald-800'
+                            : 'bg-stone-200 text-stone-600'
+                        }`}
+                      >
+                        {sub.isActive ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+                        <span>{sub.isActive ? 'Active' : 'Hidden'}</span>
+                      </button>
+
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => setPreviewCategory(sub)}
+                          className="p-1.5 rounded-lg border border-gold-300/70 hover:bg-gold-50 text-burgundy-900"
+                          title="Preview Subcategory"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openEditSubcategoryModal(sub)}
+                          className="p-1.5 rounded-lg border border-stone-200 hover:bg-stone-100 text-stone-700"
+                          title="Edit Subcategory"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDeleteError(null);
+                            setDeleteTarget(sub);
+                          }}
+                          className="p-1.5 rounded-lg border border-red-200 hover:bg-red-50 text-red-600"
+                          title="Delete Subcategory"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="p-6 text-center text-stone-500 text-xs">
+                {selectedParentFilter
+                  ? 'No subcategories found under the selected parent category.'
+                  : 'No subcategories created yet.'}
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -958,7 +1087,8 @@ export const CategoryManagementPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="overflow-x-auto">
+          {/* Desktop Table Presentation */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead className="bg-stone-50/80 border-b border-stone-200 text-stone-500 uppercase font-semibold text-[11px]">
                 <tr>
@@ -1107,6 +1237,130 @@ export const CategoryManagementPage: React.FC = () => {
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile Subcategories Cards */}
+          <div className="block md:hidden p-3.5 space-y-3">
+            {isLoading ? (
+              <div className="p-6 text-center text-stone-400 text-xs">
+                Loading subcategories...
+              </div>
+            ) : filteredSubcategories.length > 0 ? (
+              filteredSubcategories.map((sub) => {
+                const pid = getCategoryParentId(sub);
+                const parent = allMainCategories.find((p) => p._id === pid);
+                const effectiveMetal = sub.metalType || parent?.metalType || 'GOLD';
+                const isSilver = effectiveMetal === 'SILVER';
+                const isCommon = effectiveMetal === 'ALL';
+
+                return (
+                  <div
+                    key={sub._id}
+                    className="bg-[#FCFAF6] border border-stone-200/90 rounded-xl p-3.5 space-y-3 shadow-xs"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-8 h-8 rounded-lg bg-gold-50 border border-gold-300/80 flex items-center justify-center text-burgundy-900 font-bold shrink-0">
+                          <GitFork className="w-3.5 h-3.5 text-gold-700" />
+                        </div>
+                        <div className="min-w-0">
+                          <h4 className="font-serif font-bold text-sm text-burgundy-950 truncate">
+                            {sub.name}
+                          </h4>
+                          {sub.sku && (
+                            <span className="inline-block mt-0.5 px-1.5 py-0.2 rounded bg-gold-50 border border-gold-300 font-mono text-[9px] font-semibold text-burgundy-900">
+                              {sub.sku}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {isCommon ? (
+                        <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase bg-gold-100 text-gold-950 border border-gold-300 shrink-0">
+                          ALL
+                        </span>
+                      ) : isSilver ? (
+                        <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase bg-slate-100 text-slate-800 border border-slate-300 shrink-0">
+                          SILVER
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase bg-amber-100 text-amber-900 border border-amber-300 shrink-0">
+                          {effectiveMetal}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Assigned Parent Category Pill */}
+                    <div className="pt-2 border-t border-stone-200/60 flex items-center justify-between gap-2 text-xs">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="text-[10px] font-semibold text-stone-500 uppercase shrink-0">Parent:</span>
+                        {parent ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-burgundy-50 border border-gold-300 text-burgundy-950 font-bold text-[10px] truncate">
+                            <FolderTree className="w-3 h-3 text-gold-700 shrink-0" />
+                            <span className="truncate">{parent.name}</span>
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-red-600 font-semibold italic">Unassigned</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Actions and Status Footer */}
+                    <div className="pt-2 border-t border-stone-200/60 flex items-center justify-between gap-2">
+                      <button
+                        type="button"
+                        disabled={busyCategoryId === sub._id}
+                        onClick={() => handleToggleActive(sub)}
+                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase transition-colors disabled:opacity-50 ${
+                          sub.isActive
+                            ? 'bg-emerald-100 text-emerald-800'
+                            : 'bg-stone-200 text-stone-600'
+                        }`}
+                      >
+                        {sub.isActive ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+                        <span>{sub.isActive ? 'Active' : 'Hidden'}</span>
+                      </button>
+
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => setPreviewCategory(sub)}
+                          className="p-1.5 rounded-lg border border-gold-300/70 hover:bg-gold-50 text-burgundy-900"
+                          title="Preview Subcategory"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openEditSubcategoryModal(sub)}
+                          className="p-1.5 rounded-lg border border-stone-200 hover:bg-stone-100 text-stone-700"
+                          title="Edit Subcategory"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDeleteError(null);
+                            setDeleteTarget(sub);
+                          }}
+                          className="p-1.5 rounded-lg border border-red-200 hover:bg-red-50 text-red-600"
+                          title="Delete Subcategory"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="p-6 text-center text-stone-500 text-xs">
+                {selectedParentFilter
+                  ? 'No subcategories found under the selected parent category.'
+                  : 'No subcategories created yet.'}
+              </div>
+            )}
           </div>
         </div>
       )}

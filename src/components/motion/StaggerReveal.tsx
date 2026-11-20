@@ -5,6 +5,7 @@ interface StaggerRevealProps {
   children: React.ReactNode;
   className?: string;
   itemClassName?: string;
+  getItemClassName?: (child: React.ReactNode, index: number) => string;
   staggerMs?: number;
   durationMs?: number;
   distance?: number;
@@ -19,6 +20,7 @@ export const StaggerReveal: React.FC<StaggerRevealProps> = ({
   children,
   className = '',
   itemClassName = '',
+  getItemClassName,
   staggerMs = MOTION_TIMING.staggerMs,
   durationMs = 560,
   distance = 18,
@@ -90,8 +92,15 @@ export const StaggerReveal: React.FC<StaggerRevealProps> = ({
               transition: `opacity ${durationMs}ms ${MOTION_EASE_CSS} ${delay}ms, transform ${durationMs}ms ${MOTION_EASE_CSS} ${delay}ms`,
             };
 
+        const customItemClass = getItemClassName ? getItemClassName(child, idx) : '';
+        const combinedClass = [itemClassName, customItemClass].filter(Boolean).join(' ');
+
         return (
-          <div key={(child as React.ReactElement)?.key ?? idx} style={style} className={itemClassName}>
+          <div
+            key={(child as React.ReactElement)?.key ?? idx}
+            style={style}
+            className={combinedClass || undefined}
+          >
             {child}
           </div>
         );

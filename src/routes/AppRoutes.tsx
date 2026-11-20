@@ -25,7 +25,6 @@ import { RateManagementPage } from '@/pages/admin/RateManagementPage';
 import { EnquiryCrmPage } from '@/pages/admin/EnquiryCrmPage';
 import { SchemesManagementPage } from '@/pages/admin/SchemesManagementPage';
 import { HomepageCmsPage } from '@/pages/admin/HomepageCmsPage';
-import { SeoManagementPage } from '@/pages/admin/SeoManagementPage';
 
 // Helper component to preserve URL search query parameters on redirects (e.g., /collections?category=bangles -> /products?category=bangles)
 const RedirectWithSearch: React.FC<{ to: string }> = ({ to }) => {
@@ -68,7 +67,7 @@ export const AppRoutes: React.FC = () => {
         <Route path="enquiries" element={<EnquiryCrmPage />} />
         <Route path="schemes" element={<SchemesManagementPage />} />
         <Route path="banners" element={<HomepageCmsPage key="admin-banners" defaultTab="BANNERS" />} />
-        <Route path="seo" element={<SeoManagementPage />} />
+        <Route path="seo" element={<Navigate to="/admin/dashboard" replace />} />
         <Route path="digi-cms" element={<Navigate to="/admin/banners" replace />} />
         <Route path="cms" element={<Navigate to="/admin/banners" replace />} />
         <Route path="audit-logs" element={<Navigate to="/admin/dashboard" replace />} />

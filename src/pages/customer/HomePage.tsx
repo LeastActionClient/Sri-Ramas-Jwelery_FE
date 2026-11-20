@@ -410,7 +410,7 @@ export const HomePage: React.FC = () => {
       <section
         ref={heroContainerRef}
         id="hero-section"
-        className="relative overflow-hidden bg-burgundy-950 text-gold-100 border-b-2 border-gold-600/40 min-h-[100svh] min-h-screen sm:min-h-screen lg:min-h-[92vh] xl:h-screen pt-20 pb-10 sm:pt-24 sm:pb-12 lg:pt-20 lg:pb-10 flex items-end sm:items-center w-full max-w-full"
+        className="relative overflow-hidden bg-burgundy-950 text-gold-100 border-b-2 border-gold-600/40 min-h-[92svh] sm:min-h-screen lg:min-h-[92vh] xl:h-screen pt-24 pb-12 sm:pt-28 sm:pb-12 lg:pt-24 lg:pb-10 flex items-center justify-center w-full max-w-full"
       >
         <div className="hero-bg-layer absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
           <div className="hero-bg-parallax w-full h-full">
@@ -457,24 +457,24 @@ export const HomePage: React.FC = () => {
                 Welcome to Sri Ramas Jewellery. Celebrating 39 years of royal South Indian craftsmanship, BIS 916 Hallmarked bridal gold, exquisite temple jewellery, and certified diamonds.
               </p>
 
-              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2.5 sm:gap-4 pt-1">
-                <div className="hero-cta-item">
+              <div className="flex flex-col min-[480px]:flex-row items-center justify-center lg:justify-start gap-2.5 sm:gap-4 pt-1 w-full">
+                <div className="hero-cta-item w-full min-[480px]:w-auto">
                   <AnimatedCTA
                     to="/products"
                     variant="gold"
                     icon={<ArrowRight className="w-4 h-4" />}
-                    className="px-5 sm:px-7 py-2.5 sm:py-3.5 rounded-xl text-xs sm:text-sm uppercase tracking-wider font-bold shadow-luxury-gold"
+                    className="w-full min-[480px]:w-auto justify-center px-5 sm:px-7 py-2.5 sm:py-3.5 rounded-xl text-xs sm:text-sm uppercase tracking-wider font-bold shadow-luxury-gold"
                   >
                     <span>Explore Collections</span>
                   </AnimatedCTA>
                 </div>
-                <div className="hero-cta-item">
+                <div className="hero-cta-item w-full min-[480px]:w-auto">
                   <a
                     href={buildWhatsAppUrl({ type: 'GENERAL' })}
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label="Connect with Sri Ramas Jewellery WhatsApp Advisor"
-                    className="group inline-flex items-center justify-center gap-2 px-5 sm:px-7 py-2.5 sm:py-3.5 rounded-xl bg-[#25D366] hover:bg-[#20ba59] text-white font-bold text-xs sm:text-sm tracking-wide shadow-[0_8px_24px_rgba(37,211,102,0.38)] hover:shadow-[0_12px_32px_rgba(37,211,102,0.52)] hover:scale-[1.03] active:scale-[0.98] transition-all duration-300 border border-emerald-400/50 backdrop-blur-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+                    className="group w-full min-[480px]:w-auto inline-flex items-center justify-center gap-2 px-5 sm:px-7 py-2.5 sm:py-3.5 rounded-xl bg-[#25D366] hover:bg-[#20ba59] text-white font-bold text-xs sm:text-sm tracking-wide shadow-[0_8px_24px_rgba(37,211,102,0.38)] hover:shadow-[0_12px_32px_rgba(37,211,102,0.52)] hover:scale-[1.03] active:scale-[0.98] transition-all duration-300 border border-emerald-400/50 backdrop-blur-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
                   >
                     <svg
                       viewBox="0 0 24 24"

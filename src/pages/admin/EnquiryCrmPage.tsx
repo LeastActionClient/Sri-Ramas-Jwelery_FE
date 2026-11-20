@@ -165,7 +165,8 @@ export const EnquiryCrmPage: React.FC = () => {
 
       {/* Enquiries Table */}
       <div className="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Desktop Table Presentation */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-stone-50 border-b border-stone-200 text-stone-500 uppercase font-semibold">
               <tr>
@@ -290,6 +291,118 @@ export const EnquiryCrmPage: React.FC = () => {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile App-Style Enquiry Cards */}
+        <div className="block md:hidden p-3.5 space-y-3">
+          {isLoading ? (
+            <div className="p-8 text-center text-stone-400 text-xs">
+              Loading customer leads...
+            </div>
+          ) : enquiries.length > 0 ? (
+            enquiries.map((enquiry) => {
+              const targetPhone = (enquiry as any).customerMobile || enquiry.customerPhone;
+              const chatUrl = getAdminCustomerWhatsAppUrl({
+                customerPhone: targetPhone,
+                customerName: enquiry.customerName,
+                enquiryNumber: enquiry.enquiryNumber,
+                enquiryType: enquiry.enquiryType,
+              });
+
+              return (
+                <div
+                  key={enquiry._id}
+                  onClick={() => setSelectedEnquiry(enquiry)}
+                  className="bg-[#FCFAF6] border border-stone-200/90 rounded-xl p-3.5 space-y-3 shadow-xs cursor-pointer hover:border-gold-400 transition-colors"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-mono font-bold text-xs text-burgundy-900 break-all">
+                      {enquiry.enquiryNumber}
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full bg-stone-100 font-bold text-[9px] uppercase text-stone-700">
+                      {formatEnquiryTypeLabel(enquiry.enquiryType)}
+                    </span>
+                  </div>
+
+                  <div>
+                    <span className="font-bold text-sm text-stone-900 block">
+                      {enquiry.customerName}
+                    </span>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-xs text-stone-500 font-mono">
+                        📞 {targetPhone || '—'}
+                      </span>
+                      {enquiry.city && (
+                        <span className="text-[10px] text-stone-400">
+                          📍 {enquiry.city}
+                        </span>
+                      )}
+                    </div>
+
+                    {(enquiry.productName || enquiry.product?.title || enquiry.productSku || enquiry.product?.sku) && (
+                      <div className="text-[11px] text-burgundy-900 font-medium truncate mt-1 bg-burgundy-50/70 p-1.5 rounded-lg border border-gold-200/60">
+                        <span>Piece: {enquiry.productName || enquiry.product?.title}</span>
+                        {(enquiry.productSku || enquiry.product?.sku) && (
+                          <span className="text-[10px] text-stone-500 font-mono block">
+                            SKU: {enquiry.productSku || enquiry.product?.sku}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Channel & Timestamp */}
+                  <div className="flex items-center justify-between text-[11px] text-stone-500 pt-1 border-t border-stone-200/60">
+                    <span className="font-medium text-stone-600">
+                      Via {enquiry.preferredContactMethod || 'WHATSAPP'}
+                    </span>
+                    <span>{getRelativeTime(enquiry.createdAt)}</span>
+                  </div>
+
+                  {/* Status Dropdown and WhatsApp Action */}
+                  <div className="pt-2 border-t border-stone-200/60 flex items-center justify-between gap-2" onClick={(e) => e.stopPropagation()}>
+                    <select
+                      value={enquiry.status}
+                      onChange={(e) => handleStatusChange(enquiry._id, e.target.value as EnquiryStatus)}
+                      className={`text-[10px] font-bold px-2 py-1 rounded-md border outline-none ${
+                        enquiry.status === 'NEW'
+                          ? 'bg-blue-50 text-blue-700 border-blue-200'
+                          : enquiry.status === 'CONTACTED'
+                          ? 'bg-amber-50 text-amber-700 border-amber-200'
+                          : enquiry.status === 'RESOLVED'
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                          : 'bg-stone-50 text-stone-700 border-stone-200'
+                      }`}
+                    >
+                      <option value="NEW">NEW</option>
+                      <option value="CONTACTED">CONTACTED</option>
+                      <option value="IN_PROGRESS">IN PROGRESS</option>
+                      <option value="RESOLVED">RESOLVED</option>
+                      <option value="CLOSED">CLOSED</option>
+                    </select>
+
+                    {chatUrl ? (
+                      <a
+                        href={chatUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-[10px] shadow-xs"
+                      >
+                        <MessageSquare className="w-3 h-3" />
+                        <span>WhatsApp</span>
+                      </a>
+                    ) : (
+                      <span className="text-[10px] text-stone-400 italic">No WhatsApp</span>
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <div className="p-8 text-center text-stone-400 text-xs">
+              No matching enquiries found.
+            </div>
+          )}
         </div>
       </div>
 

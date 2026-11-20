@@ -191,7 +191,7 @@ export const BullionRatesPanel: React.FC<BullionRatesPanelProps> = ({
     : "TODAY'S BULLION RATES";
 
   return (
-    <section aria-label="Today's Bullion Rates" className="relative z-10 max-w-[1440px] mx-auto px-3 sm:px-5 lg:px-8">
+    <section aria-label="Today's Bullion Rates" className="relative z-10 max-w-[1440px] mx-auto px-3 sm:px-5 lg:px-8 py-4 sm:py-6">
       <ScrollReveal
         variant="fade-up"
         distance={20}
@@ -227,7 +227,7 @@ export const BullionRatesPanel: React.FC<BullionRatesPanelProps> = ({
         </div>
 
         {/* Right Content Area */}
-        <div className="flex-1 p-5 sm:p-6 lg:px-7 lg:py-6 flex flex-col justify-between gap-4">
+        <div className="flex-1 p-3.5 sm:p-6 lg:px-7 lg:py-6 flex flex-col justify-between gap-3.5 sm:gap-4">
           {/* Header Row */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
             <AnimatedHeading
@@ -242,11 +242,29 @@ export const BullionRatesPanel: React.FC<BullionRatesPanelProps> = ({
           <StaggerReveal
             staggerMs={65}
             variant="scale"
-            className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3"
+            className="grid grid-cols-2 lg:grid-cols-5 gap-2 sm:gap-3"
+            getItemClassName={(_child, idx) => {
+              const tile = RATE_TILES[idx];
+              if (!tile) return 'col-span-1 h-full';
+              if (tile.id === 'gold-22k') {
+                return 'col-span-2 lg:col-span-1 order-1 lg:order-2 h-full';
+              }
+              if (tile.id === 'gold-24k') {
+                return 'col-span-1 order-2 lg:order-1 h-full';
+              }
+              if (tile.id === 'gold-18k') {
+                return 'col-span-1 order-3 lg:order-3 h-full';
+              }
+              if (tile.id === 'silver-999') {
+                return 'col-span-1 order-4 lg:order-4 h-full';
+              }
+              return 'col-span-1 order-5 lg:order-5 h-full';
+            }}
           >
             {RATE_TILES.map((tile) => {
               const paise = tile.getPaise(rates);
               const isGold = tile.metal === 'GOLD';
+              const is22K = tile.id === 'gold-22k';
 
               const cardClasses = tile.highlighted
                 ? 'bg-gradient-to-b from-[#FAF0C9] to-[#F0D998] border-[1.5px] border-[#C99B3B] hover:border-[#A87D24] ring-1 ring-[#D4AC4B]/35 shadow-sm hover:shadow-luxury-gold'
@@ -254,58 +272,95 @@ export const BullionRatesPanel: React.FC<BullionRatesPanelProps> = ({
                   ? 'bg-gradient-to-b from-[#FDF8EC] to-[#F7EBD5] border border-[#E2CCA1] hover:border-[#C99B3B] hover:shadow-md'
                   : 'bg-gradient-to-b from-[#F3F5F8] to-[#E6EBF1] border border-[#CBD3DE] hover:border-[#94A3B8] hover:shadow-md';
 
-              const isLastSingleTile = tile.id === 'silver-925';
-
               return (
                 <div
                   key={tile.id}
-                  className={`group rounded-xl px-3 py-3.5 sm:py-4 text-center flex flex-col justify-between transition-all duration-300 ease-out hover:-translate-y-1 ${cardClasses} ${
-                    isLastSingleTile ? 'col-span-2 min-[480px]:col-span-1 sm:col-span-1' : ''
-                  }`}
+                  className={`group rounded-xl p-2.5 sm:p-3 sm:py-4 text-center flex flex-col justify-between transition-all duration-300 ease-out hover:-translate-y-1 w-full h-full ${cardClasses}`}
                 >
-                  <div className="transition-transform duration-300 group-hover:scale-[1.03]">
-                    <BullionBarIcon metal={tile.metal} />
-                    <span
-                      className={`block text-[11px] sm:text-xs leading-snug ${
-                        tile.highlighted
-                          ? 'font-bold text-[#420B14]'
-                          : isGold
-                            ? 'font-medium text-[#522424]'
-                            : 'font-medium text-[#303640]'
-                      }`}
-                    >
-                      {tile.label}
-                    </span>
-                  </div>
+                  {is22K ? (
+                    <>
+                      {/* Mobile 22K Featured Horizontal Layout */}
+                      <div className="flex lg:hidden items-center justify-between gap-2 text-left w-full py-0.5">
+                        <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+                          <div className="shrink-0">
+                            <BullionBarIcon metal={tile.metal} />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="font-bold text-xs sm:text-sm text-[#420B14] whitespace-nowrap">22K Gold (1g)</span>
+                              <span className="px-1.5 py-0.2 rounded-full bg-amber-500/25 text-[#4A151C] text-[9px] font-bold border border-amber-600/30 shrink-0">
+                                BIS 916
+                              </span>
+                            </div>
+                            <span className="text-[10px] text-[#6B4A3E] block truncate">Hallmarked Jewellery Gold</span>
+                          </div>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <span
+                            key={`22k-m-${paise}`}
+                            className="animate-rate-update font-serif font-extrabold text-sm sm:text-base md:text-lg tracking-tight text-[#420B14] block whitespace-nowrap"
+                          >
+                            {paise > 0 ? formatPaiseToInr(paise) : '—'}
+                          </span>
+                          <span className="text-[9px] font-medium text-[#7A4B3A] block whitespace-nowrap">Today's Benchmark</span>
+                        </div>
+                      </div>
 
-                  {/* Keyed purely on real backend paise so transitions run only on genuine rate updates */}
-                  <span
-                    key={`${tile.id}-${paise}`}
-                    className={`animate-rate-update font-serif font-extrabold text-base sm:text-lg lg:text-xl tracking-tight my-1 ${
-                      isGold ? 'text-[#420B14]' : 'text-[#1E242E]'
-                    }`}
-                  >
-                    {paise > 0 ? formatPaiseToInr(paise) : '—'}
-                  </span>
-
-                  <span
-                    className={`block text-[10px] sm:text-[10.5px] leading-tight ${
-                      tile.highlighted
-                        ? 'font-semibold text-[#5B261C]'
-                        : isGold
-                          ? 'text-[#6B4A3E]'
-                          : 'text-[#4E5663]'
-                    }`}
-                  >
-                    {tile.purityNote}
-                  </span>
+                      {/* Desktop 22K Vertical Layout */}
+                      <div className="hidden lg:flex flex-col justify-between h-full">
+                        <div className="transition-transform duration-300 group-hover:scale-[1.03]">
+                          <BullionBarIcon metal={tile.metal} />
+                          <span className="block text-xs font-bold text-[#420B14] leading-snug">
+                            {tile.label}
+                          </span>
+                        </div>
+                        <span
+                          key={`22k-d-${paise}`}
+                          className="animate-rate-update font-serif font-extrabold text-base sm:text-lg lg:text-xl tracking-tight my-1 text-[#420B14]"
+                        >
+                          {paise > 0 ? formatPaiseToInr(paise) : '—'}
+                        </span>
+                        <span className="block text-[10.5px] font-semibold text-[#5B261C] leading-tight">
+                          {tile.purityNote}
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex flex-col justify-between h-full">
+                      <div className="transition-transform duration-300 group-hover:scale-[1.03]">
+                        <BullionBarIcon metal={tile.metal} />
+                        <span
+                          className={`block text-[10.5px] sm:text-xs leading-snug font-medium truncate ${
+                            isGold ? 'text-[#522424]' : 'text-[#303640]'
+                          }`}
+                        >
+                          {tile.label}
+                        </span>
+                      </div>
+                      <span
+                        key={`${tile.id}-${paise}`}
+                        className={`animate-rate-update font-serif font-extrabold text-xs min-[360px]:text-sm sm:text-base lg:text-xl tracking-tight my-1 truncate ${
+                          isGold ? 'text-[#420B14]' : 'text-[#1E242E]'
+                        }`}
+                      >
+                        {paise > 0 ? formatPaiseToInr(paise) : '—'}
+                      </span>
+                      <span
+                        className={`block text-[9px] sm:text-[10.5px] leading-tight truncate ${
+                          isGold ? 'text-[#6B4A3E]' : 'text-[#4E5663]'
+                        }`}
+                      >
+                        {tile.purityNote}
+                      </span>
+                    </div>
+                  )}
                 </div>
               );
             })}
           </StaggerReveal>
 
           {/* Honest Source & Timestamp Metadata Footer */}
-          <div className="border-t border-[#E6D6B5] pt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] text-[#5B4035]">
+          <div className="border-t border-[#E6D6B5] pt-3 pb-8 sm:pb-1 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-[10px] sm:text-[11px] text-[#5B4035]">
             <div className="flex items-center gap-1.5 flex-wrap">
               <Clock className="w-3.5 h-3.5 text-[#8E692B] shrink-0" />
               <span>

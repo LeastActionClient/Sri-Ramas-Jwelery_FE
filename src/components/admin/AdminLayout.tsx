@@ -16,8 +16,7 @@ import {
   AlertTriangle,
   Eye,
   EyeOff,
-  Images,
-  Search
+  Images
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useRates } from '@/hooks/useRates';
@@ -83,7 +82,6 @@ export const AdminLayout: React.FC = () => {
     { label: 'Enquiry CRM', path: '/admin/enquiries', icon: MessageSquareText },
     { label: 'Savings Schemes', path: '/admin/schemes', icon: Award },
     { label: 'Banners & Digi CMS', path: '/admin/banners', icon: Images },
-    { label: 'SEO Management', path: '/admin/seo', icon: Search },
   ];
 
   const handleLogout = async () => {

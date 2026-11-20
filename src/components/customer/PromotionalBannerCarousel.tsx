@@ -16,7 +16,7 @@ export const PromotionalBannerCarousel: React.FC<PromotionalBannerCarouselProps>
   isLoading = false,
   forceViewport,
   autoPlayMs = 5500,
-  className = 'w-full max-w-full relative overflow-hidden h-[calc(100vh-48px)] sm:h-[calc(100vh-48px)] bg-[#140204] select-none m-0 p-0 group/carousel'
+  className = 'w-full max-w-full relative overflow-hidden h-[56vh] min-h-[320px] sm:h-[calc(100vh-48px)] bg-[#140204] select-none m-0 p-0 group/carousel'
 }) => {
   const navigate = useNavigate();
   const now = new Date().getTime();
@@ -92,7 +92,7 @@ export const PromotionalBannerCarousel: React.FC<PromotionalBannerCarouselProps>
     return (
       <section
         aria-label="Featured Promotions Loading"
-        className="w-full h-[calc(100vh-48px)] sm:h-[calc(100vh-48px)] bg-gradient-to-r from-[#2B0309] via-[#420510] to-[#2B0309] animate-pulse"
+        className="w-full h-[56vh] min-h-[320px] sm:h-[calc(100vh-48px)] bg-gradient-to-r from-[#2B0309] via-[#420510] to-[#2B0309] animate-pulse"
       />
     );
   }
@@ -167,20 +167,20 @@ export const PromotionalBannerCarousel: React.FC<PromotionalBannerCarouselProps>
                 />
               )}
 
-              {/* Single Admin-Configured CTA Button: Anchored at Bottom-Right */}
+              {/* Single Admin-Configured CTA Button: Centered above pagination on mobile, anchored bottom-right on desktop */}
               {ctaText && (
                 <div
-                  className="absolute right-6 sm:right-10 md:right-14 bottom-6 sm:bottom-10 z-20 pointer-events-auto"
+                  className="absolute left-1/2 -translate-x-1/2 sm:left-auto sm:translate-x-0 sm:right-10 md:right-14 bottom-12 sm:bottom-10 z-20 pointer-events-auto max-w-[92vw]"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <button
                     type="button"
                     onClick={() => handleBannerClick(ctaLink)}
                     aria-label={`${ctaText} — ${altText}`}
-                    className="group/btn inline-flex items-center gap-3 sm:gap-3.5 px-7 sm:px-9 md:px-11 py-3.5 sm:py-4 md:py-4.5 rounded-full font-serif font-extrabold text-sm sm:text-base md:text-lg tracking-widest uppercase bg-brand-maroon-gradient text-gold-100 border-2 border-gold-400 hover:border-gold-300 hover:text-white shadow-[0_6px_28px_rgba(0,0,0,0.7)] hover:shadow-[0_0_36px_rgba(212,175,55,0.65)] hover:scale-[1.04] transition-all duration-300 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 cursor-pointer"
+                    className="group/btn inline-flex items-center justify-center gap-2 sm:gap-3 px-5 sm:px-9 md:px-11 py-2 sm:py-4 md:py-4.5 rounded-full font-serif font-bold sm:font-extrabold text-xs sm:text-base md:text-lg tracking-wider sm:tracking-widest uppercase bg-brand-maroon-gradient text-gold-100 border sm:border-2 border-gold-400 hover:border-gold-300 hover:text-white shadow-[0_4px_20px_rgba(0,0,0,0.7)] hover:shadow-[0_0_36px_rgba(212,175,55,0.65)] hover:scale-[1.04] transition-all duration-300 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 cursor-pointer whitespace-nowrap"
                   >
                     <span>{ctaText}</span>
-                    <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 md:w-5.5 md:h-5.5 text-gold-300 group-hover/btn:text-gold-200 group-hover/btn:translate-x-1.5 transition-transform" />
+                    <ArrowRight className="w-3.5 h-3.5 sm:w-5 sm:h-5 md:w-5.5 md:h-5.5 text-gold-300 group-hover/btn:text-gold-200 group-hover/btn:translate-x-1.5 transition-transform shrink-0" />
                   </button>
                 </div>
               )}
@@ -189,30 +189,30 @@ export const PromotionalBannerCarousel: React.FC<PromotionalBannerCarouselProps>
         })}
       </div>
 
-      {/* Manual Arrow Navigation Buttons (Vertically Centered - Won't collide with Bottom-Right CTA) */}
+      {/* Manual Arrow Navigation Buttons (Vertically Centered - Won't collide with Bottom CTA or Pagination) */}
       {totalSlides > 1 && (
         <>
           <button
             type="button"
             onClick={handlePrev}
             aria-label="Previous promotional banner"
-            className="absolute left-4 sm:left-6 top-1/2 -translate-y-1/2 z-20 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#1e0205]/85 hover:bg-[#3d050d] border border-[#E6C56F]/65 text-[#F6DA8D] flex items-center justify-center backdrop-blur-sm shadow-xl opacity-90 sm:opacity-0 sm:group-hover/carousel:opacity-100 focus-visible:opacity-100 transition-all duration-300"
+            className="absolute left-2.5 sm:left-6 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-[#1e0205]/85 hover:bg-[#3d050d] border border-[#E6C56F]/65 text-[#F6DA8D] flex items-center justify-center backdrop-blur-sm shadow-xl opacity-90 sm:opacity-0 sm:group-hover/carousel:opacity-100 focus-visible:opacity-100 transition-all duration-300"
           >
-            <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+            <ChevronLeft className="w-4 h-4 sm:w-6 sm:h-6" />
           </button>
 
           <button
             type="button"
             onClick={handleNext}
             aria-label="Next promotional banner"
-            className="absolute right-4 sm:right-6 top-1/2 -translate-y-1/2 z-20 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#1e0205]/85 hover:bg-[#3d050d] border border-[#E6C56F]/65 text-[#F6DA8D] flex items-center justify-center backdrop-blur-sm shadow-xl opacity-90 sm:opacity-0 sm:group-hover/carousel:opacity-100 focus-visible:opacity-100 transition-all duration-300"
+            className="absolute right-2.5 sm:right-6 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-[#1e0205]/85 hover:bg-[#3d050d] border border-[#E6C56F]/65 text-[#F6DA8D] flex items-center justify-center backdrop-blur-sm shadow-xl opacity-90 sm:opacity-0 sm:group-hover/carousel:opacity-100 focus-visible:opacity-100 transition-all duration-300"
           >
-            <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
+            <ChevronRight className="w-4 h-4 sm:w-6 sm:h-6" />
           </button>
 
-          {/* Centered Pagination Pill Indicators */}
+          {/* Centered Pagination Pill Indicators: Anchored cleanly at bottom-3 on mobile, bottom-4 on desktop */}
           <div
-            className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#180205]/85 border border-[#C69B3D]/50 backdrop-blur-sm shadow-lg transition-all duration-300"
+            className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 sm:gap-2 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-[#180205]/85 border border-[#C69B3D]/50 backdrop-blur-sm shadow-lg transition-all duration-300"
             role="tablist"
             aria-label="Promotional banner pagination"
           >

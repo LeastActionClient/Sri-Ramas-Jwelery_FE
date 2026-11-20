@@ -515,7 +515,8 @@ export const BannerManagementPanel: React.FC<BannerManagementPanelProps> = ({
 
       {/* Banners Table */}
       <div className="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Desktop Table View */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-stone-50 border-b border-stone-200 text-stone-500 uppercase font-semibold">
               <tr>
@@ -644,33 +645,150 @@ export const BannerManagementPanel: React.FC<BannerManagementPanelProps> = ({
             </tbody>
           </table>
         </div>
+
+        {/* Mobile App-Style Banner Cards */}
+        <div className="block md:hidden p-3.5 space-y-3">
+          {isLoading ? (
+            <div className="p-8 text-center text-stone-400 text-xs">
+              Loading promotional banners...
+            </div>
+          ) : banners.length > 0 ? (
+            banners.map((b) => {
+              const mediaUrl = b.mediaUrl || b.desktopImageUrl || b.imageUrl || '';
+              const isVideo = b.mediaType === 'VIDEO' || /\.(mp4|webm|mov)(\?.*)?$/i.test(mediaUrl);
+
+              return (
+                <div
+                  key={b._id}
+                  className="bg-[#FCFAF6] border border-stone-200/90 rounded-xl p-3.5 space-y-3 shadow-xs"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="w-20 h-12 rounded-lg bg-[#3A060E] overflow-hidden shrink-0 border border-gold-400/50 relative">
+                      {isVideo ? (
+                        <div className="w-full h-full flex items-center justify-center bg-black/40 text-gold-300">
+                          <Film className="w-5 h-5" />
+                        </div>
+                      ) : mediaUrl ? (
+                        <img
+                          src={mediaUrl}
+                          alt={b.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-stone-400">
+                          <ImageIcon className="w-5 h-5" />
+                        </div>
+                      )}
+                      <span className="absolute bottom-0.5 right-0.5 px-1 py-0.2 bg-black/75 text-white text-[8px] font-bold rounded">
+                        {isVideo ? 'VIDEO' : 'IMAGE'}
+                      </span>
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-1.5">
+                        <h4 className="font-serif font-bold text-sm text-burgundy-950 truncate">
+                          {b.buttonName || b.ctaText || b.title}
+                        </h4>
+                        <span className="px-1.5 py-0.5 rounded bg-stone-100 text-[9px] font-mono font-bold text-stone-600 uppercase shrink-0">
+                          {b.destinationType || 'PAGE'}
+                        </span>
+                      </div>
+
+                      <div className="text-[11px] font-mono text-stone-500 truncate mt-1">
+                        ↳ {b.navigationDestination || b.ctaLink || b.targetLink || '/'}
+                      </div>
+
+                      <div className="text-[10px] text-stone-500 font-mono mt-1">
+                        {b.startDate || b.endDate ? (
+                          <span>
+                            {b.startDate ? b.startDate.slice(0, 10) : 'Start'} to {b.endDate ? b.endDate.slice(0, 10) : 'End'}
+                          </span>
+                        ) : (
+                          <span className="text-stone-400 italic">Always Active</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Actions & Status Footer */}
+                  <div className="pt-2 border-t border-stone-200/60 flex items-center justify-between gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleToggleStatus(b)}
+                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase transition-colors ${
+                        b.isActive
+                          ? 'bg-emerald-100 text-emerald-800'
+                          : 'bg-stone-200 text-stone-600'
+                      }`}
+                    >
+                      {b.isActive ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+                      <span>{b.isActive ? 'Active' : 'Hidden'}</span>
+                    </button>
+
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setPreviewBanner(b)}
+                        className="p-1.5 rounded-lg border border-gold-300/70 hover:bg-gold-50 text-burgundy-900"
+                        title="Preview banner"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => openEditModal(b)}
+                        className="p-1.5 rounded-lg border border-stone-200 hover:bg-stone-100 text-stone-700"
+                        title="Edit banner"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(b)}
+                        className="p-1.5 rounded-lg border border-red-200 hover:bg-red-50 text-red-600"
+                        title="Delete banner"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <div className="p-8 text-center text-stone-400 text-xs">
+              No promotional banners configured yet.
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Simplified 5-Field Banner Editor Modal */}
       {isEditorOpen && (
         <AdminModalPortal>
-          <div className="fixed inset-0 z-[9999] flex items-start justify-center p-3 sm:p-6 overflow-y-auto bg-charcoal-950/70 backdrop-blur-sm animate-fade-in">
-          <div className="relative w-full max-w-3xl bg-white rounded-2xl shadow-2xl border border-gold-500/40 overflow-hidden my-2 sm:my-4 max-h-[94vh] flex flex-col animate-modal-enter">
-            <div className="bg-burgundy-900 text-gold-100 p-4 sm:p-5 border-b border-gold-600/40 flex items-center justify-between shrink-0">
-              <div>
-                <h3 className="font-serif font-bold text-lg text-gold-100">
+          <div className="fixed inset-0 z-[9999] flex items-start justify-center p-2 sm:p-6 overflow-y-auto bg-charcoal-950/70 backdrop-blur-sm animate-fade-in">
+          <div className="relative w-full max-w-3xl bg-white rounded-2xl shadow-2xl border border-gold-500/40 overflow-hidden my-2 sm:my-4 max-h-[94vh] flex flex-col animate-modal-enter overflow-x-hidden min-w-0">
+            <div className="bg-burgundy-900 text-gold-100 p-3.5 sm:p-5 border-b border-gold-600/40 flex items-center justify-between shrink-0">
+              <div className="min-w-0 pr-2">
+                <h3 className="font-serif font-bold text-base sm:text-lg text-gold-100 truncate">
                   {editingBannerId ? 'Edit Promotional Banner' : 'Create Promotional Banner'}
                 </h3>
-                <p className="text-[11px] text-gold-300/80">
+                <p className="text-[10.5px] sm:text-[11px] text-gold-300/80 line-clamp-1 sm:line-clamp-none">
                   Fill in the 5 required fields below. Saved changes update MongoDB and sync with the public homepage carousel.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setIsEditorOpen(false)}
-                className="text-gold-300 hover:text-white"
+                className="text-gold-300 hover:text-white p-1 rounded-lg shrink-0"
+                aria-label="Close modal"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSave} className="flex flex-col flex-1 overflow-hidden">
-              <div className="p-5 sm:p-6 overflow-y-auto space-y-4 text-xs">
+            <form onSubmit={handleSave} className="flex flex-col flex-1 overflow-hidden min-w-0 w-full max-w-full">
+              <div className="p-3 sm:p-6 overflow-y-auto overflow-x-hidden space-y-3.5 sm:space-y-4 text-xs w-full max-w-full min-w-0">
                 {localErr && (
                   <div className="p-3 rounded-xl bg-red-50 border border-red-300 text-red-800 flex items-center gap-2">
                     <AlertCircle className="w-4 h-4 shrink-0" />
@@ -679,60 +797,39 @@ export const BannerManagementPanel: React.FC<BannerManagementPanelProps> = ({
                 )}
 
                 {/* 1. Media Upload (Image or Video) with Full Copy & Paste */}
-                <div className="space-y-3 rounded-xl border border-gold-300/80 bg-[#FAF7F0] p-4 shadow-sm">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <label className="font-semibold uppercase text-stone-800 text-xs tracking-wider">
+                <div className="space-y-3 rounded-xl border border-gold-300/80 bg-[#FAF7F0] p-2.5 sm:p-4 shadow-sm w-full max-w-full min-w-0 overflow-hidden">
+                  <div className="flex flex-wrap items-center justify-between gap-1.5">
+                    <label className="font-semibold uppercase text-stone-800 text-[11px] sm:text-xs tracking-wider">
                       1. Media Upload (Image or Video) *
                     </label>
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                       {bannerForm.mediaUrl && (
-                        <>
-                          <button
-                            type="button"
-                            onClick={handleRemoveMedia}
-                            className="text-[11px] text-red-600 hover:text-red-700 font-bold flex items-center gap-1 transition-colors"
-                            title="Cancel uploaded media and remove"
-                          >
-                            <X className="w-3.5 h-3.5" />
-                            <span>Cancel Media</span>
-                          </button>
-                          <span className="text-stone-300 text-[10px]">|</span>
-                          <button
-                            type="button"
-                            onClick={handleCopyMediaLink}
-                            className="text-[11px] text-stone-600 hover:text-burgundy-950 font-semibold flex items-center gap-1 transition-colors"
-                            title="Copy media URL to clipboard"
-                          >
-                            {copiedMedia ? (
-                              <>
-                                <Check className="w-3.5 h-3.5 text-emerald-600" />
-                                <span className="text-emerald-700 font-bold">Copied!</span>
-                              </>
-                            ) : (
-                              <>
-                                <Copy className="w-3.5 h-3.5 text-stone-500" />
-                                <span>Copy Link</span>
-                              </>
-                            )}
-                          </button>
-                        </>
+                        <button
+                          type="button"
+                          onClick={handleRemoveMedia}
+                          className="text-[10.5px] text-red-600 hover:text-red-700 font-bold flex items-center gap-1 transition-colors px-1.5 py-0.5 rounded bg-red-50 border border-red-200"
+                          title="Cancel uploaded media and remove"
+                        >
+                          <X className="w-3 h-3" />
+                          <span>Cancel</span>
+                        </button>
                       )}
                       <button
                         type="button"
                         onClick={handlePasteMediaFromClipboard}
-                        className="text-[11px] text-gold-700 hover:text-burgundy-900 font-bold flex items-center gap-1 transition-colors"
+                        className="text-[10.5px] text-gold-700 hover:text-burgundy-900 font-bold flex items-center gap-1 transition-colors px-1.5 py-0.5 rounded bg-amber-50 border border-gold-300"
                         title="Paste copied image or video from clipboard (Ctrl+V)"
                       >
-                        <ClipboardPaste className="w-3.5 h-3.5 text-gold-600" />
+                        <ClipboardPaste className="w-3 h-3 text-gold-600" />
                         <span>Paste Media</span>
                       </button>
                       <button
                         type="button"
                         onClick={() => setShowUrlInput(!showUrlInput)}
-                        className="text-[11px] text-stone-500 hover:text-stone-700 flex items-center gap-1"
+                        className="text-[10.5px] text-stone-600 hover:text-stone-800 flex items-center gap-1 px-1.5 py-0.5 rounded bg-white border border-stone-200"
                       >
                         <LinkIcon className="w-3 h-3" />
-                        <span>{showUrlInput ? 'Hide URL Input' : 'Paste URL'}</span>
+                        <span>{showUrlInput ? 'Hide URL' : 'Paste URL'}</span>
                       </button>
                     </div>
                   </div>
@@ -824,8 +921,8 @@ export const BannerManagementPanel: React.FC<BannerManagementPanelProps> = ({
                     </div>
                   ) : (
                     /* Media Preview Card with Overlay Controls & Live Bottom-Right CTA */
-                    <div className="space-y-2">
-                      <div className="relative rounded-xl border border-gold-400/70 overflow-hidden bg-[#140204] aspect-[2/1] min-h-[190px] max-h-72 flex items-center justify-center group shadow-md select-none">
+                    <div className="space-y-2 w-full max-w-full min-w-0">
+                      <div className="relative rounded-xl border border-gold-400/70 overflow-hidden bg-[#140204] aspect-[16/9] sm:aspect-[2/1] min-h-[160px] max-h-72 flex items-center justify-center group shadow-md select-none w-full max-w-full">
                         {/* Ambient blurred backdrop */}
                         {bannerForm.mediaType !== 'VIDEO' && bannerForm.mediaUrl && (
                           <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -842,126 +939,123 @@ export const BannerManagementPanel: React.FC<BannerManagementPanelProps> = ({
                         {bannerForm.mediaType === 'VIDEO' ? (
                           <video
                             src={bannerForm.mediaUrl}
-                            className="relative z-10 w-full h-full object-contain object-center"
+                            className="relative z-10 w-full h-full max-w-full object-contain object-center"
                             controls
+                            playsInline
                             muted
                           />
                         ) : (
                           <img
                             src={bannerForm.mediaUrl}
                             alt="Banner media preview"
-                            className="relative z-10 w-full h-full object-contain object-center drop-shadow-md"
+                            className="relative z-10 w-full h-full max-w-full object-contain object-center drop-shadow-md"
                           />
                         )}
 
-                        {/* Live Bottom-Right CTA Button Preview */}
+                        {/* Live Bottom-Right CTA Button Preview - positioned safely above video scrubber controls */}
                         {bannerForm.buttonName && (
-                          <div className="absolute right-3.5 bottom-3.5 z-20 pointer-events-none">
-                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full font-serif font-extrabold text-xs sm:text-[13px] uppercase tracking-wider bg-brand-maroon-gradient text-gold-100 border border-gold-400 shadow-xl">
-                              <span>{bannerForm.buttonName}</span>
-                              <ArrowRight className="w-3.5 h-3.5 text-gold-300" />
+                          <div className="absolute right-2 bottom-10 sm:right-3.5 sm:bottom-3.5 z-20 pointer-events-none max-w-[65%]">
+                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 sm:px-4 sm:py-2 rounded-full font-serif font-bold text-[10px] sm:text-xs uppercase tracking-wider bg-brand-maroon-gradient text-gold-100 border border-gold-400 shadow-xl truncate">
+                              <span className="truncate">{bannerForm.buttonName}</span>
+                              <ArrowRight className="w-3 h-3 text-gold-300 shrink-0" />
                             </div>
                           </div>
                         )}
 
                         {/* Badges */}
-                        <div className="absolute top-2 left-2 z-20 flex items-center gap-1.5">
-                          <span className="px-2 py-0.5 rounded bg-black/75 text-white text-[10px] font-bold uppercase tracking-wider backdrop-blur-sm">
+                        <div className="absolute top-2 left-2 z-20 flex items-center gap-1.5 max-w-[55%]">
+                          <span className="px-1.5 py-0.5 rounded bg-black/75 text-white text-[9.5px] font-bold uppercase tracking-wider backdrop-blur-sm shrink-0">
                             {bannerForm.mediaType}
                           </span>
                           {bannerForm.mediaPublicId && (
-                            <span className="hidden sm:inline-block px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-200 text-[10px] font-mono backdrop-blur-sm">
+                            <span className="hidden sm:inline-block px-1.5 py-0.5 rounded bg-emerald-950/80 text-emerald-200 text-[9.5px] font-mono backdrop-blur-sm truncate">
                               Cloudinary: {bannerForm.mediaPublicId.split('/').pop()}
                             </span>
                           )}
                         </div>
 
                         {/* Quick Actions Overlay */}
-                        <div className="absolute top-2 right-2 flex items-center gap-1.5 bg-black/60 p-1 rounded-lg backdrop-blur-sm z-30">
+                        <div className="absolute top-2 right-2 flex items-center gap-1 bg-black/70 p-1 rounded-lg backdrop-blur-sm z-30">
                           <button
                             type="button"
                             onClick={handleCopyMediaLink}
-                            className="p-1.5 rounded text-white/90 hover:text-white hover:bg-white/20 transition-colors"
+                            className="p-1 rounded text-white/90 hover:text-white hover:bg-white/20 transition-colors"
                             title="Copy Media URL"
                           >
-                            {copiedMedia ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                            {copiedMedia ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
                           </button>
                           <button
                             type="button"
                             onClick={handlePasteMediaFromClipboard}
-                            className="p-1.5 rounded text-white/90 hover:text-white hover:bg-white/20 transition-colors"
+                            className="p-1 rounded text-white/90 hover:text-white hover:bg-white/20 transition-colors"
                             title="Paste New Media from Clipboard (Ctrl+V)"
                           >
-                            <ClipboardPaste className="w-3.5 h-3.5 text-gold-300" />
+                            <ClipboardPaste className="w-3 h-3 text-gold-300" />
                           </button>
                           <button
                             type="button"
                             onClick={() => fileInputRef.current?.click()}
-                            className="p-1.5 rounded text-white/90 hover:text-white hover:bg-white/20 transition-colors"
+                            className="p-1 rounded text-white/90 hover:text-white hover:bg-white/20 transition-colors"
                             title="Browse to Replace"
                           >
-                            <Upload className="w-3.5 h-3.5" />
+                            <Upload className="w-3 h-3" />
                           </button>
                           <button
                             type="button"
                             onClick={handleRemoveMedia}
-                            className="flex items-center gap-1 px-2 py-1 rounded bg-red-600/90 hover:bg-red-700 text-white text-[11px] font-semibold transition-colors shadow-sm"
+                            className="flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-red-600/90 hover:bg-red-700 text-white text-[10px] font-semibold transition-colors shadow-sm"
                             title="Cancel / Remove Media"
                           >
-                            <X className="w-3.5 h-3.5" />
-                            <span>Cancel</span>
+                            <X className="w-3 h-3" />
+                            <span>Remove</span>
                           </button>
                         </div>
                       </div>
 
-                      {/* Explicit Media Action Toolbar with Cancel Button */}
-                      <div className="flex flex-wrap items-center justify-between gap-2 p-2 rounded-xl bg-stone-50 border border-stone-200">
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={handleRemoveMedia}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 rounded-lg text-xs font-bold transition-colors shadow-2xs"
-                            title="Cancel uploaded media and remove"
-                          >
-                            <X className="w-3.5 h-3.5 text-red-600" />
-                            <span>Cancel / Remove Media</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => fileInputRef.current?.click()}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white text-stone-700 hover:bg-stone-50 border border-stone-300 rounded-lg text-xs font-semibold transition-colors shadow-2xs"
-                            title="Replace with another file"
-                          >
-                            <Upload className="w-3.5 h-3.5 text-stone-500" />
-                            <span>Replace File</span>
-                          </button>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={handleCopyMediaLink}
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-white text-stone-700 hover:bg-stone-50 border border-stone-300 rounded-lg text-xs font-medium transition-colors shadow-2xs"
-                          >
-                            {copiedMedia ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-stone-500" />}
-                            <span>{copiedMedia ? 'Copied' : 'Copy URL'}</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={handlePasteMediaFromClipboard}
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-white text-burgundy-950 hover:bg-gold-50 border border-gold-300 rounded-lg text-xs font-semibold transition-colors shadow-2xs"
-                          >
-                            <ClipboardPaste className="w-3.5 h-3.5 text-gold-600" />
-                            <span>Paste Media</span>
-                          </button>
-                        </div>
+                      {/* Explicit Media Action Toolbar with Cancel Button - Responsive 2x2 grid on mobile */}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 p-1.5 sm:p-2 rounded-xl bg-stone-50 border border-stone-200 w-full max-w-full min-w-0">
+                        <button
+                          type="button"
+                          onClick={handleRemoveMedia}
+                          className="w-full inline-flex items-center justify-center gap-1 px-2 py-1.5 bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 rounded-lg text-[11px] font-bold transition-colors shadow-2xs"
+                          title="Cancel uploaded media and remove"
+                        >
+                          <X className="w-3 h-3 text-red-600 shrink-0" />
+                          <span className="truncate">Remove Media</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="w-full inline-flex items-center justify-center gap-1 px-2 py-1.5 bg-white text-stone-700 hover:bg-stone-50 border border-stone-300 rounded-lg text-[11px] font-semibold transition-colors shadow-2xs"
+                          title="Replace with another file"
+                        >
+                          <Upload className="w-3 h-3 text-stone-500 shrink-0" />
+                          <span className="truncate">Replace File</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleCopyMediaLink}
+                          className="w-full inline-flex items-center justify-center gap-1 px-2 py-1.5 bg-white text-stone-700 hover:bg-stone-50 border border-stone-300 rounded-lg text-[11px] font-medium transition-colors shadow-2xs"
+                        >
+                          {copiedMedia ? <Check className="w-3 h-3 text-emerald-600 shrink-0" /> : <Copy className="w-3 h-3 text-stone-500 shrink-0" />}
+                          <span className="truncate">{copiedMedia ? 'Copied' : 'Copy URL'}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handlePasteMediaFromClipboard}
+                          className="w-full inline-flex items-center justify-center gap-1 px-2 py-1.5 bg-white text-burgundy-950 hover:bg-gold-50 border border-gold-300 rounded-lg text-[11px] font-semibold transition-colors shadow-2xs"
+                        >
+                          <ClipboardPaste className="w-3 h-3 text-gold-600 shrink-0" />
+                          <span className="truncate">Paste Media</span>
+                        </button>
                       </div>
                     </div>
                   )}
 
-                  {/* Direct URL Input Bar */}
+                  {/* Direct URL Input Bar - fully responsive */}
                   {(showUrlInput || !bannerForm.mediaUrl) && (
-                    <div className="pt-1 flex flex-col sm:flex-row gap-2">
-                      <div className="flex flex-1 gap-1.5">
+                    <div className="pt-1 flex flex-col gap-1.5 w-full min-w-0">
+                      <div className="flex gap-1.5 w-full min-w-0">
                         <select
                           value={bannerForm.mediaType}
                           onChange={(e) =>
@@ -970,37 +1064,39 @@ export const BannerManagementPanel: React.FC<BannerManagementPanelProps> = ({
                               mediaType: e.target.value as 'IMAGE' | 'VIDEO'
                             }))
                           }
-                          className="px-2.5 py-1.5 border border-stone-300 rounded-lg bg-white text-xs outline-none focus:border-gold-500 shrink-0 font-medium"
+                          className="px-2 py-1.5 border border-stone-300 rounded-lg bg-white text-xs outline-none focus:border-gold-500 shrink-0 font-medium"
                         >
                           <option value="IMAGE">Image URL</option>
                           <option value="VIDEO">Video URL</option>
                         </select>
                         <input
                           type="text"
-                          placeholder="Or paste media URL (e.g. https://... or /uploads/...)"
+                          placeholder="Or paste media URL (e.g. https://...)"
                           value={bannerForm.mediaUrl}
                           onChange={(e) =>
                             setBannerForm((prev) => ({ ...prev, mediaUrl: e.target.value }))
                           }
-                          className="flex-1 p-2 border border-stone-300 rounded-lg text-xs bg-white outline-none focus:border-gold-500 font-mono"
+                          className="flex-1 min-w-0 p-1.5 border border-stone-300 rounded-lg text-xs bg-white outline-none focus:border-gold-500 font-mono"
                         />
+                      </div>
+                      <div className="flex items-center gap-1.5 justify-end">
                         <button
                           type="button"
                           onClick={handlePasteMediaFromClipboard}
-                          className="px-2.5 py-1.5 border border-gold-300 bg-gold-50 text-burgundy-900 rounded-lg text-xs font-semibold hover:bg-gold-100 flex items-center gap-1 shrink-0"
+                          className="px-2.5 py-1 border border-gold-300 bg-gold-50 text-burgundy-900 rounded-lg text-xs font-semibold hover:bg-gold-100 flex items-center gap-1 shrink-0"
                           title="Paste from clipboard"
                         >
-                          <ClipboardPaste className="w-3.5 h-3.5 text-gold-700" />
-                          <span className="hidden sm:inline">Paste</span>
+                          <ClipboardPaste className="w-3 h-3 text-gold-700" />
+                          <span>Paste from Clipboard</span>
                         </button>
                         {showUrlInput && (
                           <button
                             type="button"
                             onClick={() => setShowUrlInput(false)}
-                            className="px-2.5 py-1.5 border border-stone-300 bg-stone-100 text-stone-700 rounded-lg text-xs font-semibold hover:bg-stone-200 flex items-center gap-1 shrink-0 transition-colors"
+                            className="px-2.5 py-1 border border-stone-300 bg-stone-100 text-stone-700 rounded-lg text-xs font-semibold hover:bg-stone-200 flex items-center gap-1 shrink-0 transition-colors"
                             title="Cancel URL input"
                           >
-                            <X className="w-3.5 h-3.5 text-stone-500" />
+                            <X className="w-3 h-3 text-stone-500" />
                             <span>Cancel</span>
                           </button>
                         )}
@@ -1010,8 +1106,8 @@ export const BannerManagementPanel: React.FC<BannerManagementPanelProps> = ({
                 </div>
 
                 {/* 2. Button Name */}
-                <div>
-                  <label className="block font-semibold uppercase text-stone-700 mb-1">
+                <div className="w-full min-w-0">
+                  <label className="block font-semibold uppercase text-stone-700 mb-1 text-[11px] sm:text-xs">
                     2. Button Name *
                   </label>
                   <input
@@ -1027,23 +1123,23 @@ export const BannerManagementPanel: React.FC<BannerManagementPanelProps> = ({
                 </div>
 
                 {/* 3. Searchable Navigation Destination */}
-                <div ref={destinationDropdownRef} className="relative">
-                  <label className="block font-semibold uppercase text-stone-700 mb-1">
+                <div ref={destinationDropdownRef} className="relative w-full min-w-0">
+                  <label className="block font-semibold uppercase text-stone-700 mb-1 text-[11px] sm:text-xs">
                     3. Searchable Navigation Destination *
                   </label>
                   <div
                     onClick={() => setIsDestinationOpen(true)}
-                    className="w-full p-2.5 border border-stone-300 rounded-lg bg-white flex items-center justify-between cursor-pointer hover:border-gold-500"
+                    className="w-full p-2.5 border border-stone-300 rounded-lg bg-white flex items-center justify-between cursor-pointer hover:border-gold-500 min-w-0"
                   >
-                    <div className="flex items-center gap-2 truncate">
-                      <span className="px-1.5 py-0.5 rounded bg-burgundy-100 text-burgundy-900 text-[10px] font-bold">
+                    <div className="flex items-center gap-2 truncate min-w-0">
+                      <span className="px-1.5 py-0.5 rounded bg-burgundy-100 text-burgundy-900 text-[10px] font-bold shrink-0">
                         {bannerForm.destinationType}
                       </span>
-                      <span className="font-mono text-stone-800">
+                      <span className="font-mono text-stone-800 text-xs truncate">
                         {bannerForm.navigationDestination || 'Select destination...'}
                       </span>
                     </div>
-                    <Search className="w-4 h-4 text-stone-400 shrink-0" />
+                    <Search className="w-4 h-4 text-stone-400 shrink-0 ml-1" />
                   </div>
 
                   {/* Dropdown with Search & Categorized Groups */}
@@ -1193,26 +1289,29 @@ export const BannerManagementPanel: React.FC<BannerManagementPanelProps> = ({
                 </label>
 
                 {/* Live Banner Preview */}
-                <div className="space-y-2 pt-2 border-t border-stone-200">
+                <div className="space-y-2 pt-2 border-t border-stone-200 overflow-hidden w-full max-w-full min-w-0">
                   <span className="block font-bold uppercase tracking-wider text-stone-500 text-[10px]">
                     Live Storefront Banner Preview
                   </span>
-                  <PromotionalBannerCarousel banners={[livePreviewBanner]} />
+                  <PromotionalBannerCarousel
+                    banners={[livePreviewBanner]}
+                    className="w-full max-w-full relative overflow-hidden h-36 sm:h-52 rounded-xl bg-[#140204] select-none m-0 p-0"
+                  />
                 </div>
               </div>
 
-              <div className="p-4 sm:p-5 border-t border-stone-200 bg-stone-50 flex justify-end gap-3 shrink-0">
+              <div className="p-3 sm:p-5 border-t border-stone-200 bg-stone-50 flex items-center justify-end gap-2 sm:gap-3 shrink-0 w-full">
                 <button
                   type="button"
                   onClick={() => setIsEditorOpen(false)}
-                  className="px-4 py-2 border border-stone-300 rounded-lg text-xs font-semibold text-stone-700 hover:bg-stone-100"
+                  className="flex-1 sm:flex-initial px-4 py-2 border border-stone-300 rounded-lg text-xs font-semibold text-stone-700 hover:bg-stone-100 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={saving || !bannerForm.mediaUrl || !bannerForm.buttonName}
-                  className="px-6 py-2 bg-burgundy-900 text-gold-200 rounded-lg text-xs font-bold shadow-md hover:bg-burgundy-800 disabled:opacity-50"
+                  className="flex-1 sm:flex-initial px-5 py-2 bg-burgundy-900 text-gold-200 rounded-lg text-xs font-bold shadow-md hover:bg-burgundy-800 disabled:opacity-50 transition-colors"
                 >
                   {saving ? 'Saving...' : editingBannerId ? 'Save Changes' : 'Publish Banner'}
                 </button>
