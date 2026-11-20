@@ -92,6 +92,7 @@ export interface Category {
   description?: string;
   parentCategoryId?: string | null;
   parentCategory?: Category;
+  metalType?: 'GOLD' | 'SILVER' | 'DIAMOND' | 'PLATINUM' | string;
   imageUrl?: string | null;
   imagePublicId?: string | null;
   sortOrder: number;
@@ -180,6 +181,7 @@ export interface Product {
   media?: Array<{ type: 'IMAGE' | 'VIDEO'; url: string; publicId?: string; isPrimary?: boolean; order?: number }>;
   gender?: 'WOMEN' | 'MEN' | 'UNISEX' | 'KIDS';
   occasion?: string[];
+  classification?: 'BRIDAL' | 'TRADITIONAL' | 'DAILY_WEAR' | string;
   collectionType?: 'BRIDAL' | 'HERITAGE' | 'DAILY_WEAR' | 'FESTIVE' | 'TEMPLE' | 'SOLITAIRE';
   categoryAttributes?: Record<string, any>;
   metalDetails?: Record<string, any>;

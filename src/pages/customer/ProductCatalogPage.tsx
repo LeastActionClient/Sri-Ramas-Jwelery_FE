@@ -6,6 +6,7 @@ import { productsApi, ProductFilters } from '@/services/api/products.api';
 import { categoriesApi } from '@/services/api/categories.api';
 import { ProductCard } from '@/components/customer/ProductCard';
 import { ScrollReveal, StaggerReveal } from '@/components/motion';
+import { SEO } from '@/components/common/SEO';
 
 const METAL_OPTIONS = [
   { value: 'GOLD', label: 'Gold' },
@@ -92,6 +93,12 @@ export const GENERAL_PURITY_OPTIONS = [
   { value: 'Pt950', label: 'Pt950' },
 ] as const;
 
+export const CLASSIFICATION_OPTIONS = [
+  { value: 'BRIDAL', label: 'Bridal' },
+  { value: 'TRADITIONAL', label: 'Traditional' },
+  { value: 'DAILY_WEAR', label: 'Daily Wear' },
+] as const;
+
 export const ProductCatalogPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -100,6 +107,8 @@ export const ProductCatalogPage: React.FC = () => {
   const urlSearch = searchParams.get('search') || '';
   const urlCategoryId = searchParams.get('categoryId') || '';
   const urlCategorySlug = searchParams.get('category') || '';
+  const urlSubcategoryId = searchParams.get('subcategoryId') || '';
+  const urlClassification = (searchParams.get('classification') || '').toUpperCase();
   const metalType = (searchParams.get('metalType') || '').toUpperCase();
   const purity = (searchParams.get('purity') || '').toUpperCase();
   const diamondCut = (searchParams.get('diamondCut') || '').toUpperCase();
@@ -121,6 +130,8 @@ export const ProductCatalogPage: React.FC = () => {
   // Mobile drawer staged filter state
   const [mobileDraftSearch, setMobileDraftSearch] = useState('');
   const [mobileDraftCategoryId, setMobileDraftCategoryId] = useState('');
+  const [mobileDraftSubcategoryId, setMobileDraftSubcategoryId] = useState('');
+  const [mobileDraftClassification, setMobileDraftClassification] = useState('');
   const [mobileDraftMetal, setMobileDraftMetal] = useState('');
   const [mobileDraftPurity, setMobileDraftPurity] = useState('');
   const [mobileDraftCut, setMobileDraftCut] = useState('');
@@ -159,6 +170,29 @@ export const ProductCatalogPage: React.FC = () => {
   const effectiveCategoryId = resolvedCategory?._id || urlCategoryId;
   const effectiveCategorySlug = !effectiveCategoryId && urlCategorySlug ? urlCategorySlug : '';
 
+  // Filter root categories (optionally matching selected metal group)
+  const rootCategories = useMemo(() => {
+    return categories.filter((c) => {
+      const isRoot = !c.parentCategory;
+      if (!isRoot) return false;
+      if (c.metalType === 'ALL' || c.metalType === 'MIXED') return true;
+      if (metalType === 'GOLD') return c.metalType === 'GOLD' || !c.metalType;
+      if (metalType === 'SILVER') return c.metalType === 'SILVER';
+      return true;
+    });
+  }, [categories, metalType]);
+
+  // Subcategories belonging to the currently selected main category
+  const availableSubcategories = useMemo(() => {
+    if (!effectiveCategoryId) return [];
+    return categories.filter((c) => {
+      const parentId = typeof c.parentCategory === 'string'
+        ? c.parentCategory
+        : (c.parentCategory as any)?._id;
+      return parentId === effectiveCategoryId;
+    });
+  }, [categories, effectiveCategoryId]);
+
   const filters: ProductFilters = useMemo(() => {
     let minCarat: number | undefined;
     let maxCarat: number | undefined;
@@ -171,6 +205,8 @@ export const ProductCatalogPage: React.FC = () => {
       search: urlSearch.trim() || undefined,
       categoryId: effectiveCategoryId || undefined,
       category: effectiveCategorySlug || undefined,
+      subcategoryId: urlSubcategoryId || undefined,
+      classification: urlClassification || undefined,
       metalType: metalType || undefined,
       purity: purity || undefined,
       diamondCut: diamondCut || undefined,
@@ -188,6 +224,8 @@ export const ProductCatalogPage: React.FC = () => {
     urlSearch,
     effectiveCategoryId,
     effectiveCategorySlug,
+    urlSubcategoryId,
+    urlClassification,
     metalType,
     purity,
     diamondCut,
@@ -247,8 +285,23 @@ export const ProductCatalogPage: React.FC = () => {
   const handleCategoryChange = (nextCategoryId: string) => {
     updateUrlParams((next) => {
       next.delete('category');
+      next.delete('subcategoryId');
       if (nextCategoryId) next.set('categoryId', nextCategoryId);
       else next.delete('categoryId');
+    });
+  };
+
+  const handleSubcategoryChange = (nextSubcategoryId: string) => {
+    updateUrlParams((next) => {
+      if (nextSubcategoryId) next.set('subcategoryId', nextSubcategoryId);
+      else next.delete('subcategoryId');
+    });
+  };
+
+  const handleToggleClassification = (val: string) => {
+    updateUrlParams((next) => {
+      if (urlClassification === val) next.delete('classification');
+      else next.set('classification', val);
     });
   };
 
@@ -258,7 +311,10 @@ export const ProductCatalogPage: React.FC = () => {
       if (nextVal) next.set('metalType', nextVal);
       else next.delete('metalType');
 
-      // Clear non-applicable filters on metal switch
+      // Clear non-applicable or specific filters on metal switch
+      next.delete('categoryId');
+      next.delete('category');
+      next.delete('subcategoryId');
       next.delete('purity');
       next.delete('diamondCut');
       next.delete('diamondColor');
@@ -305,6 +361,8 @@ export const ProductCatalogPage: React.FC = () => {
     setSearchDraftState({ urlValue: '', text: '' });
     setMobileDraftSearch('');
     setMobileDraftCategoryId('');
+    setMobileDraftSubcategoryId('');
+    setMobileDraftClassification('');
     setMobileDraftMetal('');
     setMobileDraftPurity('');
     setMobileDraftCut('');
@@ -320,6 +378,8 @@ export const ProductCatalogPage: React.FC = () => {
   const openMobileDrawer = () => {
     setMobileDraftSearch(searchInput);
     setMobileDraftCategoryId(effectiveCategoryId);
+    setMobileDraftSubcategoryId(urlSubcategoryId);
+    setMobileDraftClassification(urlClassification);
     setMobileDraftMetal(metalType);
     setMobileDraftPurity(purity);
     setMobileDraftCut(diamondCut);
@@ -341,6 +401,8 @@ export const ProductCatalogPage: React.FC = () => {
     const next = new URLSearchParams();
     if (trimmed) next.set('search', trimmed);
     if (mobileDraftCategoryId) next.set('categoryId', mobileDraftCategoryId);
+    if (mobileDraftSubcategoryId) next.set('subcategoryId', mobileDraftSubcategoryId);
+    if (mobileDraftClassification) next.set('classification', mobileDraftClassification);
     if (mobileDraftMetal) next.set('metalType', mobileDraftMetal);
     if (mobileDraftPurity) next.set('purity', mobileDraftPurity);
     if (mobileDraftCut) next.set('diamondCut', mobileDraftCut);
@@ -373,6 +435,22 @@ export const ProductCatalogPage: React.FC = () => {
       key: 'category',
       label: `Category: ${catLabel}`,
       onClear: () => handleCategoryChange('')
+    });
+  }
+  if (urlSubcategoryId) {
+    const subcat = categories.find((c) => c._id === urlSubcategoryId);
+    activeFilterChips.push({
+      key: 'subcategory',
+      label: `Subcategory: ${subcat?.name || urlSubcategoryId}`,
+      onClear: () => handleSubcategoryChange('')
+    });
+  }
+  if (urlClassification) {
+    const classOption = CLASSIFICATION_OPTIONS.find((c) => c.value === urlClassification);
+    activeFilterChips.push({
+      key: 'classification',
+      label: `Classification: ${classOption?.label || urlClassification}`,
+      onClear: () => handleToggleClassification(urlClassification)
     });
   }
   if (metalType) {
@@ -436,23 +514,165 @@ export const ProductCatalogPage: React.FC = () => {
 
   const activeFilterCount = activeFilterChips.length;
 
+  const dynamicSeo = useMemo(() => {
+    const activeCatName =
+      resolvedCategory?.name || categories.find((c) => c._id === effectiveCategoryId)?.name;
+    const activeSubcatName = categories.find((c) => c._id === urlSubcategoryId)?.name;
+
+    if (metalType === 'GOLD') {
+      if (activeCatName) {
+        return {
+          title: `${activeCatName}${activeSubcatName ? ` (${activeSubcatName})` : ''} Gold Jewellery Collections | Sri Ramas Jewellery`,
+          description: `Explore handcrafted 22K gold ${activeCatName.toLowerCase()}${activeSubcatName ? ` ${activeSubcatName.toLowerCase()}` : ''} collections at Sri Ramas Jewellery. 100% BIS 916 hallmarked bridal and traditional designs.`
+        };
+      }
+      return {
+        title: 'Gold Jewellery Collections | Sri Ramas Jewellery',
+        description:
+          'Explore traditional gold jewellery collections, including harams, bangles, chains, earrings and rings at Sri Ramas Jewellery.'
+      };
+    }
+
+    if (metalType === 'SILVER') {
+      if (activeCatName) {
+        return {
+          title: `${activeCatName} Silver Jewellery Collections | Sri Ramas Jewellery`,
+          description: `Discover pure 925 sterling silver ${activeCatName.toLowerCase()} collections at Sri Ramas Jewellery. Handcrafted anklets, bracelets, chains, and toe rings.`
+        };
+      }
+      return {
+        title: 'Silver Jewellery Collections | Sri Ramas Jewellery',
+        description:
+          'Discover silver jewellery collections, including bracelets, chains, rings, anklets and toe rings at Sri Ramas Jewellery.'
+      };
+    }
+
+    if (urlClassification === 'BRIDAL') {
+      return {
+        title: 'Bridal Jewellery Collections | Sri Ramas Jewellery',
+        description:
+          'Discover majestic South Indian bridal gold jewellery, heirloom temple harams, and certified wedding collections at Sri Ramas Jewellery.'
+      };
+    }
+    if (urlClassification === 'TRADITIONAL') {
+      return {
+        title: 'Traditional Heritage Jewellery | Sri Ramas Jewellery',
+        description:
+          'Explore heirloom temple jewellery, Kasu malas, antique bangles, and timeless traditional jewellery craftsmanship at Sri Ramas Jewellery.'
+      };
+    }
+    if (urlClassification === 'DAILY_WEAR') {
+      return {
+        title: 'Daily Wear Jewellery | Sri Ramas Jewellery',
+        description:
+          'Browse lightweight, elegant daily-wear gold and silver jewellery designs at Sri Ramas Jewellery.'
+      };
+    }
+
+    if (activeCatName) {
+      return {
+        title: `${activeCatName} Jewellery Collections | Sri Ramas Jewellery`,
+        description: `Explore ${activeCatName} jewellery collections at Sri Ramas Jewellery. Browse authentic 22K gold and 925 sterling silver craftsmanship.`
+      };
+    }
+
+    return {
+      title: 'Gold & Silver Jewellery Collections | Sri Ramas Jewellery',
+      description:
+        'Explore gold and silver jewellery collections at Sri Ramas Jewellery, including harams, bangles, chains, earrings, rings and more.'
+    };
+  }, [
+    metalType,
+    resolvedCategory,
+    effectiveCategoryId,
+    urlSubcategoryId,
+    urlClassification,
+    categories
+  ]);
+
+  const breadcrumbs = useMemo(() => {
+    const list = [{ name: 'Home', path: '/' }, { name: 'Collections', path: '/products' }];
+    if (metalType) {
+      list.push({
+        name: metalType === 'GOLD' ? 'Gold Jewellery' : 'Silver Jewellery',
+        path: `/products?metalType=${metalType}`
+      });
+    }
+    if (resolvedCategory?.name) {
+      list.push({
+        name: resolvedCategory.name,
+        path: `/products?category=${resolvedCategory.slug || resolvedCategory._id}`
+      });
+    }
+    return list;
+  }, [metalType, resolvedCategory]);
+
   return (
     <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-12 space-y-6">
-      {/* Mobile Filter Trigger Button (Visible only on smaller viewports) */}
-      <div className="lg:hidden flex items-center justify-end w-full">
-        <button
-          type="button"
-          onClick={openMobileDrawer}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-gold-600 bg-white text-burgundy-900 text-sm font-semibold transition-all duration-200 hover:bg-gold-50 active:scale-[0.98] shadow-sm"
-        >
-          <Filter className="w-4 h-4 text-gold-600" />
-          <span>Filter Catalogue</span>
-          {activeFilterCount > 0 && (
-            <span className="inline-flex items-center justify-center min-w-[20px] h-[20px] px-1 rounded-full bg-burgundy-900 text-gold-200 text-xs font-bold">
-              {activeFilterCount}
-            </span>
-          )}
-        </button>
+      <SEO
+        title={dynamicSeo.title}
+        description={dynamicSeo.description}
+        breadcrumbs={breadcrumbs}
+      />
+
+      {/* Top Metal Group Switcher Tabs */}
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-stone-200/80 pb-4">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              if (metalType) handleToggleMetal(metalType);
+            }}
+            className={`px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl font-serif text-xs sm:text-sm tracking-wide transition-all duration-200 ${
+              metalType === ''
+                ? 'bg-burgundy-900 text-gold-200 font-bold shadow-md border border-gold-600/40'
+                : 'bg-white text-stone-700 hover:bg-stone-50 border border-stone-200 font-medium'
+            }`}
+          >
+            All Jewellery
+          </button>
+          <button
+            type="button"
+            onClick={() => handleToggleMetal('GOLD')}
+            className={`flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl font-serif text-xs sm:text-sm tracking-wide transition-all duration-200 ${
+              metalType === 'GOLD'
+                ? 'bg-brand-maroon-gradient text-gold-200 font-bold shadow-md border border-gold-500'
+                : 'bg-white text-stone-700 hover:bg-stone-50 border border-stone-200 font-medium'
+            }`}
+          >
+            <span className="w-2.5 h-2.5 rounded-full bg-gold-400 inline-block shadow-xs" />
+            <span>Gold Jewellery</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleToggleMetal('SILVER')}
+            className={`flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl font-serif text-xs sm:text-sm tracking-wide transition-all duration-200 ${
+              metalType === 'SILVER'
+                ? 'bg-brand-maroon-gradient text-gold-200 font-bold shadow-md border border-stone-300'
+                : 'bg-white text-stone-700 hover:bg-stone-50 border border-stone-200 font-medium'
+            }`}
+          >
+            <span className="w-2.5 h-2.5 rounded-full bg-stone-300 inline-block shadow-xs" />
+            <span>Silver Jewellery</span>
+          </button>
+        </div>
+
+        {/* Mobile Filter Trigger Button (Visible only on smaller viewports) */}
+        <div className="lg:hidden flex items-center">
+          <button
+            type="button"
+            onClick={openMobileDrawer}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gold-600 bg-white text-burgundy-900 text-xs sm:text-sm font-semibold transition-all duration-200 hover:bg-gold-50 active:scale-[0.98] shadow-sm"
+          >
+            <Filter className="w-4 h-4 text-gold-600" />
+            <span>Filter Catalogue</span>
+            {activeFilterCount > 0 && (
+              <span className="inline-flex items-center justify-center min-w-[20px] h-[20px] px-1 rounded-full bg-burgundy-900 text-gold-200 text-xs font-bold">
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Main Layout: Filters Sidebar + Grid */}
@@ -526,13 +746,13 @@ export const ProductCatalogPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Categories (Dynamic from Admin CMS) */}
+          {/* Main Category (Dynamic from Admin CMS) */}
           <div className="space-y-2">
             <label
               htmlFor="catalog-category-select"
               className="text-[13px] font-bold uppercase tracking-wider text-stone-800"
             >
-              Category
+              Main Category
             </label>
             <select
               id="catalog-category-select"
@@ -542,21 +762,88 @@ export const ProductCatalogPage: React.FC = () => {
               className="w-full text-sm p-2.5 border border-stone-300 rounded-xl outline-none focus:border-gold-500 bg-white text-stone-800 font-medium"
             >
               <option value="">All Categories</option>
-              {categories.map((c) => (
+              {rootCategories.map((c) => (
                 <option key={c._id} value={c._id}>
                   {c.name}
                 </option>
               ))}
             </select>
-            {!categoriesLoading && categories.length === 0 && (
+            {!categoriesLoading && rootCategories.length === 0 && (
               <p className="text-xs text-stone-400">
                 No active categories published yet.
               </p>
             )}
           </div>
 
+          {/* Subcategory (Dynamic when selected category has subcategories) */}
+          {availableSubcategories.length > 0 && (
+            <div className="space-y-2 pt-2 border-t border-stone-100 animate-fade-in">
+              <label
+                htmlFor="catalog-subcategory-select"
+                className="text-[13px] font-bold uppercase tracking-wider text-burgundy-900 flex items-center gap-1.5"
+              >
+                <span>Subcategory</span>
+                <span className="text-[10px] font-normal text-stone-500">
+                  ({resolvedCategory?.name || 'Selected Category'})
+                </span>
+              </label>
+              <select
+                id="catalog-subcategory-select"
+                value={urlSubcategoryId}
+                onChange={(e) => handleSubcategoryChange(e.target.value)}
+                aria-label="Filter by subcategory"
+                className="w-full text-sm p-2.5 border border-gold-300 rounded-xl outline-none focus:border-gold-500 bg-gold-50/40 text-stone-800 font-medium"
+              >
+                <option value="">All {resolvedCategory?.name || ''} Subcategories</option>
+                {availableSubcategories.map((sub) => (
+                  <option key={sub._id} value={sub._id}>
+                    {sub.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Product Classification (Bridal / Traditional / Daily Wear) */}
+          <div className="space-y-2 pt-2 border-t border-stone-100">
+            <span className="block text-[13px] font-bold uppercase tracking-wider text-stone-800">
+              Classification
+            </span>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  if (urlClassification) handleToggleClassification(urlClassification);
+                }}
+                aria-pressed={urlClassification === ''}
+                className={`text-[13px] px-3.5 py-1.5 rounded-lg border transition-all ${
+                  urlClassification === ''
+                    ? 'bg-burgundy-900 text-gold-200 border-burgundy-900 font-semibold shadow-sm'
+                    : 'border-stone-200 text-stone-700 hover:bg-stone-50 font-medium'
+                }`}
+              >
+                All
+              </button>
+              {CLASSIFICATION_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => handleToggleClassification(opt.value)}
+                  aria-pressed={urlClassification === opt.value}
+                  className={`text-[13px] px-3.5 py-1.5 rounded-lg border transition-all ${
+                    urlClassification === opt.value
+                      ? 'bg-burgundy-900 text-gold-200 border-burgundy-900 font-semibold shadow-sm'
+                      : 'border-stone-200 text-stone-700 hover:bg-stone-50 font-medium'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Precious Metal Type */}
-          <div className="space-y-2">
+          <div className="space-y-2 pt-2 border-t border-stone-100">
             <span className="block text-[13px] font-bold uppercase tracking-wider text-stone-800">
               Precious Metal
             </span>
@@ -1071,21 +1358,92 @@ export const ProductCatalogPage: React.FC = () => {
 
                 <div>
                   <label htmlFor="mobile-filter-category" className="block text-xs font-bold uppercase tracking-wider mb-1.5 text-stone-800">
-                    Category
+                    Main Category
                   </label>
                   <select
                     id="mobile-filter-category"
                     value={mobileDraftCategoryId}
-                    onChange={(e) => setMobileDraftCategoryId(e.target.value)}
+                    onChange={(e) => {
+                      setMobileDraftCategoryId(e.target.value);
+                      setMobileDraftSubcategoryId('');
+                    }}
                     className="w-full p-2.5 text-sm border border-stone-300 rounded-lg bg-white outline-none focus:border-gold-500 font-medium"
                   >
                     <option value="">All Categories</option>
-                    {categories.map((c) => (
+                    {rootCategories.map((c) => (
                       <option key={c._id} value={c._id}>
                         {c.name}
                       </option>
                     ))}
                   </select>
+                </div>
+
+                {/* Subcategory (when available) */}
+                {mobileDraftCategoryId && categories.some((c) => {
+                  const pid = typeof c.parentCategory === 'string' ? c.parentCategory : (c.parentCategory as any)?._id;
+                  return pid === mobileDraftCategoryId;
+                }) && (
+                  <div>
+                    <label htmlFor="mobile-filter-subcategory" className="block text-xs font-bold uppercase tracking-wider mb-1.5 text-stone-800">
+                      Subcategory
+                    </label>
+                    <select
+                      id="mobile-filter-subcategory"
+                      value={mobileDraftSubcategoryId}
+                      onChange={(e) => setMobileDraftSubcategoryId(e.target.value)}
+                      className="w-full p-2.5 text-sm border border-gold-300 bg-gold-50/40 rounded-lg outline-none focus:border-gold-500 font-medium"
+                    >
+                      <option value="">All Subcategories</option>
+                      {categories
+                        .filter((c) => {
+                          const pid = typeof c.parentCategory === 'string' ? c.parentCategory : (c.parentCategory as any)?._id;
+                          return pid === mobileDraftCategoryId;
+                        })
+                        .map((sub) => (
+                          <option key={sub._id} value={sub._id}>
+                            {sub.name}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Classification (Bridal / Traditional / Daily Wear) */}
+                <div>
+                  <span className="block text-xs font-bold uppercase tracking-wider mb-1.5 text-stone-800">
+                    Classification
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setMobileDraftClassification('')}
+                      className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
+                        mobileDraftClassification === ''
+                          ? 'bg-burgundy-900 text-gold-200 border-burgundy-900 font-semibold'
+                          : 'border-stone-200 text-stone-700'
+                      }`}
+                    >
+                      All
+                    </button>
+                    {CLASSIFICATION_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => {
+                          setMobileDraftClassification(
+                            mobileDraftClassification === opt.value ? '' : opt.value
+                          );
+                        }}
+                        className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
+                          mobileDraftClassification === opt.value
+                            ? 'bg-burgundy-900 text-gold-200 border-burgundy-900 font-semibold'
+                            : 'border-stone-200 text-stone-700'
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 <div>

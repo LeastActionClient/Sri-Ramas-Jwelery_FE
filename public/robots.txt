@@ -1,0 +1,21 @@
+# Robots.txt for Sri Ramas Jewellery (https://sriramasjewellery.com)
+User-agent: *
+Allow: /
+Allow: /products
+Allow: /products/*
+Allow: /about
+Allow: /schemes
+Allow: /digigold
+Allow: /digisilver
+Allow: /contact
+Allow: /images/
+Allow: /documents/
+
+# Disallow private administrative areas and internal endpoints
+Disallow: /admin
+Disallow: /admin/*
+Disallow: /api/
+Disallow: /api/v1/admin/
+
+# Sitemaps
+Sitemap: https://sriramasjewellery.com/sitemap.xml

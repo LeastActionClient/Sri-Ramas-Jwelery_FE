@@ -14,6 +14,7 @@ import { SchemeCard } from '@/components/customer/SchemeCard';
 import { useStoreWhatsApp } from '@/hooks/useStoreWhatsApp';
 import { ScrollReveal } from '@/components/motion';
 import { SchemePlan } from '@/types';
+import { SEO } from '@/components/common/SEO';
 
 export const SchemesPage: React.FC = () => {
   const { buildWhatsAppUrl } = useStoreWhatsApp();
@@ -37,8 +38,18 @@ export const SchemesPage: React.FC = () => {
 
   return (
     <div className="w-full min-h-screen bg-[#FAF6F0] text-stone-900 selection:bg-gold-200 selection:text-burgundy-950">
+      <SEO
+        title="Jewellery Savings Schemes | Sri Ramas Jewellery"
+        description="Plan your gold and silver acquisitions with flexible jewellery savings schemes at Sri Ramas Jewellery Thanjavur."
+        canonical="https://sriramasjewellery.com/schemes"
+        breadcrumbs={[
+          { name: 'Home', path: '/' },
+          { name: 'Savings Schemes', path: '/schemes' }
+        ]}
+      />
+
       {/* 1. Full-Bleed Hero Section matching reference screenshot with balanced height */}
-      <section className="relative w-full bg-[#240308] text-gold-100 min-h-[440px] sm:min-h-[490px] lg:min-h-[530px] pt-14 pb-18 sm:pt-18 sm:pb-24 lg:pt-20 lg:pb-28 flex flex-col justify-center border-b border-gold-500/30">
+      <section className="relative w-full bg-[#240308] text-gold-100 min-h-[360px] sm:min-h-[400px] lg:min-h-[440px] pt-10 pb-12 sm:pt-12 sm:pb-16 lg:pt-14 lg:pb-18 flex flex-col justify-center border-b border-gold-500/30">
         {/* Background South Indian Gold Jewellery Hero Image (2nd Image provided by user) */}
         <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
           <img
@@ -187,9 +198,9 @@ export const SchemesPage: React.FC = () => {
       </div>
 
       {/* 2. Main Schemes Section */}
-      <section className="relative max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-10 sm:pt-12 md:pt-14 pb-12 sm:pb-16">
+      <section className="relative max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 md:pt-10 pb-8 sm:pb-12">
         {/* Section Heading & Decorative Separator */}
-        <div className="text-center space-y-1.5 mb-8 sm:mb-10">
+        <div className="text-center space-y-1.5 mb-6 sm:mb-8">
           <ScrollReveal variant="fade-up">
             <h2 className="font-serif text-2xl sm:text-3xl md:text-[34px] font-bold text-[#3B060F]">
               Our Savings Schemes

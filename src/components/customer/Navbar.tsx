@@ -127,9 +127,9 @@ export const Navbar: React.FC = () => {
                 key={link.path}
                 to={link.path}
                 className={({ isActive }) =>
-                  `px-3.5 py-1 rounded-full text-xs xl:text-[13px] font-medium tracking-wide whitespace-nowrap transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 ${
+                  `px-3.5 py-1.5 rounded-full text-sm xl:text-[15px] font-semibold tracking-wide whitespace-nowrap transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 ${
                     isActive
-                      ? 'border border-gold-400/90 text-gold-200 font-semibold bg-gold-500/10 shadow-sm'
+                      ? 'border border-gold-400/90 text-gold-200 font-bold bg-gold-500/10 shadow-sm'
                       : 'text-gold-100/90 hover:text-gold-300 hover:bg-burgundy-950/40'
                   }`
                 }
@@ -206,7 +206,7 @@ export const Navbar: React.FC = () => {
               tabIndex={mobileMenuOpen ? 0 : -1}
               onClick={() => setMobileMenuOpen(false)}
               className={({ isActive }) =>
-                `px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all flex items-center min-h-[44px] ${
+                `px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center min-h-[44px] ${
                   isActive
                     ? 'bg-gold-500/20 text-gold-300 font-bold border-l-2 border-gold-400'
                     : 'text-gold-100/90 hover:text-gold-200 hover:bg-burgundy-900'

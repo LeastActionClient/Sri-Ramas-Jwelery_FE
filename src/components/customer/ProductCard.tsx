@@ -29,7 +29,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, previewOnly =
   const netWeight = product.metal?.netWeightGrams ?? product.netMetalWeightGrams ?? null;
   const hasWeights = Boolean((grossWeight && grossWeight > 0) || (netWeight && netWeight > 0));
   const categoryName = product.category?.name;
+  const subcategoryName = (product as any).subcategory?.name || (product as any).subcategoryId?.name;
   const metalType = product.metal?.metalType || product.metalType;
+  const classification = product.classification;
+  const isOutOfStock = product.stockStatus === 'OUT_OF_STOCK' || product.stockQuantity === 0;
 
   const imageContent = hasValidImage ? (
     <div className="w-full h-full overflow-hidden">
@@ -38,7 +41,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, previewOnly =
         src={primaryImage}
         alt={product.title || product.name || 'Sri Ramas Jewellery'}
         loading="lazy"
-        className="w-full h-full block object-cover object-center transition-transform duration-500 ease-out group-hover:scale-105 select-none pointer-events-none"
+        className={`w-full h-full block object-cover object-center transition-transform duration-500 ease-out group-hover:scale-105 select-none pointer-events-none ${
+          isOutOfStock ? 'filter grayscale contrast-[0.82] opacity-75' : ''
+        }`}
         onError={() => setFailedImageUrl(primaryImage)}
       />
     </div>
@@ -59,7 +64,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, previewOnly =
 
   return (
     <>
-      <div className="group bg-white rounded-xl overflow-hidden border border-gold-300/60 hover:border-[#C99B3B] shadow-md hover:shadow-[0_16px_36px_-12px_rgba(69,10,19,0.28)] hover:-translate-y-1 transition-all duration-[380ms] ease-[cubic-bezier(0.22,1,0.36,1)] flex flex-col w-full">
+      <div
+        className={`group bg-white rounded-xl overflow-hidden border ${
+          isOutOfStock
+            ? 'border-stone-300 shadow-sm'
+            : 'border-gold-300/60 hover:border-[#C99B3B] shadow-md hover:shadow-[0_16px_36px_-12px_rgba(69,10,19,0.28)]'
+        } hover:-translate-y-1 transition-all duration-[380ms] ease-[cubic-bezier(0.22,1,0.36,1)] flex flex-col w-full`}
+      >
         {/* Product Image Area: Fixed square aspect ratio, edge-to-edge fill with zero empty dark gaps */}
         <div className="relative aspect-square w-full overflow-hidden bg-[#FDFBF7] flex items-center justify-center">
           {previewOnly ? (
@@ -70,9 +81,19 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, previewOnly =
             </Link>
           )}
 
-          {/* Left Feature / New Arrival Badges (only when configured) */}
-          {(product.isNewArrival || product.isFeatured) && (
-            <div className="absolute top-2.5 left-2.5 flex flex-col gap-1 z-10">
+          {/* Out of Stock Black & White Overlay */}
+          {isOutOfStock && (
+            <div className="absolute inset-0 bg-stone-950/30 backdrop-blur-[0.5px] flex items-center justify-center z-20 pointer-events-none">
+              <span className="px-3.5 py-1.5 rounded-full bg-stone-900/95 text-stone-100 border border-stone-400/60 text-[10px] font-bold uppercase tracking-widest shadow-xl flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
+                <span>Out of Stock</span>
+              </span>
+            </div>
+          )}
+
+          {/* Left Feature / New Arrival / Classification Badges */}
+          {(product.isNewArrival || product.isFeatured || classification) && (
+            <div className="absolute top-2.5 left-2.5 flex flex-col gap-1 z-10 items-start">
               {product.isNewArrival && (
                 <span className="bg-brand-maroon-gradient text-gold-200 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded shadow">
                   New Arrival
@@ -81,6 +102,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, previewOnly =
               {product.isFeatured && (
                 <span className="bg-brand-gold-gradient text-burgundy-950 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded shadow">
                   Featured
+                </span>
+              )}
+              {classification && (
+                <span className="bg-burgundy-900/90 text-gold-300 border border-gold-500/40 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded shadow backdrop-blur-xs">
+                  {classification === 'DAILY_WEAR' ? 'Daily Wear' : classification === 'BRIDAL' ? 'Bridal' : 'Traditional'}
                 </span>
               )}
             </div>
@@ -118,7 +144,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, previewOnly =
             <div className="flex items-center justify-between gap-2 text-[11px] text-stone-500">
               <span className="font-mono uppercase tracking-wider truncate">{product.sku}</span>
               <span className="text-gold-700 font-semibold shrink-0">
-                {[categoryName, metalType].filter(Boolean).join(' • ')}
+                {[categoryName, subcategoryName, metalType].filter(Boolean).join(' • ')}
               </span>
             </div>
 
@@ -155,15 +181,19 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, previewOnly =
               )}
 
               {previewOnly ? (
-                <span className="flex-1 min-w-0 inline-flex items-center justify-center gap-1 sm:gap-1.5 px-2.5 py-2 rounded-lg bg-burgundy-900 text-gold-200 font-medium text-[11px] sm:text-xs opacity-80 whitespace-nowrap">
-                  <MessageCircle className="w-3.5 h-3.5 text-gold-400 shrink-0" />
-                  <span>Enquire</span>
+                <span
+                  className={`flex-1 min-w-0 inline-flex items-center justify-center gap-1 sm:gap-1.5 px-2.5 py-2 rounded-lg font-medium text-[11px] sm:text-xs opacity-80 whitespace-nowrap ${
+                    isOutOfStock ? 'bg-stone-800 text-stone-200' : 'bg-burgundy-900 text-gold-200'
+                  }`}
+                >
+                  <MessageCircle className={`w-3.5 h-3.5 shrink-0 ${isOutOfStock ? 'text-stone-300' : 'text-gold-400'}`} />
+                  <span>{isOutOfStock ? 'Out of Stock' : 'Enquire'}</span>
                 </span>
               ) : (
                 <Link
                   to={{
                     pathname: '/contact',
-                    search: `?enquiryType=PRODUCT&productSku=${encodeURIComponent(product.sku || '')}&productName=${encodeURIComponent(product.title || product.name || '')}&category=${encodeURIComponent(categoryName || '')}`,
+                    search: `?enquiryType=PRODUCT&productSku=${encodeURIComponent(product.sku || '')}&productName=${encodeURIComponent(product.title || product.name || '')}&category=${encodeURIComponent(categoryName || '')}${isOutOfStock ? '&stockStatus=OUT_OF_STOCK' : ''}`,
                   }}
                   state={{
                     product: {
@@ -177,10 +207,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, previewOnly =
                       url: typeof window !== 'undefined' ? `${window.location.origin}/products/${product.slug}` : `/products/${product.slug}`,
                     },
                   }}
-                  className="flex-1 min-w-0 inline-flex items-center justify-center gap-1 sm:gap-1.5 px-2.5 py-2 rounded-lg bg-burgundy-900 hover:bg-burgundy-800 hover:shadow-md text-gold-200 hover:text-gold-100 font-medium text-[11px] sm:text-xs transition-all duration-200 shadow-sm active:scale-[0.97] whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400"
+                  className={`flex-1 min-w-0 inline-flex items-center justify-center gap-1 sm:gap-1.5 px-2.5 py-2 rounded-lg font-medium text-[11px] sm:text-xs transition-all duration-200 shadow-sm active:scale-[0.97] whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 ${
+                    isOutOfStock
+                      ? 'bg-stone-900 hover:bg-black text-stone-100 hover:text-white border border-stone-700 focus-visible:ring-stone-400'
+                      : 'bg-burgundy-900 hover:bg-burgundy-800 hover:shadow-md text-gold-200 hover:text-gold-100 focus-visible:ring-gold-400'
+                  }`}
                 >
-                  <MessageCircle className="w-3.5 h-3.5 text-gold-400 shrink-0" />
-                  <span>Enquire</span>
+                  <MessageCircle className={`w-3.5 h-3.5 shrink-0 ${isOutOfStock ? 'text-stone-300' : 'text-gold-400'}`} />
+                  <span>{isOutOfStock ? 'Enquire Restock' : 'Enquire'}</span>
                 </Link>
               )}
             </div>

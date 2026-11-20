@@ -5,7 +5,6 @@ import {
   ArrowLeftRight,
   CheckCircle2,
   ChevronDown,
-  Clock,
   Info,
   MessageCircle,
   Phone,
@@ -18,7 +17,6 @@ import { cmsApi } from '@/services/api/cms.api';
 import { useRates } from '@/hooks/useRates';
 import { useStoreWhatsApp } from '@/hooks/useStoreWhatsApp';
 import { formatPaiseToInr } from '@/utils/currency';
-import { formatDateTime } from '@/utils/date';
 import { AnimatedCTA, ScrollReveal, StaggerReveal } from '@/components/motion';
 import { DigiEducationalSection } from './DigiEducationalSection';
 
@@ -302,7 +300,7 @@ export const DigiMetalShowcase: React.FC<DigiMetalShowcaseProps> = ({ metal }) =
   return (
     <div className="w-full min-h-screen">
       {/* 1. Full-Viewport Luxury Hero Section (No Outer Card Container) */}
-      <section className="relative w-full min-h-[460px] sm:min-h-[520px] lg:min-h-[calc(100vh-80px)] flex items-center overflow-hidden bg-[#1A0307] text-gold-100 py-10 sm:py-16 lg:py-20 border-b-2 border-gold-500/30">
+      <section className="relative w-full min-h-[calc(100vh-64px)] sm:min-h-[calc(100vh-72px)] flex items-center overflow-hidden bg-[#1A0307] text-gold-100 py-8 sm:py-12 lg:py-14 border-b-2 border-gold-500/30">
         {/* Full-bleed Background Luxury Bullion Imagery */}
         <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
           <img
@@ -333,7 +331,7 @@ export const DigiMetalShowcase: React.FC<DigiMetalShowcaseProps> = ({ metal }) =
 
         {/* Hero Content Container */}
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 lg:gap-10">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 lg:gap-12">
             {/* Left Content Column */}
             <div className="space-y-4 sm:space-y-6 max-w-2xl">
               <ScrollReveal variant="fade-up" immediate>
@@ -345,7 +343,7 @@ export const DigiMetalShowcase: React.FC<DigiMetalShowcaseProps> = ({ metal }) =
                       className="w-full h-full object-cover rounded-full"
                     />
                   </div>
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold-400/20 text-gold-300 text-[10px] sm:text-xs font-bold uppercase tracking-widest border border-gold-400/40 shadow-sm backdrop-blur-xs">
+                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gold-400/20 text-gold-300 text-xs font-bold uppercase tracking-widest border border-gold-400/40 shadow-sm backdrop-blur-xs">
                     <ShieldCheck className="w-3.5 h-3.5 text-gold-400" />
                     <span>{eyebrowText}</span>
                   </div>
@@ -354,7 +352,7 @@ export const DigiMetalShowcase: React.FC<DigiMetalShowcaseProps> = ({ metal }) =
 
               <ScrollReveal variant="fade-up" delay={80}>
                 <h1
-                  className="font-serif text-2xl min-[400px]:text-3xl sm:text-5xl lg:text-6xl font-extrabold text-[#FCE7B2] leading-[1.15] tracking-wide break-words"
+                  className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-[52px] xl:text-6xl font-extrabold text-[#FCE7B2] leading-[1.16] tracking-wide break-words"
                   style={{
                     textShadow:
                       '0 4px 20px rgba(0, 0, 0, 0.95), 0 2px 6px rgba(0, 0, 0, 0.85)',
@@ -366,7 +364,7 @@ export const DigiMetalShowcase: React.FC<DigiMetalShowcaseProps> = ({ metal }) =
 
               <ScrollReveal variant="fade-up" delay={120}>
                 <p
-                  className="text-xs sm:text-base lg:text-lg text-gold-100/90 font-light leading-relaxed max-w-xl"
+                  className="text-sm sm:text-base lg:text-lg text-gold-100/90 font-light leading-relaxed max-w-xl"
                   style={{
                     textShadow: '0 2px 10px rgba(0, 0, 0, 0.85)',
                   }}
@@ -377,21 +375,21 @@ export const DigiMetalShowcase: React.FC<DigiMetalShowcaseProps> = ({ metal }) =
 
               {/* Action Buttons */}
               <ScrollReveal variant="fade-up" delay={160}>
-                <div className="flex flex-col min-[480px]:flex-row items-stretch min-[480px]:items-center gap-3 pt-2 w-full min-[480px]:w-auto">
+                <div className="flex flex-col min-[480px]:flex-row items-stretch min-[480px]:items-center gap-3.5 pt-2 w-full min-[480px]:w-auto">
                   <AnimatedCTA
                     variant="gold"
                     href={defaultWhatsAppHref}
                     target="_blank"
                     rel="noopener noreferrer"
                     icon={<MessageCircle className="w-4 h-4" />}
-                    className="px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-wider shadow-luxury-gold text-center justify-center"
+                    className="px-7 py-3.5 rounded-xl text-xs sm:text-sm font-bold uppercase tracking-wider shadow-luxury-gold text-center justify-center"
                   >
                     ENQUIRE ON WHATSAPP
                   </AnimatedCTA>
 
                   <Link
                     to={secondaryCtaHref}
-                    className="px-5 py-3 rounded-xl border-2 border-gold-400/60 bg-burgundy-950/60 text-gold-200 hover:bg-gold-400/20 hover:border-gold-300 text-xs font-bold uppercase tracking-wider transition-all duration-300 backdrop-blur-xs shadow-md text-center justify-center"
+                    className="px-6 py-3.5 rounded-xl border-2 border-gold-400/60 bg-burgundy-950/60 hover:bg-gold-400/20 hover:border-gold-300 text-gold-200 text-xs sm:text-sm font-bold uppercase tracking-wider transition-all duration-300 backdrop-blur-xs shadow-md text-center justify-center"
                   >
                     {secondaryCtaLabel} →
                   </Link>
@@ -401,19 +399,19 @@ export const DigiMetalShowcase: React.FC<DigiMetalShowcaseProps> = ({ metal }) =
 
             {/* Right Column: Live Rate Display Card */}
             <ScrollReveal variant="fade-up" delay={200} className="w-full lg:w-[380px] shrink-0">
-              <div className="bg-burgundy-950/85 backdrop-blur-md rounded-2xl border-2 border-gold-400/50 p-4 sm:p-6 lg:p-7 shadow-luxury-gold space-y-3.5 sm:space-y-4">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-gold-300">
-                    <TrendingUp className="w-3.5 h-3.5 text-gold-400" />
+              <div className="bg-burgundy-950/90 backdrop-blur-md rounded-2xl border-2 border-gold-400/50 p-5 sm:p-6 lg:p-7 shadow-luxury-gold space-y-4">
+                <div className="flex items-center justify-between gap-2 border-b border-gold-500/25 pb-3">
+                  <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-gold-300">
+                    <TrendingUp className="w-4 h-4 text-gold-400" />
                     <span>Live Rate Display</span>
                   </span>
-                  <span className="px-2.5 py-0.5 rounded-full bg-gold-400/15 border border-gold-400/35 text-[10px] font-semibold text-gold-200">
+                  <span className="px-2.5 py-1 rounded-full bg-gold-400/15 border border-gold-400/35 text-[11px] font-semibold text-gold-200">
                     {sourceBadgeText}
                   </span>
                 </div>
 
-                <div>
-                  <p className="text-xs text-gold-200/80 mb-1">{rateLabelText}</p>
+                <div className="space-y-1 py-1">
+                  <p className="text-xs sm:text-sm text-gold-200/85 font-medium">{rateLabelText}</p>
                   {ratesLoading ? (
                     <div className="h-10 w-44 rounded bg-gold-400/20 animate-pulse" />
                   ) : ratesError || ratePerGramPaise <= 0 ? (
@@ -424,32 +422,27 @@ export const DigiMetalShowcase: React.FC<DigiMetalShowcaseProps> = ({ metal }) =
                       <button
                         type="button"
                         onClick={() => refetchRates()}
-                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-gold-400/20 text-gold-200 text-xs"
+                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-gold-400/20 text-gold-200 text-xs font-semibold"
                       >
                         <RefreshCw className="w-3.5 h-3.5" />
                         <span>Refresh Rate</span>
                       </button>
                     </div>
                   ) : (
-                    <div className="flex items-baseline gap-2">
-                      <span className="font-serif text-3xl sm:text-4xl font-extrabold text-[#FCE7B2] tabular-nums">
+                    <div className="flex items-baseline gap-2 pt-1">
+                      <span className="font-serif text-3xl sm:text-4xl font-extrabold text-[#FCE7B2] tabular-nums tracking-tight">
                         {formatPaiseToInr(ratePerGramPaise)}
                       </span>
-                      <span className="text-xs text-gold-300 font-medium">/ gram</span>
+                      <span className="text-xs sm:text-sm text-gold-300 font-medium">/ gram</span>
                     </div>
                   )}
                 </div>
 
-                {rates?.effectiveDate && (
-                  <div className="flex items-center gap-1.5 text-[11px] text-gold-200/75 border-t border-gold-500/25 pt-3">
-                    <Clock className="w-3.5 h-3.5 text-gold-400 shrink-0" />
-                    <span>Updated: {formatDateTime(rates.effectiveDate)}</span>
-                  </div>
-                )}
-
-                <p className="text-[10.5px] text-gold-300/75 leading-relaxed">
-                  Advisory showroom reference. Visit showroom counter for final certified weights and confirmation.
-                </p>
+                <div className="pt-3 border-t border-gold-500/25">
+                  <p className="text-xs text-gold-300/80 leading-relaxed">
+                    Advisory showroom reference. Visit showroom counter for final certified weights and confirmation.
+                  </p>
+                </div>
               </div>
             </ScrollReveal>
           </div>
@@ -457,7 +450,7 @@ export const DigiMetalShowcase: React.FC<DigiMetalShowcaseProps> = ({ metal }) =
       </section>
 
       {/* Main Content Sections: Educational Guide, Calculator, FAQs */}
-      <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16 space-y-8 sm:space-y-12 lg:space-y-16">
+      <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10 space-y-6 sm:space-y-8 lg:space-y-10">
         {/* 2. Educational Section — What is DigiGold / DigiSilver? */}
         <DigiEducationalSection metal={metal} />
 
