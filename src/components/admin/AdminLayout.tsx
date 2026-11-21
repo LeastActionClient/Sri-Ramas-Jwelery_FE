@@ -221,8 +221,8 @@ export const AdminLayout: React.FC = () => {
             <span className="font-serif font-bold text-sm text-gold-100 block truncate">
               SRI RAMAS JEWELLERY
             </span>
-            <span className="text-[10px] text-gold-400/80 font-medium tracking-wider uppercase block">
-              Admin Dashboard
+            <span className="text-[10px] text-gold-400 font-serif tracking-wide block">
+              ஸ்ரீ ரமாஸ் ஜுவல்லரி
             </span>
           </div>
         </div>
