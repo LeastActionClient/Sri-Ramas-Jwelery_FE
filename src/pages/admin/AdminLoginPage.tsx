@@ -79,6 +79,9 @@ export const AdminLoginPage: React.FC = () => {
           <h1 className="font-serif text-xl sm:text-2xl font-bold text-gold-100 tracking-wide">
             SRI RAMAS JEWELLERY
           </h1>
+          <p className="text-xs text-gold-300 font-serif tracking-wider mt-1">
+            ஸ்ரீ ரமாஸ் ஜுவல்லரி
+          </p>
           <p className="text-xs text-gold-300/80 uppercase tracking-widest mt-0.5">
             Administrative Management Portal
           </p>
