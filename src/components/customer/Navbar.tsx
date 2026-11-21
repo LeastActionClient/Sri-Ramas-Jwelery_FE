@@ -109,8 +109,8 @@ export const Navbar: React.FC = () => {
               <span className="font-serif text-[11px] min-[340px]:text-xs min-[380px]:text-sm sm:text-base xl:text-lg font-bold tracking-tight min-[380px]:tracking-wider text-gold-100 group-hover:text-gold-300 transition-colors whitespace-nowrap truncate">
                 SRI RAMAS JEWELLERY
               </span>
-              <div className="hidden sm:flex items-center gap-1.5 text-[9px] xl:text-[10px] text-gold-300/80 font-medium">
-                <span className="font-serif">ஸ்ரீ ராமாஸ் ஜூவல்லரி</span>
+              <div className="flex items-center gap-1.5 text-[8.5px] min-[380px]:text-[9px] xl:text-[10px] text-gold-300/80 font-medium leading-none mt-0.5">
+                <span className="font-serif">ஸ்ரீ ரமாஸ் ஜுவல்லரி</span>
                 <span className="text-gold-600">•</span>
                 <span className="tracking-widest uppercase text-gold-400">SINCE 1947</span>
               </div>

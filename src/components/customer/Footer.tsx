@@ -175,7 +175,7 @@ export const Footer: React.FC = () => {
                 <h3 className="font-serif text-lg sm:text-xl font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-[#FAF7F0] via-[#FFE28A] to-[#F5DE9C]">
                   SRI RAMAS JEWELLERY
                 </h3>
-                <p className="text-sm text-[#C49A3A] font-serif tracking-wide">ஸ்ரீ ராமாஸ் • Since 1987</p>
+                <p className="text-sm text-[#C49A3A] font-serif tracking-wide">ஸ்ரீ ரமாஸ் • Since 1987</p>
               </div>
             </div>
 
@@ -428,7 +428,7 @@ export const Footer: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-gold-400 font-serif text-sm">ஸ்ரீ ராமாஸ் ஜுவல்லரி • தஞ்சாவூர்</span>
+            <span className="text-gold-400 font-serif text-sm">ஸ்ரீ ரமாஸ் ஜுவல்லரி • தஞ்சாவூர்</span>
           </div>
 
           {/* Least Action Company Logo */}
