@@ -18,12 +18,12 @@ export const FounderLegacySection: React.FC = () => {
 
   const tamilStory = {
     quote:
-      '1987 முதல் என்றும் தங்கத்தில் தூய்மை, விலையில் நேர்மை, தலைமுறையின் நம்பிக்கை. கைராசியின் பேராசியான உங்கள் ஸ்ரீ ராமஸ்.',
+      '1987 முதல் என்றும் தங்கத்தில் தூய்மை, விலையில் நேர்மை, தலைமுறையின் நம்பிக்கை. கைராசியின் பேராசியான உங்கள் ஸ்ரீ ரமாஸ்.',
     founder: 'S. R. VASU',
     role: 'Founder',
     designation: 'The Legacy Behind Sri Ramas',
     heading: 'தலைமுறை கடந்த நம்பிக்கை',
-    caption: '1987 முதல் என்றும் உங்கள் ஸ்ரீ ராமஸ்',
+    caption: '1987 முதல் என்றும் உங்கள் ஸ்ரீ ரமாஸ்',
   };
 
   const current = selectedLanguage === 'ta' ? tamilStory : englishStory;

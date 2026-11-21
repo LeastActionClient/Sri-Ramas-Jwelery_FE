@@ -273,7 +273,7 @@ export const SchemeBannerCard: React.FC<SchemeBannerCardProps> = ({
           <img src={logoSrc} alt="Sri Ramas Crest" className="w-full h-full object-cover rounded-full" />
         </div>
         <span className="text-[10px] font-serif text-gold-300/90 tracking-wider whitespace-nowrap">
-          ஸ்ரீ ராமாஸ் • Since 1987
+          ஸ்ரீ ரமாஸ் • Since 1987
         </span>
         {isSelected && (
           <span className="absolute -top-5 left-1/2 -translate-x-1/2 bg-gold-500 text-burgundy-950 text-[9px] font-bold px-1.5 py-0.5 rounded shadow">
@@ -754,7 +754,7 @@ export const SchemeBannerCard: React.FC<SchemeBannerCardProps> = ({
                     <img src={logoSrc} alt="Sri Ramas Crest" className="w-full h-full object-cover rounded-full" />
                   </div>
                   <span className="text-[10px] font-serif text-gold-300/90 tracking-wider">
-                    ஸ்ரீ ராமாஸ் • Since 1987
+                    ஸ்ரீ ரமாஸ் • Since 1987
                   </span>
                 </div>
                 <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold tracking-wide text-[#F6DFA4] drop-shadow-[0_2px_10px_rgba(0,0,0,0.6)] leading-tight">
